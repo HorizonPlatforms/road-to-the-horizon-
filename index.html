@@ -248,6 +248,48 @@
       grid-column: 1 / -1;
     }
 
+    .modal-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 1300;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(17, 25, 35, 0.66);
+    }
+
+    .modal-screen[hidden] {
+      display: none;
+    }
+
+    .modal-card {
+      width: min(620px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--red);
+      background: var(--soft);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 12px 0;
+    }
+
     .top-actions,
     .tabs,
     .inline-actions {
@@ -867,6 +909,44 @@
     <span id="updateBannerStatus" class="hint"></span>
   </div>
 
+  <section id="resetModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <div id="resetStepWarning">
+        <h2>Reset App Data</h2>
+        <div class="warning-box">
+          <strong>This will delete the dashboard data stored in this browser.</strong>
+          <p class="hint">This includes tasks, itinerary stops, journal entries, counters, budget items, check-ins, settings and locally cached app data.</p>
+        </div>
+        <p id="resetCloudWarning" class="hint"></p>
+        <p class="hint">A JSON backup will be created before anything is deleted. If the backup cannot be created, the reset will be cancelled.</p>
+        <div class="modal-actions">
+          <button id="cancelResetBtn" class="ghost-btn" type="button">Cancel</button>
+          <button id="continueResetBtn" class="danger-btn" type="button">Continue</button>
+        </div>
+      </div>
+      <div id="resetStepConfirm" hidden>
+        <h2>Final Confirmation</h2>
+        <div class="warning-box">
+          <strong>This action cannot be undone.</strong>
+        </div>
+        <div id="resetRemovalSummary"></div>
+        <label>Type RESET to confirm<input id="resetConfirmInput" autocomplete="off" placeholder="RESET"></label>
+        <div class="modal-actions">
+          <button id="backResetBtn" class="ghost-btn" type="button">Back</button>
+          <button id="finalResetBtn" class="danger-btn" type="button" disabled>Reset App Data</button>
+        </div>
+      </div>
+      <div id="resetStepSuccess" hidden>
+        <h2>App reset successfully.</h2>
+        <p class="hint">Your automatic backup was prepared before reset. You can restore a backup now or return to the login screen.</p>
+        <div class="modal-actions">
+          <label class="file-label" for="importFile">Restore Backup</label>
+          <button id="goToLoginAfterResetBtn" class="primary-btn" type="button">Go to Login</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div id="appShell" class="app-shell" hidden>
   <header>
     <div class="wrap header-grid">
@@ -1361,7 +1441,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.8.0";
+    const APP_VERSION = "0.9.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -1420,6 +1500,10 @@
     function formatDate(dateString) {
       if (!dateString) return "No date";
       return parseDate(dateString).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function timestampForFilename() {
+      return new Date().toISOString().replace(/[:.]/g, "-");
     }
 
     const defaults = {
@@ -1533,6 +1617,7 @@
     let authMode = "login";
     let offlineMode = false;
     let pendingServiceWorker = null;
+    let suppressNextCloudSave = false;
     const dirtyForms = new Set();
 
     window.addEventListener("error", (event) => {
@@ -1755,6 +1840,26 @@
     function save() {
       saveLocalOnly();
       scheduleCloudSave();
+    }
+
+    function createBackupDownload(reason = "manual") {
+      try {
+        const backup = { ...state, meta: { ...state.meta, exportedAt: new Date().toISOString(), backupReason: reason } };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `travel-life-os-backup-${timestampForFilename()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        return true;
+      } catch (error) {
+        console.error("Backup creation failed", error);
+        alert("Backup creation failed. Reset cancelled.");
+        return false;
+      }
     }
 
     function money(value) {
@@ -2124,6 +2229,11 @@
 
     function scheduleCloudSave() {
       if (AUTH_ONLY_STAGE) return;
+      if (suppressNextCloudSave) {
+        suppressNextCloudSave = false;
+        setCloudStatus("Local reset complete. Cloud data was not deleted or overwritten.");
+        return;
+      }
       if (isApplyingRemoteState || !supabaseClient || !currentUser) return;
       clearTimeout(cloudSaveTimer);
       setCloudStatus("Local changes saved. Cloud sync pending...");
@@ -2583,6 +2693,54 @@
         ["Last local save", lastSaved],
         ["Last cloud save", lastCloudSave]
       ].map(([label, value]) => `<div class="about-card"><div class="muted">${escapeHtml(label)}</div><strong>${escapeHtml(value)}</strong></div>`).join("");
+    }
+
+    function resetCounts() {
+      return {
+        tasks: state.tasks.length,
+        itineraryStops: state.route.length,
+        journalEntries: state.journals.length,
+        counters: (state.settings.dateItems || []).length,
+        budgetItems: state.money.length
+      };
+    }
+
+    function renderResetSummary() {
+      const counts = resetCounts();
+      document.getElementById("resetRemovalSummary").innerHTML = statsHtml([
+        ["Tasks", String(counts.tasks)],
+        ["Itinerary stops", String(counts.itineraryStops)],
+        ["Journal entries", String(counts.journalEntries)],
+        ["Counters", String(counts.counters)],
+        ["Budget items", String(counts.budgetItems)]
+      ]);
+      const cloudText = currentUser
+        ? `You are signed in as ${currentUser.email}. This reset deletes local browser data only. It does not delete Supabase cloud data, but future saves may overwrite cloud state if you continue using this reset browser while signed in.`
+        : "You are not signed in. This reset deletes local browser data only.";
+      document.getElementById("resetCloudWarning").textContent = cloudText;
+    }
+
+    function setResetStep(step) {
+      document.getElementById("resetStepWarning").hidden = step !== "warning";
+      document.getElementById("resetStepConfirm").hidden = step !== "confirm";
+      document.getElementById("resetStepSuccess").hidden = step !== "success";
+      if (step === "warning" || step === "confirm") renderResetSummary();
+      if (step === "confirm") {
+        const input = document.getElementById("resetConfirmInput");
+        input.value = "";
+        document.getElementById("finalResetBtn").disabled = true;
+        setTimeout(() => input.focus(), 0);
+      }
+    }
+
+    function openResetDialog() {
+      renderResetSummary();
+      setResetStep("warning");
+      document.getElementById("resetModal").hidden = false;
+    }
+
+    function closeResetDialog() {
+      document.getElementById("resetModal").hidden = true;
     }
 
     function renderSectionLabelSettings() {
@@ -3880,16 +4038,7 @@
     }
 
     document.getElementById("exportBtn").addEventListener("click", () => {
-      const backup = { ...state, meta: { ...state.meta, exportedAt: new Date().toISOString() } };
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `travel-life-os-${today()}.json`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      createBackupDownload("manual");
     });
 
     document.getElementById("importFile").addEventListener("change", (event) => {
@@ -3912,10 +4061,28 @@
     });
 
     document.getElementById("resetBtn").addEventListener("click", () => {
-      if (!confirm("Reset the Life OS data in this browser? Export a backup first if you need one.")) return;
+      openResetDialog();
+    });
+
+    document.getElementById("cancelResetBtn").addEventListener("click", closeResetDialog);
+    document.getElementById("continueResetBtn").addEventListener("click", () => setResetStep("confirm"));
+    document.getElementById("backResetBtn").addEventListener("click", () => setResetStep("warning"));
+    document.getElementById("resetConfirmInput").addEventListener("input", (event) => {
+      document.getElementById("finalResetBtn").disabled = event.target.value !== "RESET";
+    });
+    document.getElementById("finalResetBtn").addEventListener("click", () => {
+      if (document.getElementById("resetConfirmInput").value !== "RESET") return;
+      const backupCreated = createBackupDownload("before-reset");
+      if (!backupCreated) return;
+      suppressNextCloudSave = true;
       state = clone(defaults);
       dirtyForms.clear();
       render();
+      setResetStep("success");
+    });
+    document.getElementById("goToLoginAfterResetBtn").addEventListener("click", () => {
+      closeResetDialog();
+      showLoginScreen("App reset successfully. Sign in or continue offline.");
     });
 
     function recentCheckins(days) {
