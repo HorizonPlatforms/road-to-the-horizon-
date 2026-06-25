@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.6.0`.
+Current app version: `0.7.0`.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
@@ -97,6 +97,7 @@ Then open the served file in the browser.
 - `Habits` - habit tracking based on saved daily logs.
 - `Journal` - journal entries and reflections.
 - `Weekly Review` - weekly summaries and review notes.
+- `Dates & Counters` - editable countdowns and count-up counters, with dashboard pinning.
 - `Settings & Data` - rarely changed global settings, targets, dates, labels and backup tools.
 
 Daily entries stay inside their own sections. Settings & Data is for global configuration, not everyday logging.

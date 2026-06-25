@@ -104,6 +104,17 @@
       padding: 14px;
     }
 
+    .pinned-date-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .pinned-date-item {
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
     .date-box strong {
       display: block;
       margin: 2px 0;
@@ -687,6 +698,10 @@
       align-items: end;
     }
 
+    .date-counter-row {
+      grid-template-columns: 1fr 120px 110px 120px 90px auto;
+    }
+
     .auth-panel {
       border-color: color-mix(in srgb, var(--blue) 42%, var(--line));
     }
@@ -749,6 +764,7 @@
       .score-grid,
       .task-columns,
       .settings-route-row,
+      .date-counter-row,
       .setup-actions,
       .timeline-item {
         grid-template-columns: 1fr;
@@ -859,9 +875,13 @@
         <p id="dashboardSubtitle" class="subtitle">Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.</p>
       </div>
       <div class="date-box">
-        <span class="muted">Target departure</span>
-        <strong id="targetDepartureLabel">No date set</strong>
-        <span id="daysLeft" class="muted">Complete setup to start</span>
+        <span class="muted">Pinned dates</span>
+        <div id="pinnedDateCards" class="pinned-date-list">
+          <div class="pinned-date-item">
+            <strong id="targetDepartureLabel">No date set</strong>
+            <span id="daysLeft" class="muted">Complete setup to start</span>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -949,6 +969,7 @@
       <button class="tab" type="button" data-view="habits">Habits</button>
       <button class="tab" type="button" data-view="journal">Journal</button>
       <button class="tab" type="button" data-view="review">Weekly Review</button>
+      <button class="tab" type="button" data-view="dates">Dates & Counters</button>
       <button class="tab" type="button" data-view="settings">Settings & Data</button>
     </nav>
 
@@ -1246,6 +1267,30 @@
       </div>
     </section>
 
+    <section id="dates" class="view">
+      <div class="grid">
+        <div class="panel span-12">
+          <h2>Dates & Counters</h2>
+          <p class="hint">Create editable countdowns and count-up counters. Pin important dates to the dashboard, or archive dates you want to keep out of daily view.</p>
+          <form id="dateItemForm" class="form-grid">
+            <label class="field-3">Title<input name="title" required placeholder="Departure"></label>
+            <label class="field-2">Date<input name="date" type="date" required></label>
+            <label class="field-2">Type<select name="type"><option value="countdown">Countdown</option><option value="count-up">Count-up</option></select></label>
+            <label class="field-2">Category<input name="category" placeholder="travel"></label>
+            <label class="field-12">Note<input name="note" placeholder="Optional note"></label>
+            <label class="field-2"><span>Pin to dashboard</span><select name="pinned"><option value="false">No</option><option value="true">Yes</option></select></label>
+            <button class="field-2" type="submit">Add Date</button>
+          </form>
+        </div>
+        <div class="panel span-12">
+          <h2>Active Dates</h2>
+          <div id="dateItemList" class="table-ish"></div>
+          <h3>Archived Dates</h3>
+          <div id="archivedDateItemList" class="table-ish"></div>
+        </div>
+      </div>
+    </section>
+
     <section id="settings" class="view">
       <div class="grid">
         <div class="panel span-12">
@@ -1316,7 +1361,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.6.0";
+    const APP_VERSION = "0.7.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -1329,6 +1374,7 @@
       habits: "Habits",
       journal: "Journal",
       review: "Weekly Review",
+      dates: "Dates & Counters",
       settings: "Settings & Data"
     };
     function defaultTravelDates() {
@@ -1391,6 +1437,7 @@
         teflManualHours: 0,
         keyDates: {},
         travelDates: defaultTravelDates(),
+        dateItems: [],
         timelinePhases: []
       },
       tasks: [],
@@ -1429,6 +1476,11 @@
         { id: id(), key: "departure", title: "Demo departure", date: "2027-05-01", endDate: "", location: "Travel Phase", notes: "Sample departure date", archived: false },
         { id: id(), key: "julyPaidTrip", title: "Demo paid trip", date: "2027-03-10", endDate: "2027-03-17", location: "Trip Phase", notes: "Fake sample trip", archived: false },
         { id: id(), key: "septemberConference", title: "Demo conference", date: "2027-04-12", endDate: "2027-04-14", location: "Conference Phase", notes: "Fake sample event", archived: false }
+      ];
+      demo.settings.dateItems = [
+        { id: id(), key: "departure", title: "Demo departure", date: "2027-05-01", type: "countdown", note: "Sample departure date", category: "travel", pinned: true, archived: false },
+        { id: id(), key: "", title: "Started Travel Life OS", date: "2027-02-01", type: "count-up", note: "Fake sample start date", category: "milestone", pinned: true, archived: false },
+        { id: id(), key: "septemberConference", title: "Demo conference", date: "2027-04-12", type: "countdown", note: "Fake sample event", category: "work", pinned: false, archived: false }
       ];
       demo.settings.timelinePhases = [
         { id: id(), label: "Planning", start: "2027-02-01", end: "2027-03-09" },
@@ -1577,12 +1629,14 @@
         (data.money && data.money.length) ||
         (data.route && data.route.length) ||
         (data.settings?.travelDates && data.settings.travelDates.length) ||
+        (data.settings?.dateItems && data.settings.dateItems.length) ||
         (data.checkins && data.checkins.length) ||
         (data.journals && data.journals.length)
       );
       merged.meta.setupComplete = Boolean(data.meta?.setupComplete || (data.meta && data.meta.setupComplete === undefined && hasExistingUserData));
       merged.settings.keyDates = { ...next.settings.keyDates, ...(data.settings?.keyDates || {}) };
       merged.settings.travelDates = normalizeTravelDates(data.settings?.travelDates, merged.settings.keyDates);
+      merged.settings.dateItems = normalizeDateItems(data.settings?.dateItems, merged.settings.travelDates);
       merged.settings.timelinePhases = (data.settings?.timelinePhases || next.settings.timelinePhases).map((phase) => ({
         id: phase.id || id(),
         label: phase.label || "Route phase",
@@ -1649,6 +1703,44 @@
         notes: entry.notes || "",
         archived: Boolean(entry.archived)
       }));
+    }
+
+    function normalizeDateItems(savedItems, travelDates) {
+      const items = (savedItems || []).map((entry) => ({
+        id: entry.id || id(),
+        key: entry.key || "",
+        title: entry.title || "Date",
+        date: entry.date || "",
+        type: entry.type === "count-up" ? "count-up" : "countdown",
+        note: entry.note ?? entry.notes ?? "",
+        category: entry.category || entry.location || "travel",
+        pinned: Boolean(entry.pinned),
+        archived: Boolean(entry.archived)
+      }));
+      const byKey = new Map(items.filter((entry) => entry.key).map((entry) => [entry.key, entry]));
+      (travelDates || []).forEach((entry) => {
+        if (!entry.date) return;
+        const key = entry.key || "";
+        const existing = key ? byKey.get(key) : null;
+        if (existing) {
+          existing.date = existing.date || entry.date;
+          existing.title = existing.title || entry.title || "Date";
+          if (key === "departure") existing.pinned = true;
+          return;
+        }
+        items.push({
+          id: id(),
+          key,
+          title: entry.title || "Travel date",
+          date: entry.date,
+          type: "countdown",
+          note: entry.notes || "",
+          category: entry.location || "travel",
+          pinned: key === "departure",
+          archived: Boolean(entry.archived)
+        });
+      });
+      return items;
     }
 
     function saveLocalOnly() {
@@ -2056,8 +2148,12 @@
 
     function keyDates() {
       const dates = {};
-      (state.settings.travelDates || []).forEach((entry) => {
+      (state.settings.dateItems || []).forEach((entry) => {
         if (!entry.key || entry.archived) return;
+        dates[entry.key] = entry.date || dates[entry.key];
+      });
+      (state.settings.travelDates || []).forEach((entry) => {
+        if (!entry.key || entry.archived || dates[entry.key]) return;
         dates[entry.key] = entry.date || dates[entry.key];
         if (entry.key === "septemberConference") dates.septemberConferenceEnd = entry.endDate || dates.septemberConferenceEnd;
         if (entry.key === "julyPaidTrip") dates.julyTripReturn = entry.endDate || dates.julyTripReturn;
@@ -2066,9 +2162,27 @@
     }
 
     function countdownItems() {
-      return (state.settings.travelDates || [])
+      return (state.settings.dateItems || [])
         .filter((entry) => !entry.archived && entry.date)
-        .map((entry) => [entry.title, entry.date]);
+        .map((entry) => [entry.title, entry.date, entry.type || "countdown"]);
+    }
+
+    function pinnedDateItems() {
+      return (state.settings.dateItems || [])
+        .filter((entry) => entry.pinned && !entry.archived && entry.date)
+        .sort((a, b) => Math.abs(dayDiff(a.date)) - Math.abs(dayDiff(b.date)));
+    }
+
+    function counterText(entry) {
+      const days = dayDiff(entry.date);
+      if ((entry.type || "countdown") === "count-up") {
+        if (days > 0) return `${days} day${days === 1 ? "" : "s"} until start`;
+        const since = Math.abs(days);
+        return `${since} day${since === 1 ? "" : "s"} since`;
+      }
+      if (days >= 0) return `${days} day${days === 1 ? "" : "s"} to go`;
+      const since = Math.abs(days);
+      return `${since} day${since === 1 ? "" : "s"} since`;
     }
 
     function currentPhase() {
@@ -2172,6 +2286,7 @@
 
     function upcomingDeadlines(days = 14) {
       const dateItems = countdownItems()
+        .filter(([, , type]) => type !== "count-up")
         .map(([title, date]) => ({ title, date, days: dayDiff(date) }))
         .filter((item) => item.days >= 0 && item.days <= days);
       const docs = state.documents
@@ -2203,6 +2318,7 @@
       renderHabits();
       renderJournal();
       renderReview();
+      renderDates();
       renderSettings();
       renderAbout();
       save();
@@ -2224,15 +2340,23 @@
     }
 
     function renderCountdown() {
-      const departure = keyDates().departure;
-      if (!departure) {
-        setText("targetDepartureLabel", "No date set");
-        setText("daysLeft", "Add a departure date in Key Travel Dates");
+      const root = document.getElementById("pinnedDateCards");
+      if (!root) return;
+      const items = pinnedDateItems();
+      root.innerHTML = "";
+      if (!items.length) {
+        root.innerHTML = `<div class="pinned-date-item"><strong id="targetDepartureLabel">No date set</strong><span id="daysLeft" class="muted">Pin dates in Dates & Counters</span></div>`;
         return;
       }
-      const days = dayDiff(departure);
-      setText("targetDepartureLabel", formatDate(departure));
-      setText("daysLeft", days >= 0 ? `${days} days to go` : `${Math.abs(days)} days since departure`);
+      items.forEach((entry) => {
+        const node = document.createElement("div");
+        node.className = "pinned-date-item";
+        node.innerHTML = `<span class="muted"></span><strong></strong><span class="muted"></span>`;
+        node.children[0].textContent = entry.title;
+        node.children[1].textContent = formatDate(entry.date);
+        node.children[2].textContent = counterText(entry);
+        root.appendChild(node);
+      });
     }
 
     function applyDashboardSettings() {
@@ -2249,17 +2373,17 @@
       root.innerHTML = "";
       const items = countdownItems();
       if (!items.length) {
-        root.innerHTML = `<div class="empty">Add travel dates in setup or Settings & Data to show countdowns.</div>`;
+        root.innerHTML = `<div class="empty"><strong>No dates yet</strong><span>Add countdowns or count-up counters in Dates & Counters.</span></div>`;
         return;
       }
-      items.forEach(([label, date]) => {
-        const days = dayDiff(date);
+      items.forEach(([label, date, type]) => {
+        const entry = { title: label, date, type: type || "countdown" };
         const card = document.createElement("div");
         card.className = "countdown-card";
         card.innerHTML = `<div class="muted"></div><strong></strong><div class="hint"></div>`;
         card.children[0].textContent = label;
-        card.children[1].textContent = days >= 0 ? String(days) : "Done";
-        card.children[2].textContent = days >= 0 ? `${formatDate(date)}` : `${Math.abs(days)} days ago`;
+        card.children[1].textContent = String(Math.abs(dayDiff(date)));
+        card.children[2].textContent = `${formatDate(date)} - ${counterText(entry)}`;
         root.appendChild(card);
       });
     }
@@ -2760,6 +2884,62 @@
       renderList("weeklyReviewList", state.weeklyReviews.slice().sort((a, b) => (b.week || "").localeCompare(a.week || "")), (entry) => simpleItem(entry, `${entry.week || "No week"} - Wins: ${entry.wins || ""} - Priorities: ${entry.priorities || ""}`, "weeklyReviews", editWeeklyReview));
     }
 
+    function renderDates() {
+      renderDateCounterList("dateItemList", (state.settings.dateItems || []).filter((entry) => !entry.archived));
+      renderDateCounterList("archivedDateItemList", (state.settings.dateItems || []).filter((entry) => entry.archived));
+    }
+
+    function renderDateCounterList(idName, items) {
+      const root = document.getElementById(idName);
+      if (!root) return;
+      root.innerHTML = "";
+      if (!items.length) {
+        root.innerHTML = `<div class="empty"><strong>${idName === "dateItemList" ? "No active dates" : "No archived dates"}</strong><span>${idName === "dateItemList" ? "Add countdowns and count-up counters here." : "Archived dates will appear here."}</span></div>`;
+        return;
+      }
+      items.slice().sort((a, b) => (a.date || "").localeCompare(b.date || "")).forEach((entry) => {
+        root.appendChild(dateCounterItem(entry));
+      });
+    }
+
+    function dateCounterItem(entry) {
+      const node = document.createElement("div");
+      node.className = "row-ish date-counter-row";
+      node.innerHTML = `
+        <div><strong></strong><div class="hint"></div></div>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <div class="item-actions">
+          <button type="button" class="ghost-btn edit-date-counter">Edit</button>
+          <button type="button" class="ghost-btn pin-date-counter"></button>
+          <button type="button" class="ghost-btn archive-date-counter"></button>
+          <button type="button" class="danger-btn delete-date-counter">Delete</button>
+        </div>
+      `;
+      node.querySelector("strong").textContent = entry.title || "Date";
+      node.querySelector(".hint").textContent = entry.note || "";
+      const spans = node.querySelectorAll(":scope > span");
+      spans[0].textContent = formatDate(entry.date);
+      spans[1].textContent = entry.type === "count-up" ? "Count-up" : "Countdown";
+      spans[2].textContent = entry.category || "Uncategorised";
+      spans[3].textContent = counterText(entry);
+      node.querySelector(".pin-date-counter").textContent = entry.pinned ? "Unpin" : "Pin";
+      node.querySelector(".archive-date-counter").textContent = entry.archived ? "Unarchive" : "Archive";
+      node.querySelector(".edit-date-counter").addEventListener("click", () => editDateCounter(entry));
+      node.querySelector(".pin-date-counter").addEventListener("click", () => {
+        entry.pinned = !entry.pinned;
+        render();
+      });
+      node.querySelector(".archive-date-counter").addEventListener("click", () => {
+        entry.archived = !entry.archived;
+        render();
+      });
+      node.querySelector(".delete-date-counter").addEventListener("click", () => removeDateCounter(entry.id));
+      return node;
+    }
+
     function renderList(idName, items, factory) {
       const root = document.getElementById(idName);
       root.innerHTML = "";
@@ -2774,6 +2954,8 @@
           writingSessionList: ["No writing sessions yet", "Saved sessions will appear here."],
           journalList: ["No journal entries yet", "Your reflections will appear here."],
           weeklyReviewList: ["No reviews yet", "Weekly reviews will appear after you save them."],
+          dateItemList: ["No active dates", "Add countdowns and count-up counters here."],
+          archivedDateItemList: ["No archived dates", "Archived dates will appear here."],
           travelDateList: ["No active travel dates", "Add key dates to power countdowns and timelines."],
           archivedTravelDateList: ["No archived dates", "Archived travel dates will appear here."]
         };
@@ -2901,6 +3083,31 @@
     function removeTravelDate(itemId) {
       if (!confirm("Delete this travel date?")) return;
       state.settings.travelDates = (state.settings.travelDates || []).filter((item) => item.id !== itemId);
+      render();
+    }
+
+    function removeDateCounter(itemId) {
+      if (!confirm("Delete this date item?")) return;
+      state.settings.dateItems = (state.settings.dateItems || []).filter((item) => item.id !== itemId);
+      render();
+    }
+
+    function editDateCounter(entry) {
+      const title = promptValue("Title", entry.title || "");
+      if (title === null) return;
+      const date = promptValue("Date, YYYY-MM-DD", entry.date || "");
+      if (date === null) return;
+      const type = promptValue("Type: countdown or count-up", entry.type || "countdown");
+      if (type === null) return;
+      const category = promptValue("Category", entry.category || "");
+      if (category === null) return;
+      const note = promptValue("Note", entry.note || "");
+      if (note === null) return;
+      entry.title = title || entry.title || "Date";
+      entry.date = date || entry.date;
+      entry.type = type === "count-up" ? "count-up" : "countdown";
+      entry.category = category || "";
+      entry.note = note || "";
       render();
     }
 
@@ -3546,6 +3753,20 @@
         endDate: data.endDate || "",
         location: data.location || "",
         notes: data.notes || "",
+        archived: false
+      });
+    });
+    bindForm("dateItemForm", (data) => {
+      state.settings.dateItems = state.settings.dateItems || [];
+      state.settings.dateItems.push({
+        id: id(),
+        key: "",
+        title: data.title || "Date",
+        date: data.date || today(),
+        type: data.type === "count-up" ? "count-up" : "countdown",
+        note: data.note || "",
+        category: data.category || "",
+        pinned: bool(data.pinned),
         archived: false
       });
     });
