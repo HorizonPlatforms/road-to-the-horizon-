@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Travel Life OS icon">
+  <rect width="512" height="512" rx="96" fill="#245d8f"/>
+  <path d="M112 348c56-44 101-66 136-66 36 0 62 22 97 22 23 0 43-10 55-20" fill="none" stroke="#f7f5ef" stroke-width="28" stroke-linecap="round"/>
+  <path d="M256 94c-65 0-118 52-118 116 0 82 118 210 118 210s118-128 118-210c0-64-53-116-118-116z" fill="#ffffff"/>
+  <circle cx="256" cy="210" r="45" fill="#2f7d5c"/>
+  <path d="M229 209l20 21 38-48" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

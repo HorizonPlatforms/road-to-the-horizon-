@@ -8,11 +8,20 @@ The app shell contains no real travel budget, departure date, route, tasks, trip
 
 - `index.html` - the public-safe Life OS app for GitHub Pages.
 - `index.html.html` - the previous local filename, kept as a matching copy for continuity.
+- `manifest.webmanifest`, `icon.svg` and `sw.js` - installable app/PWA shell files.
 - `Road_to_Australia_Project.md` - the original private planning document. Do not publish this unless it has been separately sanitised.
 - `README.md` - these instructions.
 - `.gitignore` - excludes the private planning document and exported JSON backups from new commits.
 
 GitHub Pages serves `index.html` as the site homepage.
+
+## App Shell
+
+Current app version: `0.4.0`.
+
+The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
+
+The account panel supports email/password sign up, sign in, sign out and Supabase password reset email requests.
 
 ## Privacy Model
 
