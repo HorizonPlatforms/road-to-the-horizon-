@@ -1441,7 +1441,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.9.0";
+    const APP_VERSION = "0.10.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -1500,6 +1500,14 @@
     function formatDate(dateString) {
       if (!dateString) return "No date";
       return parseDate(dateString).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function formatDateOrNotSet(dateString) {
+      return dateString ? formatDate(dateString) : "Not set";
+    }
+
+    function isDateString(value) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
     }
 
     function timestampForFilename() {
@@ -2300,6 +2308,26 @@
       return dates;
     }
 
+    function dateItemByKey(key) {
+      return (state.settings.dateItems || [])
+        .filter((entry) => entry.key === key && !entry.archived && isDateString(entry.date))
+        .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)))[0] || null;
+    }
+
+    function travelDateByKey(key) {
+      return (state.settings.travelDates || [])
+        .find((entry) => entry.key === key && !entry.archived && isDateString(entry.date)) || null;
+    }
+
+    function departureDate() {
+      return dateItemByKey("departure")?.date || travelDateByKey("departure")?.date || "";
+    }
+
+    function departureDaysRemaining() {
+      const date = departureDate();
+      return date ? Math.max(0, dayDiff(date)) : null;
+    }
+
     function countdownItems() {
       return (state.settings.dateItems || [])
         .filter((entry) => !entry.archived && entry.date)
@@ -2326,17 +2354,18 @@
 
     function currentPhase() {
       const dates = keyDates();
-      if (!dates.departure) return "Setup Phase";
+      const departure = departureDate();
+      if (!departure) return "Setup Phase";
       const now = parseDate(today());
       const julyTrip = parseDate(dates.julyPaidTrip || "2999-12-31");
       const julyReturn = parseDate(dates.julyTripReturn || "2999-12-31");
       const lateAugust = parseDate(dates.lateAugustPaidTrip || "2999-12-31");
       const conference = parseDate(dates.septemberConference || "2999-12-31");
-      const departure = parseDate(dates.departure);
+      const departureAt = parseDate(departure);
       const conferenceEnd = parseDate(dates.septemberConferenceEnd || dates.septemberConference || "2999-12-31");
       conferenceEnd.setDate(conferenceEnd.getDate() + 1);
 
-      if (now >= departure) return "Travel Phase";
+      if (now >= departureAt) return "Travel Phase";
       if (now >= conferenceEnd) return "Final Countdown Phase";
       if (now >= conference) return "Event Phase";
       if (now >= lateAugust) return "Trip Phase";
@@ -2371,38 +2400,40 @@
     }
 
     function teflPace() {
-      const dates = keyDates();
       const t = totals();
       const targetHours = Number(state.settings.teflTargetHours || 120);
       const remainingHours = Math.max(0, targetHours - t.teflHours);
-      const remainingDays = dates.departure ? Math.max(1, dayDiff(dates.departure)) : 1;
-      const requiredPerDay = remainingHours / remainingDays;
+      const departure = departureDate();
+      const remainingDays = departure ? Math.max(1, dayDiff(departure)) : null;
+      const requiredPerDay = remainingDays ? remainingHours / remainingDays : null;
       const courseStart = parseDate((state.meta.createdAt || today()).slice(0, 10));
-      const departure = dates.departure ? parseDate(dates.departure) : parseDate(today());
+      const departureAt = departure ? parseDate(departure) : null;
       const todayDate = parseDate(today());
-      const totalDays = dates.departure ? Math.max(1, dayDiff(dates.departure, courseStart)) : 1;
-      const elapsedDays = Math.max(0, Math.min(totalDays, Math.floor((todayDate - courseStart) / (1000 * 60 * 60 * 24))));
-      const expectedHours = (targetHours * elapsedDays) / totalDays;
+      const totalDays = departure ? Math.max(1, dayDiff(departure, courseStart)) : null;
+      const elapsedDays = totalDays ? Math.max(0, Math.min(totalDays, Math.floor((todayDate - courseStart) / (1000 * 60 * 60 * 24)))) : 0;
+      const expectedHours = totalDays ? (targetHours * elapsedDays) / totalDays : 0;
       const bufferHours = Math.max(3, targetHours * 0.05);
       let status = "On track";
+      if (!departure) status = "Departure not set";
       if (remainingHours <= 0) status = "Ahead";
       else if (t.teflHours + bufferHours < expectedHours) status = "Behind";
       else if (t.teflHours > expectedHours + bufferHours) status = "Ahead";
-      if (todayDate >= departure && remainingHours > 0) status = "Behind";
+      if (departureAt && todayDate >= departureAt && remainingHours > 0) status = "Behind";
       return { remainingHours, remainingDays, requiredPerDay, status, expectedHours };
     }
 
     function budgetPace() {
-      const dates = keyDates();
       const t = totals();
-      const remainingDays = dates.departure ? Math.max(1, dayDiff(dates.departure)) : 1;
-      const safeDaily = t.prepRemaining / remainingDays;
-      const safeWeekly = safeDaily * 7;
+      const departure = departureDate();
+      const remainingDays = departure ? Math.max(1, dayDiff(departure)) : null;
+      const safeDaily = remainingDays ? t.prepRemaining / remainingDays : null;
+      const safeWeekly = safeDaily === null ? null : safeDaily * 7;
       const recentDaily = state.money
         .filter((entry) => entry.type === "expense" && daysAgo(entry.date) < 7)
         .reduce((sum, entry) => sum + Number(entry.amount || 0), 0) / 7;
       let warning = "Within current pace";
-      if (t.prepRemaining < 0) warning = "Over budget";
+      if (!departure) warning = "Departure date not set";
+      else if (t.prepRemaining < 0) warning = "Over budget";
       else if (recentDaily > safeDaily && recentDaily > 0) warning = "Recent spending is above safe pace";
       else if (safeDaily < 10) warning = "Very tight daily budget";
       return { remainingDays, safeDaily, safeWeekly, recentDaily, warning };
@@ -2587,7 +2618,7 @@
     function renderCoreSettingsSummary() {
       const dates = keyDates();
       document.getElementById("coreSettingsSummary").innerHTML = statsHtml([
-        ["Departure date", formatDate(dates.departure)],
+        ["Departure date", formatDateOrNotSet(departureDate())],
         ["Trip date", `${formatDate(dates.julyPaidTrip)} to ${formatDate(dates.julyTripReturn)}`],
         ["Extra trip date", formatDate(dates.lateAugustPaidTrip)],
         ["Event date", `${formatDate(dates.septemberConference)} to ${formatDate(dates.septemberConferenceEnd)}`]
@@ -2595,18 +2626,18 @@
     }
 
     function renderDailyBriefing() {
-      const dates = keyDates();
       const t = totals();
       const tefl = teflPace();
       const budget = budgetPace();
       const deadlines = upcomingDeadlines(14);
       const priorities = recommendedPriorities();
+      const daysToDeparture = departureDaysRemaining();
       document.getElementById("dailyBriefing").innerHTML = `
         ${statsHtml([
           ["Today", new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })],
           ["Current phase", currentPhase()],
-          ["Days until departure", dates.departure ? String(dayDiff(dates.departure)) : "No date set"],
-          ["Budget status", `${money(t.prepRemaining)} left, ${money(budget.safeDaily)} safe daily spend`],
+          ["Days until departure", daysToDeparture === null ? "Not set" : String(daysToDeparture)],
+          ["Budget status", `${money(t.prepRemaining)} left, ${budget.safeDaily === null ? "Not set" : money(budget.safeDaily)} safe daily spend`],
           ["TEFL status", `${t.teflHours} hours done, ${tefl.remainingHours} remaining, ${tefl.status}`]
         ])}
         <h3>Top 3 Priorities</h3>
@@ -2887,9 +2918,9 @@
       const pace = budgetPace();
       document.getElementById("budgetPace").innerHTML = statsHtml([
         ["Amount remaining", money(totals().prepRemaining)],
-        ["Days until departure", String(pace.remainingDays)],
-        ["Safe daily spend", money(pace.safeDaily)],
-        ["Safe weekly spend", money(pace.safeWeekly)],
+        ["Days until departure", pace.remainingDays === null ? "Not set" : String(pace.remainingDays)],
+        ["Safe daily spend", pace.safeDaily === null ? "Not set" : money(pace.safeDaily)],
+        ["Safe weekly spend", pace.safeWeekly === null ? "Not set" : money(pace.safeWeekly)],
         ["Recent daily average", money(pace.recentDaily)],
         ["Warning", pace.warning]
       ]);
@@ -2973,7 +3004,7 @@
       document.getElementById("teflPace").innerHTML = statsHtml([
         ["Hours completed", String(totals().teflHours)],
         ["Hours remaining", String(pace.remainingHours)],
-        ["Required per day", pace.requiredPerDay.toFixed(2)],
+        ["Required per day", pace.requiredPerDay === null ? "Not set" : pace.requiredPerDay.toFixed(2)],
         ["Expected by today", `${pace.expectedHours.toFixed(1)} hours`],
         ["Pace status", pace.status]
       ]);
