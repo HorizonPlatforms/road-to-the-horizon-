@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.10.0`.
+Current app version: `0.11.0`.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
@@ -28,6 +28,8 @@ Visible route/itinerary numbering is calculated from the current sorted list pos
 Reset App Data uses a two-step confirmation, requires typing `RESET`, and prepares a timestamped JSON backup before local browser data is cleared. Signed-in Supabase cloud data is never silently deleted.
 
 Departure-dependent calculations use one shared departure-date helper. If no departure date exists, pace widgets show `Not set` rather than using a fallback date.
+
+Phases and habits are editable settings. Route, budget and habit widgets read from those shared settings so changes update across the app.
 
 ## App Updates
 

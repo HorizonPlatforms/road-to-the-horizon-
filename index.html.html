@@ -947,6 +947,25 @@
     </div>
   </section>
 
+  <section id="routeEditModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <h2>Edit Route Stop</h2>
+      <form id="routeEditForm" class="form-grid">
+        <input name="id" type="hidden">
+        <label class="field-2">Position<input name="order" type="number" min="1"></label>
+        <label class="field-5">City<input name="place" required></label>
+        <label class="field-5">Country<input name="country"></label>
+        <label class="field-4">Target arrival<input name="targetArrival" type="date"></label>
+        <label class="field-4">Phase<select name="phase" data-phase-select></select></label>
+        <label class="field-12">Notes<textarea name="notes"></textarea></label>
+        <div class="field-12 modal-actions">
+          <button id="cancelRouteEditBtn" class="ghost-btn" type="button">Cancel</button>
+          <button class="primary-btn" type="submit">Save Stop</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
   <div id="appShell" class="app-shell" hidden>
   <header>
     <div class="wrap header-grid">
@@ -1135,7 +1154,7 @@
             <label class="field-2">City<input name="place" required placeholder="Sample City"></label>
             <label class="field-2">Country<input name="country" placeholder="Sample Country"></label>
             <label class="field-2">Target arrival<input name="targetArrival" type="date"></label>
-            <label class="field-2">Phase<select name="phase"><option>Pre-departure</option><option>Phase 1</option><option>Phase 2</option><option>Phase 3</option><option>Destination</option></select></label>
+            <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
             <label class="field-12">Notes<input name="notes" placeholder="City notes, accommodation, transport, content angles"></label>
             <button class="field-2" type="submit">Add Stop</button>
           </form>
@@ -1197,7 +1216,7 @@
             <label class="field-2">Type<select name="type"><option value="expense">Expense</option><option value="income">Income</option></select></label>
             <label class="field-2">Date<input name="date" type="date"></label>
             <label class="field-2">Category<input name="category" placeholder="Food, gear"></label>
-            <label class="field-2">Phase<select name="phase"><option>Pre-departure</option><option>Phase 1</option><option>Phase 2</option><option>Phase 3</option><option>Destination</option></select></label>
+            <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
             <label class="field-2">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
             <label class="field-12">Note<input name="note" placeholder="Optional detail"></label>
             <button class="field-2" type="submit">Add Entry</button>
@@ -1404,13 +1423,31 @@
             <label class="field-6">TEFL total hours target<input id="teflTargetInput" type="number" min="1" step="1"></label>
           </div>
         </div>
+        <div class="panel span-6">
+          <h2>Phases</h2>
+          <form id="phaseForm" class="form-grid">
+            <label class="field-8">Phase name<input name="name" required placeholder="Europe"></label>
+            <label class="field-2">Position<input name="order" type="number" min="1"></label>
+            <button class="field-2" type="submit">Add Phase</button>
+          </form>
+          <div id="phaseList" class="list"></div>
+        </div>
+        <div class="panel span-6">
+          <h2>Habits</h2>
+          <form id="habitForm" class="form-grid">
+            <label class="field-8">Habit name<input name="label" required placeholder="Morning walk"></label>
+            <label class="field-2">Position<input name="order" type="number" min="1"></label>
+            <button class="field-2" type="submit">Add Habit</button>
+          </form>
+          <div id="habitSettingsList" class="list"></div>
+        </div>
         <div class="panel span-12">
           <h2>Key Travel Dates</h2>
           <form id="travelDateForm" class="form-grid">
             <label class="field-3">Title<input name="title" required placeholder="First destination"></label>
             <label class="field-2">Start date<input name="date" type="date" required></label>
             <label class="field-2">End date<input name="endDate" type="date"></label>
-            <label class="field-3">Location / phase<input name="location" placeholder="Phase 1"></label>
+            <label class="field-3">Location / phase<input name="location" placeholder="Europe"></label>
             <label class="field-12">Notes<input name="notes" placeholder="Booking refs, plan, reminders"></label>
             <button class="field-2" type="submit">Add Date</button>
           </form>
@@ -1441,7 +1478,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.10.0";
+    const APP_VERSION = "0.11.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -1460,20 +1497,22 @@
     function defaultTravelDates() {
       return [];
     }
-    const phases = ["Pre-departure", "Phase 1", "Phase 2", "Phase 3", "Destination"];
+    const defaultPhases = ["Pre-departure", "Europe", "Asia", "Australia", "Destination / Long-term"];
+    const phases = defaultPhases;
     const taskCategories = ["Travel admin", "Budget", "TEFL", "Route", "Packing", "Content", "Writing", "Destination"];
     const taskTimeframes = ["Setup", "Pre-trip", "Final prep", "During travel", "Later"];
-    const habitKeys = [
-      ["tefl", "TEFL study"],
-      ["exercise", "Exercise"],
-      ["walk", "Walking"],
-      ["reading", "Reading"],
-      ["writing", "Poetry writing"],
-      ["content", "Content creation"],
-      ["travelPlanning", "Travel planning"],
-      ["budgetDiscipline", "Budget discipline"],
-      ["earlyBedtime", "Early bedtime"]
+    const defaultHabits = [
+      { key: "tefl", label: "TEFL study" },
+      { key: "exercise", label: "Exercise" },
+      { key: "walk", label: "Walking" },
+      { key: "reading", label: "Reading" },
+      { key: "writing", label: "Poetry writing" },
+      { key: "content", label: "Content creation" },
+      { key: "travelPlanning", label: "Travel planning" },
+      { key: "budgetDiscipline", label: "Budget discipline" },
+      { key: "earlyBedtime", label: "Early bedtime" }
     ];
+    const habitKeys = defaultHabits.map((habit) => [habit.key, habit.label]);
 
     function id() {
       return "id-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -1530,6 +1569,8 @@
         keyDates: {},
         travelDates: defaultTravelDates(),
         dateItems: [],
+        phases: defaultPhases.map((name, index) => ({ id: id(), name, order: index + 1, archived: false })),
+        habits: defaultHabits.map((habit, index) => ({ id: id(), ...habit, order: index + 1, archived: false })),
         timelinePhases: []
       },
       tasks: [],
@@ -1592,8 +1633,8 @@
       ];
       demo.route = [
         { id: id(), order: 1, place: "Home Base", country: "Demo Country", targetArrival: "", phase: "Pre-departure", notes: "Starting point" },
-        { id: id(), order: 2, place: "Sample City", country: "Demo Country", targetArrival: "2027-05-01", phase: "Phase 1", notes: "First sample stop" },
-        { id: id(), order: 3, place: "Coastal Town", country: "Demo Country", targetArrival: "2027-05-20", phase: "Phase 2", notes: "Low-cost base example" }
+        { id: id(), order: 2, place: "Sample City", country: "Demo Country", targetArrival: "2027-05-01", phase: "Europe", notes: "First sample stop" },
+        { id: id(), order: 3, place: "Coastal Town", country: "Demo Country", targetArrival: "2027-05-20", phase: "Asia", notes: "Low-cost base example" }
       ];
       demo.documents = [
         { id: id(), type: "Passport", title: "Check passport expiry", due: "2027-03-01", status: "Needed", done: false },
@@ -1699,7 +1740,7 @@
     function inferPhase(place) {
       const lower = place.toLowerCase();
       if (lower.includes("destination")) return "Destination";
-      return "Phase 1";
+      return "Europe";
     }
 
     function normalize(data) {
@@ -1730,13 +1771,16 @@
       merged.settings.keyDates = { ...next.settings.keyDates, ...(data.settings?.keyDates || {}) };
       merged.settings.travelDates = normalizeTravelDates(data.settings?.travelDates, merged.settings.keyDates);
       merged.settings.dateItems = normalizeDateItems(data.settings?.dateItems, merged.settings.travelDates);
+      merged.settings.phases = normalizePhases(data.settings?.phases);
+      merged.settings.habits = normalizeHabits(data.settings?.habits);
       merged.settings.timelinePhases = (data.settings?.timelinePhases || next.settings.timelinePhases).map((phase) => ({
         id: phase.id || id(),
         label: phase.label || "Route phase",
         start: phase.start || "",
         end: phase.end || phase.start || ""
       }));
-      merged.phaseBudgets = phases.map((phase) => {
+      const activePhaseNames = orderedItems(merged.settings.phases || []).filter((phase) => !phase.archived).map((phase) => phase.name);
+      merged.phaseBudgets = activePhaseNames.map((phase) => {
         return (data.phaseBudgets || next.phaseBudgets).find((entry) => entry.phase === phase) || { id: id(), phase, allocation: 0 };
       });
       merged.tasks = (data.tasks || next.tasks).map((task) => ({
@@ -1835,6 +1879,39 @@
         });
       });
       return items;
+    }
+
+    function normalizePhases(savedPhases) {
+      const source = savedPhases?.length ? savedPhases : defaultPhases.map((name, index) => ({ name, order: index + 1 }));
+      return orderedItems(source.map((phase, index) => ({
+        id: phase.id || id(),
+        name: phase.name || phase.label || defaultPhases[index] || "Phase",
+        order: Number(phase.order) || index + 1,
+        archived: Boolean(phase.archived)
+      }))).map((phase, index) => ({ ...phase, order: index + 1 }));
+    }
+
+    function normalizeHabits(savedHabits) {
+      const source = savedHabits?.length ? savedHabits : defaultHabits.map((habit, index) => ({ ...habit, order: index + 1 }));
+      return orderedItems(source.map((habit, index) => ({
+        id: habit.id || id(),
+        key: habit.key || `habit_${index + 1}`,
+        label: habit.label || habit.name || "Habit",
+        order: Number(habit.order) || index + 1,
+        archived: Boolean(habit.archived)
+      }))).map((habit, index) => ({ ...habit, order: index + 1 }));
+    }
+
+    function phaseNames(includeArchived = false) {
+      const names = orderedItems(state.settings.phases || [])
+        .filter((phase) => includeArchived || !phase.archived)
+        .map((phase) => phase.name)
+        .filter(Boolean);
+      return names.length ? names : ["Pre-departure"];
+    }
+
+    function activeHabits() {
+      return orderedItems(state.settings.habits || []).filter((habit) => !habit.archived);
     }
 
     function saveLocalOnly() {
@@ -2314,13 +2391,23 @@
         .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)))[0] || null;
     }
 
+    function inferredDepartureDateItem() {
+      return (state.settings.dateItems || [])
+        .filter((entry) => !entry.archived && isDateString(entry.date) && (entry.type || "countdown") === "countdown")
+        .filter((entry) => {
+          const text = `${entry.title || ""} ${entry.category || ""}`.toLowerCase();
+          return entry.pinned && (text.includes("departure") || text.includes("leaving") || text.includes("travel"));
+        })
+        .sort((a, b) => Math.abs(dayDiff(a.date)) - Math.abs(dayDiff(b.date)))[0] || null;
+    }
+
     function travelDateByKey(key) {
       return (state.settings.travelDates || [])
         .find((entry) => entry.key === key && !entry.archived && isDateString(entry.date)) || null;
     }
 
     function departureDate() {
-      return dateItemByKey("departure")?.date || travelDateByKey("departure")?.date || "";
+      return dateItemByKey("departure")?.date || inferredDepartureDateItem()?.date || travelDateByKey("departure")?.date || "";
     }
 
     function departureDaysRemaining() {
@@ -2357,6 +2444,17 @@
       const departure = departureDate();
       if (!departure) return "Setup Phase";
       const now = parseDate(today());
+      const activeTimelinePhase = (state.settings.timelinePhases || []).find((phase) => {
+        if (!phase.start) return false;
+        const start = parseDate(phase.start);
+        const end = parseDate(phase.end || phase.start);
+        return now >= start && now <= end;
+      });
+      if (activeTimelinePhase?.label) return activeTimelinePhase.label;
+      const latestRouteStop = state.route
+        .filter((stop) => stop.targetArrival && parseDate(stop.targetArrival) <= now)
+        .sort((a, b) => parseDate(b.targetArrival) - parseDate(a.targetArrival))[0];
+      if (latestRouteStop?.phase) return latestRouteStop.phase;
       const julyTrip = parseDate(dates.julyPaidTrip || "2999-12-31");
       const julyReturn = parseDate(dates.julyTripReturn || "2999-12-31");
       const lateAugust = parseDate(dates.lateAugustPaidTrip || "2999-12-31");
@@ -2473,6 +2571,7 @@
     function render() {
       applyTheme();
       applyDashboardSettings();
+      renderPhaseSelects();
       applyActiveView();
       renderSetup();
       renderCountdown();
@@ -2709,7 +2808,48 @@
       setValue("emergencyCurrentInput", state.settings.emergencyCurrent);
       setValue("teflTargetInput", state.settings.teflTargetHours);
       renderSectionLabelSettings();
+      renderPhaseSettings();
+      renderHabitSettings();
       renderTravelDateSettings();
+    }
+
+    function renderPhaseSelects() {
+      const names = phaseNames();
+      document.querySelectorAll("select[data-phase-select]").forEach((select) => {
+        const current = select.value;
+        select.innerHTML = names.map((name) => `<option>${escapeHtml(name)}</option>`).join("");
+        if (current && names.includes(current)) select.value = current;
+      });
+    }
+
+    function renderPhaseSettings() {
+      renderList("phaseList", orderedItems(state.settings.phases || []), (phase) => settingRow(
+        phase,
+        `${phase.archived ? "Archived" : "Active"} - position ${phase.order}`,
+        () => editPhase(phase),
+        () => {
+          phase.archived = !phase.archived;
+          normaliseOrderedList(state.settings.phases);
+          render();
+        },
+        phase.archived ? "Unarchive" : "Archive",
+        () => removePhase(phase.id)
+      ));
+    }
+
+    function renderHabitSettings() {
+      renderList("habitSettingsList", orderedItems(state.settings.habits || []), (habit) => settingRow(
+        habit,
+        `${habit.archived ? "Archived" : "Active"} - position ${habit.order}`,
+        () => editHabitSetting(habit),
+        () => {
+          habit.archived = !habit.archived;
+          normaliseOrderedList(state.settings.habits);
+          render();
+        },
+        habit.archived ? "Unarchive" : "Archive",
+        () => removeHabitSetting(habit.id)
+      ));
     }
 
     function renderAbout() {
@@ -2929,6 +3069,7 @@
     function renderPhaseBudgets() {
       const root = document.getElementById("phaseBudgetInputs");
       root.innerHTML = "";
+      state.phaseBudgets = phaseNames().map((phase) => state.phaseBudgets.find((entry) => entry.phase === phase) || { id: id(), phase, allocation: 0 });
       state.phaseBudgets.forEach((entry) => {
         const label = document.createElement("label");
         label.innerHTML = `${entry.phase}<input type="number" min="0" step="0.01">`;
@@ -2968,7 +3109,7 @@
       const expenses = state.money.filter((entry) => entry.type === "expense");
       const week = expenses.filter((entry) => daysAgo(entry.date) <= 7).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const month = expenses.filter((entry) => daysAgo(entry.date) <= 31).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      const phaseHtml = phases.map((phase) => {
+      const phaseHtml = phaseNames(true).map((phase) => {
         const spent = expenses.filter((entry) => entry.phase === phase).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
         const allocation = state.phaseBudgets.find((entry) => entry.phase === phase)?.allocation || 0;
         return `<div class="stat-line"><span>${phase}</span><strong>${money(spent)}${allocation ? " / " + money(allocation) : ""}</strong></div>`;
@@ -3061,7 +3202,7 @@
       renderHabitQuickForm();
       const root = document.getElementById("habitTable");
       root.innerHTML = "";
-      habitKeys.forEach(([key, label]) => {
+      activeHabits().forEach(({ key, label }) => {
         const stat = habitStatFor(key);
         const box = document.createElement("div");
         box.className = "panel span-4";
@@ -3075,11 +3216,11 @@
       if (!form) return;
       const entry = state.checkins.find((item) => item.date === today()) || {};
       form.innerHTML = `<label class="field-3">Date<input name="date" type="date" value="${today()}"></label>`;
-      habitKeys.forEach(([key, label]) => {
+      activeHabits().forEach(({ key, label }) => {
         form.innerHTML += `<label class="field-3"><span>${label}</span><select name="${key}"><option value="false">No</option><option value="true">Yes</option></select></label>`;
       });
       form.innerHTML += `<button class="field-3" type="submit">Save Habits</button>`;
-      habitKeys.forEach(([key]) => {
+      activeHabits().forEach(({ key }) => {
         const select = form.querySelector(`[name="${key}"]`);
         if (select) select.value = entry[key] ? "true" : "false";
       });
@@ -3217,6 +3358,21 @@
       return node;
     }
 
+    function settingRow(item, body, editFn, secondaryFn, secondaryLabel, deleteFn) {
+      const node = document.createElement("div");
+      node.className = "item compact";
+      node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn edit-setting">Edit</button><button type="button" class="ghost-btn secondary-setting"></button><button type="button" class="danger-btn delete-setting">Delete</button></div>`;
+      node.querySelector(".item-title").textContent = item.name || item.label || "Untitled";
+      node.querySelector(".item-body").textContent = body || "";
+      node.querySelector(".edit-setting").addEventListener("click", editFn);
+      node.querySelector(".secondary-setting").textContent = secondaryLabel;
+      node.querySelector(".secondary-setting").addEventListener("click", secondaryFn);
+      const deleteButton = node.querySelector(".delete-setting");
+      if (deleteFn) deleteButton.addEventListener("click", deleteFn);
+      else deleteButton.remove();
+      return node;
+    }
+
     function rowItem(item, cells, collection, editFn, isRoute) {
       const row = document.createElement("div");
       row.className = isRoute ? "row-ish route-row" : "row-ish";
@@ -3330,6 +3486,42 @@
       render();
     }
 
+    function editPhase(phase) {
+      const name = promptValue("Phase name", phase.name || "");
+      if (name === null) return;
+      const position = promptValue("Position", phase.order || "");
+      if (position === null) return;
+      phase.name = name || phase.name || "Phase";
+      moveOrderedItem(state.settings.phases, phase, position);
+      normaliseOrderedList(state.settings.phases);
+      render();
+    }
+
+    function editHabitSetting(habit) {
+      const label = promptValue("Habit name", habit.label || "");
+      if (label === null) return;
+      const position = promptValue("Position", habit.order || "");
+      if (position === null) return;
+      habit.label = label || habit.label || "Habit";
+      moveOrderedItem(state.settings.habits, habit, position);
+      normaliseOrderedList(state.settings.habits);
+      render();
+    }
+
+    function removePhase(phaseId) {
+      if (!confirm("Delete this phase? Existing route stops using it will keep their saved text.")) return;
+      state.settings.phases = (state.settings.phases || []).filter((phase) => phase.id !== phaseId);
+      normaliseOrderedList(state.settings.phases);
+      render();
+    }
+
+    function removeHabitSetting(habitId) {
+      if (!confirm("Delete this habit from the active settings? Old daily log history will be kept.")) return;
+      state.settings.habits = (state.settings.habits || []).filter((habit) => habit.id !== habitId);
+      normaliseOrderedList(state.settings.habits);
+      render();
+    }
+
     function syncDailySpendingEntry(entry) {
       state.money = state.money.filter((item) => !(item.date === entry.date && item.category === "Daily spending" && item.note === "From daily check-in"));
       if (Number(entry.spending || 0) > 0) {
@@ -3388,25 +3580,19 @@
     }
 
     function editRoute(item) {
-      const position = promptValue("Position", item.order || orderedItems(state.route).indexOf(item) + 1);
-      if (position === null) return;
-      const place = promptValue("City/place", item.place);
-      if (place === null) return;
-      const country = promptValue("Country", item.country || "");
-      if (country === null) return;
-      const targetArrival = promptValue("Target arrival YYYY-MM-DD", item.targetArrival || "");
-      if (targetArrival === null) return;
-      const phase = promptValue(`Phase (${phases.join(", ")})`, item.phase || inferPhase(place || item.place || ""));
-      if (phase === null) return;
-      const notes = promptValue("Notes", item.notes || "");
-      if (notes === null) return;
-      item.place = place || item.place;
-      item.country = country;
-      item.targetArrival = targetArrival;
-      item.phase = phase || item.phase || inferPhase(item.place || "");
-      item.notes = notes;
-      moveOrderedItem(state.route, item, position);
-      render();
+      const form = document.getElementById("routeEditForm");
+      renderPhaseSelects();
+      form.elements.id.value = item.id;
+      form.elements.order.value = item.order || orderedItems(state.route).indexOf(item) + 1;
+      form.elements.place.value = item.place || "";
+      form.elements.country.value = item.country || "";
+      form.elements.targetArrival.value = item.targetArrival || "";
+      if (item.phase && ![...form.elements.phase.options].some((option) => option.value === item.phase)) {
+        form.elements.phase.appendChild(new Option(item.phase, item.phase));
+      }
+      form.elements.phase.value = item.phase || phaseNames()[0] || "";
+      form.elements.notes.value = item.notes || "";
+      document.getElementById("routeEditModal").hidden = false;
     }
 
     function editMoney(item) {
@@ -3416,7 +3602,7 @@
       if (date === null) return;
       const category = promptValue("Category", item.category || "");
       if (category === null) return;
-      const phase = promptValue(`Phase (${phases.join(", ")})`, item.phase || "Pre-departure");
+      const phase = promptValue(`Phase (${phaseNames(true).join(", ")})`, item.phase || phaseNames()[0] || "Pre-departure");
       if (phase === null) return;
       const amount = promptValue("Amount", item.amount);
       if (amount === null) return;
@@ -3635,7 +3821,7 @@
           place: place || `Stop ${index + 1}`,
           country: country || "",
           targetArrival: targetArrival || "",
-          phase: phase || "Phase 1",
+          phase: phase || "Europe",
           notes: notes || ""
         };
       });
@@ -3958,6 +4144,24 @@
       state.route.push(stop);
       moveOrderedItem(state.route, stop, data.order);
     });
+    document.getElementById("cancelRouteEditBtn").addEventListener("click", () => {
+      document.getElementById("routeEditModal").hidden = true;
+    });
+    document.getElementById("routeEditForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      const stop = state.route.find((entry) => entry.id === data.id);
+      if (!stop) return;
+      stop.place = data.place || stop.place;
+      stop.country = data.country || "";
+      stop.targetArrival = data.targetArrival || "";
+      stop.phase = data.phase || stop.phase || phaseNames()[0] || "";
+      stop.notes = data.notes || "";
+      moveOrderedItem(state.route, stop, data.order);
+      dirtyForms.delete("routeEditForm");
+      document.getElementById("routeEditModal").hidden = true;
+      render();
+    });
     bindForm("documentForm", (data) => state.documents.push({ id: id(), ...data, done: data.status === "Done" }));
     bindForm("packingForm", (data) => state.packing.push({ id: id(), ...data }));
     bindForm("moneyForm", (data) => state.money.push({ id: id(), ...data, amount: Number(data.amount) || 0 }));
@@ -3996,6 +4200,23 @@
         archived: false
       });
     });
+    bindForm("phaseForm", (data) => {
+      const phase = { id: id(), name: data.name || "Phase", order: state.settings.phases.length + 1, archived: false };
+      state.settings.phases.push(phase);
+      moveOrderedItem(state.settings.phases, phase, data.order);
+    });
+    bindForm("habitForm", (data) => {
+      const baseKey = String(data.label || "habit").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "habit";
+      let key = baseKey;
+      let suffix = 2;
+      while ((state.settings.habits || []).some((habit) => habit.key === key)) {
+        key = `${baseKey}_${suffix}`;
+        suffix += 1;
+      }
+      const habit = { id: id(), key, label: data.label || "Habit", order: state.settings.habits.length + 1, archived: false };
+      state.settings.habits.push(habit);
+      moveOrderedItem(state.settings.habits, habit, data.order);
+    });
     bindForm("habitQuickForm", (data) => {
       const date = data.date || today();
       let entry = state.checkins.find((item) => item.date === date);
@@ -4003,7 +4224,7 @@
         entry = { id: id(), date, spending: 0 };
         state.checkins.push(entry);
       }
-      habitKeys.forEach(([key]) => {
+      activeHabits().forEach(({ key }) => {
         entry[key] = bool(data[key]);
       });
     }, () => {
@@ -4133,8 +4354,9 @@
 
     function habitStats() {
       const recent = recentCheckins(7);
-      const total = recent.length * habitKeys.length;
-      const done = recent.reduce((sum, entry) => sum + habitKeys.filter(([key]) => Boolean(entry[key])).length, 0);
+      const habits = activeHabits();
+      const total = recent.length * habits.length;
+      const done = recent.reduce((sum, entry) => sum + habits.filter(({ key }) => Boolean(entry[key])).length, 0);
       return { total, done, rate: pct(done, total) };
     }
 
