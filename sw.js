@@ -1,4 +1,4 @@
-const CACHE_NAME = "travel-life-os-v0.5.0";
+const CACHE_NAME = "travel-life-os-v0.6.0";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -12,8 +12,13 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {

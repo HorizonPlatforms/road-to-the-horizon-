@@ -17,11 +17,23 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.5.0`.
+Current app version: `0.6.0`.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
 The full-screen authentication flow supports email/password login, account creation, sign out, offline mode and Supabase password reset email requests.
+
+## App Updates
+
+When the app is installed as a PWA, the service worker checks for new static app files during normal loads. If a new version is available, the app shows:
+
+```text
+Update available. Refresh to get the latest version.
+```
+
+Choose `Refresh` to activate the new service worker and reload the app. The app does not auto-refresh while you are typing or editing data. If a form has unsaved edits, finish or save the edit first, then refresh.
+
+Local storage is saved before the refresh starts. Supabase sessions are managed by Supabase Auth, so signed-in users should remain signed in after the app reloads.
 
 ## Privacy Model
 

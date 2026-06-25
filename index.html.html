@@ -205,6 +205,38 @@
       margin-top: 4px;
     }
 
+    .update-banner {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      z-index: 1200;
+      width: min(520px, calc(100% - 24px));
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .update-banner[hidden] {
+      display: none;
+    }
+
+    .update-banner p {
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .update-banner .hint {
+      grid-column: 1 / -1;
+    }
+
     .top-actions,
     .tabs,
     .inline-actions {
@@ -744,6 +776,9 @@
         width: 100%;
         border-radius: 8px;
       }
+      .update-banner {
+        grid-template-columns: 1fr;
+      }
       .about-grid { grid-template-columns: 1fr; }
 
       .span-3,
@@ -809,6 +844,12 @@
       <div id="cloudStatus" class="sync-status cloud-status-text" aria-live="polite">Preparing sync...</div>
     </div>
   </section>
+
+  <div id="updateBanner" class="update-banner" hidden aria-live="polite">
+    <p>Update available. Refresh to get the latest version.</p>
+    <button id="refreshUpdateBtn" class="primary-btn" type="button">Refresh</button>
+    <span id="updateBannerStatus" class="hint"></span>
+  </div>
 
   <div id="appShell" class="app-shell" hidden>
   <header>
@@ -1275,7 +1316,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.5.0";
+    const APP_VERSION = "0.6.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -1439,6 +1480,8 @@
     let authGate = "checking";
     let authMode = "login";
     let offlineMode = false;
+    let pendingServiceWorker = null;
+    const dirtyForms = new Set();
 
     window.addEventListener("error", (event) => {
       console.error("Life OS error", event.error || event.message);
@@ -1713,6 +1756,66 @@
       authMode = mode === "create" ? "create" : "login";
       passwordRecoveryMode = false;
       renderAuth();
+    }
+
+    function setUpdateStatus(message) {
+      const element = document.getElementById("updateBannerStatus");
+      if (element) element.textContent = message || "";
+    }
+
+    function showUpdateBanner(worker) {
+      pendingServiceWorker = worker || pendingServiceWorker;
+      const banner = document.getElementById("updateBanner");
+      if (banner) banner.hidden = false;
+      setUpdateStatus("");
+    }
+
+    function hasUnsavedDataEdits() {
+      const active = document.activeElement;
+      const isEditing = active && ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName) && active.id !== "authEmail" && active.id !== "authPassword";
+      return Boolean(isEditing || dirtyForms.size);
+    }
+
+    function registerDirtyFormTracking() {
+      document.addEventListener("input", (event) => {
+        const form = event.target.closest?.("form");
+        if (form && form.id !== "authForm") dirtyForms.add(form.id || "form");
+      });
+      document.addEventListener("change", (event) => {
+        const form = event.target.closest?.("form");
+        if (form && form.id !== "authForm") dirtyForms.add(form.id || "form");
+      });
+      document.addEventListener("submit", (event) => {
+        if (event.target?.id) dirtyForms.delete(event.target.id);
+      }, true);
+    }
+
+    function setupAppUpdateDetection() {
+      if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
+      navigator.serviceWorker.register("./sw.js")
+        .then((registration) => {
+          registration.update().catch((error) => console.warn("Service worker update check failed", error));
+          if (registration.waiting && navigator.serviceWorker.controller) showUpdateBanner(registration.waiting);
+          registration.addEventListener("updatefound", () => {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener("statechange", () => {
+              if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                showUpdateBanner(newWorker);
+              }
+            });
+          });
+        })
+        .catch((error) => {
+          console.warn("Service worker registration failed", error);
+        });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
     }
 
     function renderAuth() {
@@ -3081,6 +3184,7 @@
         const data = Object.fromEntries(new FormData(event.target).entries());
         handler(data);
         event.target.reset();
+        dirtyForms.delete(idName);
         render();
         if (afterSubmit) afterSubmit();
       });
@@ -3538,6 +3642,7 @@
         try {
           if (!confirm("Import this backup and replace the current browser data? Export first if you need a safety copy.")) return;
           state = normalize(JSON.parse(reader.result));
+          dirtyForms.clear();
           render();
           alert("Backup imported.");
         } catch (error) {
@@ -3551,6 +3656,7 @@
     document.getElementById("resetBtn").addEventListener("click", () => {
       if (!confirm("Reset the Life OS data in this browser? Export a backup first if you need one.")) return;
       state = clone(defaults);
+      dirtyForms.clear();
       render();
     });
 
@@ -3612,11 +3718,21 @@
     render();
     renderAuth();
     initSupabase();
-    if ("serviceWorker" in navigator && location.protocol !== "file:") {
-      navigator.serviceWorker.register("./sw.js").catch((error) => {
-        console.warn("Service worker registration failed", error);
-      });
-    }
+    registerDirtyFormTracking();
+    setupAppUpdateDetection();
+    document.getElementById("refreshUpdateBtn").addEventListener("click", () => {
+      saveLocalOnly();
+      if (hasUnsavedDataEdits()) {
+        setUpdateStatus("Finish or save your current edit first, then refresh.");
+        return;
+      }
+      if (!pendingServiceWorker) {
+        setUpdateStatus("Update is preparing. Try again in a moment.");
+        return;
+      }
+      setUpdateStatus("Refreshing...");
+      pendingServiceWorker.postMessage({ type: "SKIP_WAITING" });
+    });
   </script>
 </body>
 </html>
