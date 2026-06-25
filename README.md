@@ -17,11 +17,11 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.4.0`.
+Current app version: `0.5.0`.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
-The account panel supports email/password sign up, sign in, sign out and Supabase password reset email requests.
+The full-screen authentication flow supports email/password login, account creation, sign out, offline mode and Supabase password reset email requests.
 
 ## Privacy Model
 

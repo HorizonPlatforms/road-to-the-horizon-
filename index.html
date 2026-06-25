@@ -114,6 +114,97 @@
 
     main { padding: 18px 0 46px; }
 
+    .app-shell {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 260ms ease, transform 260ms ease;
+    }
+
+    .app-shell.ready {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .auth-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--blue) 18%, transparent), transparent 34%),
+        linear-gradient(135deg, var(--paper), var(--soft));
+    }
+
+    .auth-screen[hidden],
+    .app-shell[hidden] {
+      display: none;
+    }
+
+    .splash-card,
+    .auth-card {
+      width: min(100%, 460px);
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel) 96%, var(--soft));
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 22px;
+    }
+
+    .brand-mark {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: var(--blue);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.35rem;
+      margin-bottom: 14px;
+    }
+
+    .splash-spinner {
+      width: 34px;
+      height: 34px;
+      border: 3px solid var(--line);
+      border-top-color: var(--blue);
+      border-radius: 999px;
+      animation: spin 900ms linear infinite;
+      margin-top: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .auth-tabs button.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #ffffff;
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .auth-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
     .top-actions,
     .tabs,
     .inline-actions {
@@ -685,6 +776,41 @@
   </style>
 </head>
 <body>
+  <section id="splashScreen" class="auth-screen" aria-live="polite">
+    <div class="splash-card">
+      <div class="brand-mark">LO</div>
+      <h1>Travel Life OS</h1>
+      <p id="splashStatus" class="subtitle">Checking your session...</p>
+      <div class="splash-spinner" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <section id="loginScreen" class="auth-screen" hidden>
+    <div class="auth-card">
+      <div class="brand-mark">LO</div>
+      <h1>Travel Life OS</h1>
+      <p class="subtitle">Sign in to sync with Supabase, create a new account, or continue with local storage only.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
+        <button id="loginTab" class="active" type="button" role="tab" aria-selected="true">Login</button>
+        <button id="createAccountTab" type="button" role="tab" aria-selected="false">Create Account</button>
+      </div>
+      <form id="authForm" class="auth-form">
+        <label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
+        <label>Password<input id="authPassword" type="password" autocomplete="current-password" placeholder="Password"></label>
+        <div class="auth-actions">
+          <button id="signInBtn" class="primary-btn" type="button">Login</button>
+          <button id="signUpBtn" class="primary-btn" type="button" hidden>Create Account</button>
+          <button id="resetPasswordBtn" class="ghost-btn" type="button">Reset Password</button>
+          <button id="updatePasswordBtn" class="ghost-btn" type="button" hidden>Set New Password</button>
+          <button id="continueOfflineBtn" class="ghost-btn" type="button">Continue Offline</button>
+        </div>
+      </form>
+      <div id="authStatus" class="sync-status auth-status-text" aria-live="polite">Checking session...</div>
+      <div id="cloudStatus" class="sync-status cloud-status-text" aria-live="polite">Preparing sync...</div>
+    </div>
+  </section>
+
+  <div id="appShell" class="app-shell" hidden>
   <header>
     <div class="wrap header-grid">
       <div>
@@ -722,29 +848,16 @@
       </form>
     </section>
 
-    <section class="panel auth-panel" id="authPanel">
-      <h2>Account & Sync</h2>
-      <p class="hint">Sign in to sync this browser's saved dashboard with Supabase. Local storage remains active as an offline cache.</p>
-      <form id="authForm" class="auth-grid">
-        <label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
-        <label>Password<input id="authPassword" type="password" autocomplete="current-password" placeholder="Password"></label>
-        <button id="signUpBtn" type="button">Create Account</button>
-        <button id="signInBtn" class="primary-btn" type="button">Sign In</button>
-        <button id="resetPasswordBtn" class="ghost-btn" type="button">Reset Password</button>
-        <button id="updatePasswordBtn" class="ghost-btn" type="button" hidden>Set New Password</button>
-        <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
-      </form>
-      <div id="authStatus" class="sync-status" aria-live="polite">Not signed in. Local storage is active.</div>
-      <div id="cloudStatus" class="sync-status" aria-live="polite">Cloud sync will start after sign in.</div>
-    </section>
-
     <div class="top-actions">
       <button id="exportBtn" type="button">Export JSON Backup</button>
       <label class="file-label" for="importFile">Import JSON Backup</label>
       <input id="importFile" type="file" accept="application/json,.json">
       <button id="themeBtn" type="button">Dark Mode</button>
+      <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
       <button id="resetBtn" class="danger-btn" type="button">Reset App Data</button>
       <span id="saveStatus" class="hint"></span>
+      <span class="sync-status auth-status-text" aria-live="polite">Not signed in. Local storage is active.</span>
+      <span class="sync-status cloud-status-text" aria-live="polite">Cloud sync will start after sign in.</span>
     </div>
 
     <section class="metrics">
@@ -1147,6 +1260,7 @@
       </div>
     </section>
   </main>
+  </div>
 
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -1161,7 +1275,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.4.0";
+    const APP_VERSION = "0.5.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -1322,6 +1436,9 @@
     let isApplyingRemoteState = false;
     let authBusy = false;
     let passwordRecoveryMode = false;
+    let authGate = "checking";
+    let authMode = "login";
+    let offlineMode = false;
 
     window.addEventListener("error", (event) => {
       console.error("Life OS error", event.error || event.message);
@@ -1529,12 +1646,18 @@
     function setCloudStatus(message) {
       const element = document.getElementById("cloudStatus");
       if (element) element.textContent = message;
+      document.querySelectorAll(".cloud-status-text").forEach((item) => {
+        item.textContent = message;
+      });
       console.log("[Life OS sync]", message);
     }
 
     function setAuthStatus(message) {
       const element = document.getElementById("authStatus");
       if (element) element.textContent = message;
+      document.querySelectorAll(".auth-status-text").forEach((item) => {
+        item.textContent = message;
+      });
       console.log("[Life OS auth]", message);
     }
 
@@ -1550,20 +1673,87 @@
       return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
     }
 
+    function setSplashStatus(message) {
+      const element = document.getElementById("splashStatus");
+      if (element) element.textContent = message;
+    }
+
+    function setAuthGate(nextGate) {
+      authGate = nextGate;
+      const splash = document.getElementById("splashScreen");
+      const login = document.getElementById("loginScreen");
+      const app = document.getElementById("appShell");
+      if (splash) splash.hidden = nextGate !== "checking";
+      if (login) login.hidden = nextGate !== "login";
+      if (app) {
+        if (nextGate === "dashboard") {
+          app.classList.remove("ready");
+          app.hidden = false;
+        } else {
+          app.hidden = true;
+          app.classList.remove("ready");
+        }
+      }
+    }
+
+    function showLoginScreen(message) {
+      offlineMode = false;
+      if (message) setCloudStatus(message);
+      setAuthGate("login");
+      renderAuth();
+    }
+
+    function showDashboard() {
+      setAuthGate("dashboard");
+      requestAnimationFrame(() => document.getElementById("appShell")?.classList.add("ready"));
+      renderAuth();
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode === "create" ? "create" : "login";
+      passwordRecoveryMode = false;
+      renderAuth();
+    }
+
     function renderAuth() {
       const signedIn = Boolean(currentUser);
       const email = currentUser?.email || "";
       const recoveryMode = Boolean(passwordRecoveryMode && currentUser);
-      setAuthStatus(recoveryMode ? `Password reset ready for ${email}. Enter a new password.` : signedIn ? `Signed in as ${email}` : "Not signed in. Local storage is active.");
-      document.getElementById("signOutBtn").disabled = !signedIn || authBusy;
-      document.getElementById("signInBtn").disabled = signedIn || authBusy;
-      document.getElementById("signUpBtn").disabled = signedIn || authBusy;
-      document.getElementById("resetPasswordBtn").hidden = recoveryMode;
-      document.getElementById("resetPasswordBtn").disabled = signedIn || authBusy;
-      document.getElementById("updatePasswordBtn").hidden = !recoveryMode;
-      document.getElementById("updatePasswordBtn").disabled = !recoveryMode || authBusy;
-      document.getElementById("authEmail").disabled = signedIn || authBusy;
-      document.getElementById("authPassword").disabled = (signedIn && !recoveryMode) || authBusy;
+      setAuthStatus(recoveryMode ? `Password reset ready for ${email}. Enter a new password.` : signedIn ? `Signed in as ${email}` : offlineMode ? "Offline mode. Local storage is active." : "Not signed in. Local storage is active.");
+      const signOutBtn = document.getElementById("signOutBtn");
+      const signInBtn = document.getElementById("signInBtn");
+      const signUpBtn = document.getElementById("signUpBtn");
+      const resetPasswordBtn = document.getElementById("resetPasswordBtn");
+      const updatePasswordBtn = document.getElementById("updatePasswordBtn");
+      const authEmail = document.getElementById("authEmail");
+      const authPassword = document.getElementById("authPassword");
+      const loginTab = document.getElementById("loginTab");
+      const createAccountTab = document.getElementById("createAccountTab");
+      if (signOutBtn) signOutBtn.disabled = !signedIn || authBusy;
+      if (signInBtn) {
+        signInBtn.hidden = authMode !== "login" || recoveryMode;
+        signInBtn.disabled = signedIn || authBusy;
+      }
+      if (signUpBtn) {
+        signUpBtn.hidden = authMode !== "create" || recoveryMode;
+        signUpBtn.disabled = signedIn || authBusy;
+      }
+      if (resetPasswordBtn) {
+        resetPasswordBtn.hidden = recoveryMode;
+        resetPasswordBtn.disabled = signedIn || authBusy;
+      }
+      if (updatePasswordBtn) {
+        updatePasswordBtn.hidden = !recoveryMode;
+        updatePasswordBtn.disabled = !recoveryMode || authBusy;
+      }
+      if (authEmail) authEmail.disabled = signedIn || authBusy;
+      if (authPassword) authPassword.disabled = (signedIn && !recoveryMode) || authBusy;
+      if (loginTab && createAccountTab) {
+        loginTab.classList.toggle("active", authMode === "login");
+        loginTab.setAttribute("aria-selected", String(authMode === "login"));
+        createAccountTab.classList.toggle("active", authMode === "create");
+        createAccountTab.setAttribute("aria-selected", String(authMode === "create"));
+      }
       renderAbout();
     }
 
@@ -1573,19 +1763,24 @@
     }
 
     function initSupabase() {
+      setAuthGate("checking");
+      setSplashStatus("Checking your session...");
       if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
         setCloudStatus("Supabase config missing. Check config.js is loaded before the app script.");
         renderAuth();
+        showLoginScreen();
         return;
       }
       if (SUPABASE_URL.includes("/rest/v1")) {
         setCloudStatus("Supabase config error: use the base Project URL, not the REST endpoint.");
         renderAuth();
+        showLoginScreen();
         return;
       }
       if (!window.supabase?.createClient) {
         setCloudStatus("Supabase SDK could not load. Check internet/CDN access, then refresh.");
         renderAuth();
+        showLoginScreen();
         return;
       }
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -1596,6 +1791,7 @@
         }
       });
       setCloudStatus("Supabase connected. Ready to sign up or sign in.");
+      setSplashStatus("Checking for an existing session...");
       withTimeout(supabaseClient.auth.getSession(), SESSION_TIMEOUT_MS, "Checking existing session timed out.")
         .then(({ data, error }) => {
         if (error) {
@@ -1609,12 +1805,14 @@
       .catch((error) => {
         console.error("getSession timed out or failed", error);
         setCloudStatus(`Could not check login: ${error.message}`);
+        showLoginScreen();
       });
       supabaseClient.auth.onAuthStateChange((event, session) => {
         console.log("[Life OS auth] onAuthStateChange", event, Boolean(session));
         if (event === "PASSWORD_RECOVERY") {
           passwordRecoveryMode = true;
           currentUser = session?.user || null;
+          setAuthGate("login");
           renderAuth();
           setCloudStatus("Password reset link accepted. Enter a new password and choose Set New Password.");
           return;
@@ -1629,10 +1827,16 @@
       if (!currentUser) {
         passwordRecoveryMode = false;
         loadedCloudForUser = "";
+        if (offlineMode) {
+          setCloudStatus("Continuing offline. Cloud sync will start after sign in.");
+          return;
+        }
         if (/^Sign (in|up) failed:/.test(currentCloudStatus())) return;
         setCloudStatus("Supabase connected. Not signed in. Local storage is active.");
+        showLoginScreen();
         return;
       }
+      offlineMode = false;
       if (AUTH_ONLY_STAGE) {
         setCloudStatus(`Signed in as ${currentUser.email}. Cloud saving is paused for this auth test.`);
         return;
@@ -1642,8 +1846,10 @@
       if (loadedCloudForUser !== currentUser.id) {
         loadedCloudForUser = currentUser.id;
         await loadStateFromSupabase();
+        showDashboard();
       } else {
         setCloudStatus(`Signed in as ${currentUser.email}. Cloud data already loaded.`);
+        showDashboard();
       }
     }
 
@@ -3013,7 +3219,25 @@
 
     document.getElementById("authForm").addEventListener("submit", (event) => {
       event.preventDefault();
+      if (passwordRecoveryMode) {
+        document.getElementById("updatePasswordBtn").click();
+        return;
+      }
+      if (authMode === "create") {
+        document.getElementById("signUpBtn").click();
+        return;
+      }
       signInWithEmail();
+    });
+
+    document.getElementById("loginTab").addEventListener("click", () => {
+      setAuthMode("login");
+      setCloudStatus("Supabase connected. Ready to sign in.");
+    });
+
+    document.getElementById("createAccountTab").addEventListener("click", () => {
+      setAuthMode("create");
+      setCloudStatus("Create an account to sync this dashboard with Supabase.");
     });
 
     document.getElementById("signInBtn").addEventListener("click", () => {
@@ -3119,6 +3343,7 @@
         document.getElementById("authPassword").value = "";
         renderAuth();
         setCloudStatus("Password updated. You are signed in.");
+        showDashboard();
       } catch (error) {
         console.error("Password update error", error);
         setCloudStatus(`Password update failed: ${error.message}`);
@@ -3144,13 +3369,23 @@
         currentUser = null;
         passwordRecoveryMode = false;
         renderAuth();
-        setCloudStatus("Signed out. Local storage is still active.");
+        showLoginScreen("Signed out. Local storage is still active.");
       } catch (error) {
         console.error("Sign out error", error);
         setCloudStatus(`Sign out failed: ${error.message}`);
       } finally {
         setAuthBusy(false);
       }
+    });
+
+    document.getElementById("continueOfflineBtn").addEventListener("click", () => {
+      currentUser = null;
+      passwordRecoveryMode = false;
+      offlineMode = true;
+      loadedCloudForUser = "";
+      setAuthStatus("Offline mode. Local storage is active.");
+      setCloudStatus("Continuing offline. Cloud sync will start after sign in.");
+      showDashboard();
     });
 
     console.log("[Life OS auth] Auth button listeners connected.");
