@@ -1051,7 +1051,7 @@
         <div class="panel span-12">
           <h2>Editable Route Planner</h2>
           <form id="routeForm" class="form-grid">
-            <label class="field-1">Order<input name="order" type="number" min="1"></label>
+            <label class="field-1">Position<input name="order" type="number" min="1"></label>
             <label class="field-2">City<input name="place" required placeholder="Sample City"></label>
             <label class="field-2">Country<input name="country" placeholder="Sample Country"></label>
             <label class="field-2">Target arrival<input name="targetArrival" type="date"></label>
@@ -1361,7 +1361,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.7.0";
+    const APP_VERSION = "0.8.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -1656,6 +1656,7 @@
         done: Boolean(task.done)
       }));
       merged.milestones = (data.milestones || next.milestones).map((entry) => ({ ...entry, id: entry.id || id() }));
+      normaliseOrderedList(merged.route);
       return merged;
     }
 
@@ -1767,6 +1768,34 @@
 
     function bool(value) {
       return value === true || value === "true";
+    }
+
+    function orderedItems(list, orderKey = "order") {
+      return (list || [])
+        .map((item, index) => ({ item, index }))
+        .sort((a, b) => {
+          const aOrder = Number(a.item?.[orderKey]) || a.index + 1;
+          const bOrder = Number(b.item?.[orderKey]) || b.index + 1;
+          if (aOrder !== bOrder) return aOrder - bOrder;
+          return a.index - b.index;
+        })
+        .map(({ item }) => item);
+    }
+
+    function normaliseOrderedList(list, orderKey = "order") {
+      orderedItems(list, orderKey).forEach((item, index) => {
+        item[orderKey] = index + 1;
+      });
+      return list;
+    }
+
+    function moveOrderedItem(list, item, position, orderKey = "order") {
+      const ordered = orderedItems(list, orderKey).filter((entry) => entry.id !== item.id);
+      const targetIndex = Math.max(0, Math.min(ordered.length, (Number(position) || ordered.length + 1) - 1));
+      ordered.splice(targetIndex, 0, item);
+      ordered.forEach((entry, index) => {
+        entry[orderKey] = index + 1;
+      });
     }
 
     function setText(idName, value) {
@@ -2609,9 +2638,9 @@
     function renderTravel() {
       const routeList = document.getElementById("routeList");
       routeList.innerHTML = "";
-      state.route.slice().sort((a, b) => Number(a.order) - Number(b.order)).forEach((stop) => {
+      orderedItems(state.route).forEach((stop, index) => {
         routeList.appendChild(rowItem(stop, [
-          stop.order,
+          index + 1,
           `${stop.place}${stop.country ? ", " + stop.country : ""}`,
           stop.targetArrival || "Arrival TBD",
           stop.phase,
@@ -3077,6 +3106,7 @@
     function removeItem(collection, itemId) {
       if (!confirm("Delete this item?")) return;
       state[collection] = state[collection].filter((item) => item.id !== itemId);
+      if (collection === "route") normaliseOrderedList(state.route);
       render();
     }
 
@@ -3169,6 +3199,8 @@
     }
 
     function editRoute(item) {
+      const position = promptValue("Position", item.order || orderedItems(state.route).indexOf(item) + 1);
+      if (position === null) return;
       const place = promptValue("City/place", item.place);
       if (place === null) return;
       const country = promptValue("Country", item.country || "");
@@ -3184,6 +3216,7 @@
       item.targetArrival = targetArrival;
       item.phase = phase || item.phase || inferPhase(item.place || "");
       item.notes = notes;
+      moveOrderedItem(state.route, item, position);
       render();
     }
 
@@ -3731,7 +3764,11 @@
       const status = document.getElementById("dailyLogStatus");
       if (status) status.textContent = "Daily log saved";
     });
-    bindForm("routeForm", (data) => state.route.push({ id: id(), ...data, order: Number(data.order) || state.route.length + 1 }));
+    bindForm("routeForm", (data) => {
+      const stop = { id: id(), ...data, order: state.route.length + 1 };
+      state.route.push(stop);
+      moveOrderedItem(state.route, stop, data.order);
+    });
     bindForm("documentForm", (data) => state.documents.push({ id: id(), ...data, done: data.status === "Done" }));
     bindForm("packingForm", (data) => state.packing.push({ id: id(), ...data }));
     bindForm("moneyForm", (data) => state.money.push({ id: id(), ...data, amount: Number(data.amount) || 0 }));

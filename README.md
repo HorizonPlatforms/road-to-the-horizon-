@@ -17,11 +17,13 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.7.0`.
+Current app version: `0.8.0`.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
 The full-screen authentication flow supports email/password login, account creation, sign out, offline mode and Supabase password reset email requests.
+
+Visible route/itinerary numbering is calculated from the current sorted list position. Stable item IDs remain separate from display numbers, so deleting or moving a middle stop automatically renumbers the route without gaps.
 
 ## App Updates
 
