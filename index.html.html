@@ -59,10 +59,14 @@
     }
 
     header {
-      background: var(--soft);
+      background: color-mix(in srgb, var(--panel) 86%, var(--soft));
       border-bottom: 1px solid var(--line);
-      padding: 24px 0 16px;
+      padding: 14px 0;
       box-shadow: var(--shadow-soft);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
     }
 
     .wrap {
@@ -72,22 +76,23 @@
 
     .header-grid {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 18px;
-      align-items: end;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(2rem, 5vw, 4.2rem);
-      line-height: 0.96;
+      font-size: clamp(1.45rem, 3vw, 2.2rem);
+      line-height: 1;
       letter-spacing: 0;
     }
 
     .subtitle {
-      margin: 10px 0 0;
+      margin: 6px 0 0;
       max-width: 820px;
       color: var(--muted);
+      font-size: 0.92rem;
     }
 
     .date-box,
@@ -100,8 +105,9 @@
     }
 
     .date-box {
-      min-width: 240px;
-      padding: 14px;
+      min-width: 220px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow-soft);
     }
 
     .pinned-date-list {
@@ -119,11 +125,50 @@
       display: block;
       margin: 2px 0;
       color: var(--blue);
-      font-size: 1.55rem;
+      font-size: 1.15rem;
       line-height: 1.1;
     }
 
-    main { padding: 18px 0 46px; }
+    main {
+      padding: 18px 0 46px;
+      display: grid;
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .main-content {
+      min-width: 0;
+      display: grid;
+      gap: 14px;
+    }
+
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .mini-brand {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--blue);
+      color: #ffffff;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .header-status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-start;
+      margin-top: 8px;
+    }
 
     .app-shell {
       opacity: 0;
@@ -290,16 +335,32 @@
       margin: 12px 0;
     }
 
-    .top-actions,
-    .tabs,
     .inline-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
     }
 
-    .top-actions { margin-bottom: 16px; }
-    .tabs { margin: 0 0 16px; }
+    .inline-actions { margin-top: 12px; }
+
+    .tabs {
+      grid-column: 1;
+      grid-row: 1 / span 80;
+      position: sticky;
+      top: 96px;
+      align-self: start;
+      display: grid;
+      gap: 4px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel) 92%, var(--soft));
+      border-radius: 8px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    main > :not(.tabs) {
+      grid-column: 2;
+    }
 
     button,
     .file-label {
@@ -341,36 +402,77 @@
       box-shadow: var(--focus);
     }
 
+    .tab {
+      width: 100%;
+      justify-content: flex-start;
+      text-align: left;
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+      min-height: 34px;
+      padding: 7px 9px;
+      color: var(--muted);
+    }
+
+    .tab:hover {
+      background: var(--soft);
+      transform: none;
+      box-shadow: none;
+    }
+
     .tab.active {
       background: var(--blue);
       border-color: var(--blue);
       color: #ffffff;
     }
 
-    .danger-btn { color: var(--red); }
-    .ghost-btn { background: var(--soft); }
+    .danger-btn {
+      color: var(--red);
+      background: color-mix(in srgb, var(--red) 7%, var(--panel));
+      border-color: color-mix(in srgb, var(--red) 24%, var(--line));
+    }
+    .ghost-btn,
+    .secondary-btn { background: var(--soft); }
+    .subtle-btn {
+      background: transparent;
+      border-color: transparent;
+      color: var(--muted);
+      box-shadow: none;
+    }
     .primary-btn {
       background: var(--blue);
       border-color: var(--blue);
       color: #ffffff;
     }
 
+    .item-actions button {
+      min-height: 30px;
+      padding: 5px 9px;
+      font-size: 0.84rem;
+      box-shadow: none;
+    }
+
+    .item-actions .danger-btn {
+      background: color-mix(in srgb, var(--red) 8%, var(--panel));
+      border-color: color-mix(in srgb, var(--red) 24%, var(--line));
+    }
+
     .metrics {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      margin-bottom: 16px;
     }
 
     .metric-card {
-      min-height: 118px;
-      padding: 14px;
+      min-height: 104px;
+      padding: 13px;
+      box-shadow: var(--shadow-soft);
     }
 
     .metric {
       margin-top: 8px;
       color: var(--blue);
-      font-size: 1.8rem;
+      font-size: 1.45rem;
       font-weight: 700;
       line-height: 1;
     }
@@ -407,8 +509,8 @@
     }
 
     .panel {
-      padding: 16px;
-      margin-bottom: 14px;
+      padding: 15px;
+      box-shadow: var(--shadow-soft);
     }
 
     .span-3 { grid-column: span 3; }
@@ -421,7 +523,7 @@
 
     h2 {
       margin: 0 0 12px;
-      font-size: 1.22rem;
+      font-size: 1.08rem;
       letter-spacing: 0;
     }
 
@@ -483,7 +585,7 @@
     .list {
       display: grid;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .item {
@@ -495,7 +597,7 @@
       border: 1px solid var(--line);
       background: color-mix(in srgb, var(--panel) 92%, var(--soft));
       border-radius: 8px;
-      box-shadow: var(--shadow-soft);
+      box-shadow: none;
     }
 
     .item.compact { grid-template-columns: 1fr auto; }
@@ -605,6 +707,10 @@
 
     .transaction-row {
       grid-template-columns: 86px 112px 1fr 130px 100px 1.4fr auto;
+    }
+
+    .budget-pool-row {
+      grid-template-columns: 1fr 120px 120px 130px auto;
     }
 
     .packing-group {
@@ -788,13 +894,19 @@
     }
 
     @media (max-width: 1060px) {
-      .metrics { grid-template-columns: repeat(3, 1fr); }
+      main {
+        grid-template-columns: 170px minmax(0, 1fr);
+      }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
       .about-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 820px) {
+      body {
+        padding-bottom: 78px;
+      }
+
       .header-grid,
-      .metrics,
       .grid,
       .form-grid,
       .auth-grid,
@@ -813,25 +925,55 @@
       }
 
       .wrap { width: min(100% - 24px, 1260px); }
-      header { padding: 18px 0 12px; }
+      header {
+        position: static;
+        padding: 12px 0;
+      }
+      main {
+        display: block;
+        padding-top: 12px;
+      }
       main { padding-top: 12px; }
-      h1 { font-size: clamp(2rem, 12vw, 3.2rem); }
+      h1 { font-size: 1.45rem; }
       .subtitle { font-size: 0.95rem; }
       .panel,
       .metric-card { padding: 13px; }
-      .top-actions button,
-      .top-actions .file-label,
-      .tabs button,
       .auth-grid button {
         width: 100%;
         justify-content: center;
       }
+
       .tabs {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 900;
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+        border-radius: 0;
+        border-width: 1px 0 0;
+        background: color-mix(in srgb, var(--panel) 96%, var(--soft));
+        box-shadow: 0 -10px 24px rgba(22, 32, 47, 0.08);
+        -webkit-overflow-scrolling: touch;
       }
+
+      .tab {
+        width: auto;
+        flex: 0 0 auto;
+        min-width: 76px;
+        min-height: 42px;
+        justify-content: center;
+        text-align: center;
+        font-size: 0.84rem;
+        padding: 7px 10px;
+      }
+
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .sync-status {
-        width: 100%;
+        max-width: 100%;
         border-radius: 8px;
       }
       .update-banner {
@@ -860,6 +1002,9 @@
       }
 
       .date-box { min-width: 0; }
+      .header-status {
+        gap: 6px;
+      }
       .item { grid-template-columns: auto 1fr; }
       .item-actions {
         grid-column: 1 / -1;
@@ -908,6 +1053,7 @@
     <button id="refreshUpdateBtn" class="primary-btn" type="button">Refresh</button>
     <span id="updateBannerStatus" class="hint"></span>
   </div>
+  <input id="importFile" type="file" accept="application/json,.json">
 
   <section id="resetModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
     <div class="modal-card">
@@ -970,15 +1116,23 @@
   <header>
     <div class="wrap header-grid">
       <div>
-        <h1>Travel Life OS</h1>
+        <div class="header-title-row">
+          <div class="mini-brand">LO</div>
+          <h1>Travel Life OS</h1>
+        </div>
         <p id="dashboardSubtitle" class="subtitle">Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.</p>
+        <div class="header-status">
+          <span id="saveStatus" class="sync-status">Local save ready</span>
+          <span class="sync-status auth-status-text" aria-live="polite">Not signed in. Local storage is active.</span>
+          <span class="sync-status cloud-status-text" aria-live="polite">Cloud sync will start after sign in.</span>
+        </div>
       </div>
       <div class="date-box">
         <span class="muted">Pinned dates</span>
         <div id="pinnedDateCards" class="pinned-date-list">
           <div class="pinned-date-item">
-            <strong id="targetDepartureLabel">No date set</strong>
-            <span id="daysLeft" class="muted">Complete setup to start</span>
+            <strong>No date set</strong>
+            <span class="muted">Complete setup to start</span>
           </div>
         </div>
       </div>
@@ -1008,18 +1162,6 @@
       </form>
     </section>
 
-    <div class="top-actions">
-      <button id="exportBtn" type="button">Export JSON Backup</button>
-      <label class="file-label" for="importFile">Import JSON Backup</label>
-      <input id="importFile" type="file" accept="application/json,.json">
-      <button id="themeBtn" type="button">Dark Mode</button>
-      <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
-      <button id="resetBtn" class="danger-btn" type="button">Reset App Data</button>
-      <span id="saveStatus" class="hint"></span>
-      <span class="sync-status auth-status-text" aria-live="polite">Not signed in. Local storage is active.</span>
-      <span class="sync-status cloud-status-text" aria-live="polite">Cloud sync will start after sign in.</span>
-    </div>
-
     <section class="metrics">
       <div class="metric-card">
         <div class="muted">Travel prep</div>
@@ -1028,15 +1170,15 @@
         <div id="prepMeta" class="hint">0 complete</div>
       </div>
       <div class="metric-card">
-        <div class="muted">Pre-departure money</div>
+        <div class="muted">Active budget</div>
         <div id="prepMoney" class="metric">&pound;0</div>
-        <div id="prepMoneyMeta" class="hint">From saved starting pot plus income minus expenses</div>
+        <div id="prepMoneyMeta" class="hint">Add a budget pool to start</div>
       </div>
       <div class="metric-card">
         <div class="muted">Travel fund</div>
         <div id="travelFund" class="metric">&pound;0</div>
         <div class="progress-bar"><div id="travelFundFill" class="progress-fill"></div></div>
-        <div id="travelFundMeta" class="hint">Target set in Settings & Data</div>
+        <div id="travelFundMeta" class="hint">Targets live in Budget</div>
       </div>
       <div class="metric-card">
         <div class="muted">Emergency fund</div>
@@ -1069,7 +1211,7 @@
       <button class="tab" type="button" data-view="journal">Journal</button>
       <button class="tab" type="button" data-view="review">Weekly Review</button>
       <button class="tab" type="button" data-view="dates">Dates & Counters</button>
-      <button class="tab" type="button" data-view="settings">Settings & Data</button>
+      <button class="tab" type="button" data-view="settings">Settings</button>
     </nav>
 
     <section id="command" class="view active">
@@ -1139,7 +1281,7 @@
         <div class="panel span-4"><h2>Finance Milestones</h2><div id="milestoneStats"></div></div>
         <div class="panel span-12">
           <h2>Core Settings</h2>
-          <p class="hint">Edit these values in Settings & Data.</p>
+          <p class="hint">Edit dates in Dates & Counters, phases in Travel, and finance pools in Budget.</p>
           <div id="coreSettingsSummary"></div>
         </div>
       </div>
@@ -1161,12 +1303,22 @@
           <div id="routeList" class="table-ish"></div>
         </div>
         <div class="panel span-12">
+          <h2>Phase Manager</h2>
+          <p class="hint">Create the phases that route stops, budget pools, dates and dashboard summaries should use.</p>
+          <form id="phaseForm" class="form-grid">
+            <label class="field-6">Phase name<input name="name" required placeholder="Europe"></label>
+            <label class="field-2">Position<input name="order" type="number" min="1"></label>
+            <button class="field-2 primary-btn" type="submit">Add Phase</button>
+          </form>
+          <div id="phaseList" class="list"></div>
+        </div>
+        <div class="panel span-12">
           <h2>Timeline View</h2>
           <div id="timelineView" class="timeline"></div>
         </div>
         <div class="panel span-12">
           <h2>Route Timeline Dates</h2>
-          <p class="hint">Adjust route phase timing here. Global departure and trip dates live in Settings & Data.</p>
+          <p class="hint">Adjust route phase timing here. Key dates live in Dates & Counters.</p>
           <div id="routeDateSettings" class="table-ish"></div>
         </div>
         <div class="panel span-6">
@@ -1200,22 +1352,66 @@
     <section id="budget" class="view">
       <div class="grid">
         <div class="panel span-4">
-          <h2>Budget Settings</h2>
-          <p class="hint">Edit these values in Settings & Data.</p>
-          <div id="budgetSettingsSummary"></div>
-          <h3>Phase Allocations</h3>
-          <div id="phaseBudgetInputs" class="list"></div>
-        </div>
-        <div class="panel span-4">
           <h2>Budget Pace</h2>
           <div id="budgetPace"></div>
+        </div>
+        <div class="panel span-8">
+          <h2>Savings Targets</h2>
+          <p class="hint">Older target cards read from these values. Day-to-day planning should use budget pools below.</p>
+          <div class="form-grid">
+            <label class="field-4">Starting balance<input id="prepPotInput" type="number" min="0" step="0.01"></label>
+            <label class="field-4">Travel fund target<input id="travelTargetInput" type="number" min="0" step="0.01"></label>
+            <label class="field-4">Current travel fund<input id="travelCurrentInput" type="number" min="0" step="0.01"></label>
+            <label class="field-4">Emergency fund target<input id="emergencyTargetInput" type="number" min="0" step="0.01"></label>
+            <label class="field-4">Emergency fund current<input id="emergencyCurrentInput" type="number" min="0" step="0.01"></label>
+          </div>
+        </div>
+        <div class="panel span-8">
+          <h2>Budget Pools</h2>
+          <p class="hint">Use pools for time-boxed money planning, such as a pre-departure pot, Europe fund or short city budget.</p>
+          <form id="budgetPoolForm" class="form-grid">
+            <label class="field-3">Name<input name="name" required placeholder="Europe fund"></label>
+            <label class="field-2">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
+            <label class="field-2">Start<input name="startDate" type="date"></label>
+            <label class="field-2">End<input name="endDate" type="date"></label>
+            <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
+            <label class="field-2"><span>Status</span><select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>
+            <label class="field-12">Notes<input name="notes" placeholder="Purpose, constraints, reminders"></label>
+            <button class="field-2 primary-btn" type="submit">Add Pool</button>
+          </form>
+          <div id="budgetPoolList" class="list"></div>
+        </div>
+        <div class="panel span-4">
+          <h2>Finance Categories</h2>
+          <p class="hint">Flexible categories and subcategories for spending reports.</p>
+          <form id="financeCategoryForm" class="form-grid">
+            <label class="field-6">Category<input name="name" required placeholder="Food"></label>
+            <label class="field-6">Subcategories<input name="subcategories" placeholder="Groceries, Eating out, Coffee"></label>
+            <button class="field-4 primary-btn" type="submit">Add Category</button>
+          </form>
+          <div id="financeCategoryList" class="list"></div>
+        </div>
+        <div class="panel span-8">
+          <h2>Planning Windows</h2>
+          <p class="hint">Short time boxes for things like “10 days until departure with this pool of money”.</p>
+          <form id="planningWindowForm" class="form-grid">
+            <label class="field-3">Title<input name="title" required placeholder="Final 10 days"></label>
+            <label class="field-2">Start<input name="startDate" type="date"></label>
+            <label class="field-2">End<input name="endDate" type="date"></label>
+            <label class="field-2">Budget pool<select name="budgetPoolId" data-budget-pool-select></select></label>
+            <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
+            <button class="field-2 primary-btn" type="submit">Add Window</button>
+          </form>
+          <div id="planningWindowList" class="list"></div>
         </div>
         <div class="panel span-8">
           <h2>Income And Expenses</h2>
           <form id="moneyForm" class="form-grid">
             <label class="field-2">Type<select name="type"><option value="expense">Expense</option><option value="income">Income</option></select></label>
             <label class="field-2">Date<input name="date" type="date"></label>
-            <label class="field-2">Category<input name="category" placeholder="Food, gear"></label>
+            <label class="field-2">Budget pool<select name="budgetPoolId" data-budget-pool-select></select></label>
+            <label class="field-2">Category<select name="category" data-finance-category-select></select></label>
+            <label class="field-2">Subcategory<select name="subcategory" data-finance-subcategory-select></select></label>
             <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
             <label class="field-2">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
             <label class="field-12">Note<input name="note" placeholder="Optional detail"></label>
@@ -1244,7 +1440,7 @@
       <div class="grid">
         <div class="panel span-5">
           <h2>TEFL Module Tracker</h2>
-          <p class="hint">Edit the total course target in Settings & Data. Update completed hours here or by logging study.</p>
+          <p class="hint">Update completed hours here or by logging study. The course target lives in Settings.</p>
           <label>Completed hours quick entry<input id="teflManualHoursInput" type="number" min="0" step="0.5"></label>
           <div id="teflPace"></div>
           <form id="teflModuleForm" class="form-grid">
@@ -1325,6 +1521,16 @@
           <h2>Today's Habits</h2>
           <form id="habitQuickForm" class="form-grid"></form>
         </div>
+        <div class="panel span-12">
+          <h2>Habit Manager</h2>
+          <p class="hint">Add, archive and reorder habits without losing old daily history.</p>
+          <form id="habitForm" class="form-grid">
+            <label class="field-6">Habit name<input name="label" required placeholder="Morning walk"></label>
+            <label class="field-2">Position<input name="order" type="number" min="1"></label>
+            <button class="field-2 primary-btn" type="submit">Add Habit</button>
+          </form>
+          <div id="habitSettingsList" class="list"></div>
+        </div>
         <div class="panel span-12"><h2>Habit Tracker</h2><div id="habitTable" class="grid"></div></div>
       </div>
     </section>
@@ -1387,60 +1593,6 @@
           <h3>Archived Dates</h3>
           <div id="archivedDateItemList" class="table-ish"></div>
         </div>
-      </div>
-    </section>
-
-    <section id="settings" class="view">
-      <div class="grid">
-        <div class="panel span-12">
-          <h2>Settings & Data</h2>
-          <p class="hint">Central source for rarely changed dates, targets, balances, dashboard labels and app preferences. Daily entries stay in their own sections.</p>
-        </div>
-        <div class="panel span-6">
-          <h2>Dashboard Text And Preferences</h2>
-          <div class="form-grid">
-            <label class="field-4"><span>Theme</span><select id="themeSettingInput"><option value="light">Light</option><option value="dark">Dark</option></select></label>
-            <label class="field-12">Dashboard subtitle<textarea id="dashboardSubtitleInput"></textarea></label>
-          </div>
-        </div>
-        <div class="panel span-6">
-          <h2>Section Names</h2>
-          <div id="sectionLabelSettings" class="form-grid"></div>
-        </div>
-        <div class="panel span-6">
-          <h2>Money Settings</h2>
-          <div class="form-grid">
-            <label class="field-6">Pre-departure starting pot<input id="prepPotInput" type="number" min="0" step="0.01"></label>
-            <label class="field-6">Travel fund target<input id="travelTargetInput" type="number" min="0" step="0.01"></label>
-            <label class="field-6">Current travel fund<input id="travelCurrentInput" type="number" min="0" step="0.01"></label>
-            <label class="field-6">Emergency fund target<input id="emergencyTargetInput" type="number" min="0" step="0.01"></label>
-            <label class="field-6">Emergency fund current<input id="emergencyCurrentInput" type="number" min="0" step="0.01"></label>
-          </div>
-        </div>
-        <div class="panel span-6">
-          <h2>TEFL Settings</h2>
-          <div class="form-grid">
-            <label class="field-6">TEFL total hours target<input id="teflTargetInput" type="number" min="1" step="1"></label>
-          </div>
-        </div>
-        <div class="panel span-6">
-          <h2>Phases</h2>
-          <form id="phaseForm" class="form-grid">
-            <label class="field-8">Phase name<input name="name" required placeholder="Europe"></label>
-            <label class="field-2">Position<input name="order" type="number" min="1"></label>
-            <button class="field-2" type="submit">Add Phase</button>
-          </form>
-          <div id="phaseList" class="list"></div>
-        </div>
-        <div class="panel span-6">
-          <h2>Habits</h2>
-          <form id="habitForm" class="form-grid">
-            <label class="field-8">Habit name<input name="label" required placeholder="Morning walk"></label>
-            <label class="field-2">Position<input name="order" type="number" min="1"></label>
-            <button class="field-2" type="submit">Add Habit</button>
-          </form>
-          <div id="habitSettingsList" class="list"></div>
-        </div>
         <div class="panel span-12">
           <h2>Key Travel Dates</h2>
           <form id="travelDateForm" class="form-grid">
@@ -1449,16 +1601,70 @@
             <label class="field-2">End date<input name="endDate" type="date"></label>
             <label class="field-3">Location / phase<input name="location" placeholder="Europe"></label>
             <label class="field-12">Notes<input name="notes" placeholder="Booking refs, plan, reminders"></label>
-            <button class="field-2" type="submit">Add Date</button>
+            <button class="field-2 primary-btn" type="submit">Add Date</button>
           </form>
           <h3>Active Travel Dates</h3>
           <div id="travelDateList" class="list"></div>
           <h3>Archived Travel Dates</h3>
           <div id="archivedTravelDateList" class="list"></div>
         </div>
+      </div>
+    </section>
+
+    <section id="settings" class="view">
+      <div class="grid">
+        <div class="panel span-12">
+          <h2>Settings</h2>
+          <p class="hint">App-level preferences, section labels, backup/import/export, sync status and reset controls. Everyday editing now lives in the relevant section.</p>
+        </div>
+        <div class="panel span-6">
+          <h2>Account & Sync</h2>
+          <div class="list">
+            <div class="sync-status auth-status-text" aria-live="polite">Not signed in. Local storage is active.</div>
+            <div class="sync-status cloud-status-text" aria-live="polite">Cloud sync will start after sign in.</div>
+          </div>
+          <div class="inline-actions">
+            <button id="signOutBtn" class="secondary-btn" type="button">Sign Out</button>
+          </div>
+        </div>
+        <div class="panel span-6">
+          <h2>Backup & Restore</h2>
+          <p class="hint">Export private backups before large changes, or import a saved JSON backup.</p>
+          <div class="inline-actions">
+            <button id="exportBtn" class="primary-btn" type="button">Export JSON Backup</button>
+            <label class="file-label secondary-btn" for="importFile">Import JSON Backup</label>
+          </div>
+        </div>
+        <div class="panel span-6">
+          <h2>Dashboard Text And Preferences</h2>
+          <div class="form-grid">
+            <label class="field-4"><span>Theme</span><select id="themeSettingInput"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+            <label class="field-12">Dashboard subtitle<textarea id="dashboardSubtitleInput"></textarea></label>
+          </div>
+          <div class="inline-actions">
+            <button id="themeBtn" class="secondary-btn" type="button">Dark Mode</button>
+          </div>
+        </div>
+        <div class="panel span-6">
+          <h2>Section Names</h2>
+          <div id="sectionLabelSettings" class="form-grid"></div>
+        </div>
+        <div class="panel span-6">
+          <h2>TEFL Settings</h2>
+          <div class="form-grid">
+            <label class="field-6">TEFL total hours target<input id="teflTargetInput" type="number" min="1" step="1"></label>
+          </div>
+        </div>
         <div class="panel span-12">
           <h2>About</h2>
           <div id="aboutPanel" class="about-grid"></div>
+        </div>
+        <div class="panel span-12">
+          <h2>Advanced / Danger Zone</h2>
+          <p class="hint">Reset is protected by backup and confirmation steps. Cloud data is never silently deleted.</p>
+          <div class="inline-actions">
+            <button id="resetBtn" class="danger-btn" type="button">Reset App Data</button>
+          </div>
         </div>
       </div>
     </section>
@@ -1478,7 +1684,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.11.0";
+    const APP_VERSION = "0.13.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -1492,13 +1698,21 @@
       journal: "Journal",
       review: "Weekly Review",
       dates: "Dates & Counters",
-      settings: "Settings & Data"
+      settings: "Settings"
     };
     function defaultTravelDates() {
       return [];
     }
-    const defaultPhases = ["Pre-departure", "Europe", "Asia", "Australia", "Destination / Long-term"];
+    const defaultPhases = ["Pre-departure", "Europe", "Asia", "Australia", "Long-term"];
     const phases = defaultPhases;
+    const defaultFinanceCategories = [
+      { area: "finance", name: "Accommodation", subcategories: ["Hostels", "Hotels", "Workaway"] },
+      { area: "finance", name: "Food", subcategories: ["Groceries", "Eating out", "Coffee"] },
+      { area: "finance", name: "Transport", subcategories: ["Flights", "Trains", "Buses"] },
+      { area: "finance", name: "Admin", subcategories: ["Visas", "Insurance", "Banking"] },
+      { area: "finance", name: "Gear", subcategories: ["Clothing", "Tech", "Documents"] },
+      { area: "finance", name: "Other", subcategories: ["Misc"] }
+    ];
     const taskCategories = ["Travel admin", "Budget", "TEFL", "Route", "Packing", "Content", "Writing", "Destination"];
     const taskTimeframes = ["Setup", "Pre-trip", "Final prep", "During travel", "Later"];
     const defaultHabits = [
@@ -1571,12 +1785,15 @@
         dateItems: [],
         phases: defaultPhases.map((name, index) => ({ id: id(), name, order: index + 1, archived: false })),
         habits: defaultHabits.map((habit, index) => ({ id: id(), ...habit, order: index + 1, archived: false })),
-        timelinePhases: []
+        timelinePhases: [],
+        categories: defaultFinanceCategories.map((category, index) => ({ id: id(), ...category, order: index + 1, archived: false }))
       },
       tasks: [],
       money: [],
       route: [],
       phaseBudgets: phases.map((phase) => ({ id: id(), phase, allocation: 0 })),
+      budgetPools: [],
+      planningWindows: [],
       milestones: [
         { id: id(), title: "Reach travel fund target", target: 0, current: 0 },
         { id: id(), title: "Build emergency reserve", target: 0, current: 0 }
@@ -1628,8 +1845,15 @@
         { id: id(), category: "TEFL", timeframe: "Final prep", due: "", title: "Complete another study block", done: true }
       ];
       demo.money = [
-        { id: id(), type: "income", date: "2027-02-03", category: "Savings", phase: "Pre-departure", amount: 250, note: "Demo income" },
-        { id: id(), type: "expense", date: "2027-02-08", category: "Gear", phase: "Pre-departure", amount: 45, note: "Demo expense" }
+        { id: id(), type: "income", date: "2027-02-03", category: "Other", subcategory: "Misc", phase: "Pre-departure", amount: 250, note: "Demo income" },
+        { id: id(), type: "expense", date: "2027-02-08", category: "Gear", subcategory: "Tech", phase: "Pre-departure", amount: 45, note: "Demo expense" }
+      ];
+      demo.budgetPools = [
+        { id: id(), name: "Demo pre-departure pot", amount: 750, startDate: "2027-02-01", endDate: "2027-04-30", phase: "Pre-departure", notes: "Sample local planning pool", active: true, archived: false, order: 1 },
+        { id: id(), name: "Demo Europe fund", amount: 1200, startDate: "2027-05-01", endDate: "2027-06-15", phase: "Europe", notes: "Fake route fund example", active: true, archived: false, order: 2 }
+      ];
+      demo.planningWindows = [
+        { id: id(), title: "Demo final prep window", startDate: "2027-04-20", endDate: "2027-04-30", budgetPoolId: demo.budgetPools[0].id, phase: "Pre-departure", archived: false, order: 1 }
       ];
       demo.route = [
         { id: id(), order: 1, place: "Home Base", country: "Demo Country", targetArrival: "", phase: "Pre-departure", notes: "Starting point" },
@@ -1714,7 +1938,7 @@
         type: entry.type === "spending" ? "expense" : entry.type,
         date: entry.date || "",
         category: entry.category || "",
-        phase: entry.phase || "Pre-departure",
+        phase: entry.phase || defaultPhases[0],
         amount: Number(entry.amount) || 0,
         note: entry.note || ""
       }));
@@ -1739,7 +1963,7 @@
 
     function inferPhase(place) {
       const lower = place.toLowerCase();
-      if (lower.includes("destination")) return "Destination";
+      if (lower.includes("destination")) return "Long-term";
       return "Europe";
     }
 
@@ -1768,11 +1992,13 @@
         (data.journals && data.journals.length)
       );
       merged.meta.setupComplete = Boolean(data.meta?.setupComplete || (data.meta && data.meta.setupComplete === undefined && hasExistingUserData));
+      if (merged.settings.sectionLabels?.settings === "Settings & Data") merged.settings.sectionLabels.settings = "Settings";
       merged.settings.keyDates = { ...next.settings.keyDates, ...(data.settings?.keyDates || {}) };
       merged.settings.travelDates = normalizeTravelDates(data.settings?.travelDates, merged.settings.keyDates);
       merged.settings.dateItems = normalizeDateItems(data.settings?.dateItems, merged.settings.travelDates);
       merged.settings.phases = normalizePhases(data.settings?.phases);
       merged.settings.habits = normalizeHabits(data.settings?.habits);
+      merged.settings.categories = normalizeCategories(data.settings?.categories);
       merged.settings.timelinePhases = (data.settings?.timelinePhases || next.settings.timelinePhases).map((phase) => ({
         id: phase.id || id(),
         label: phase.label || "Route phase",
@@ -1783,6 +2009,19 @@
       merged.phaseBudgets = activePhaseNames.map((phase) => {
         return (data.phaseBudgets || next.phaseBudgets).find((entry) => entry.phase === phase) || { id: id(), phase, allocation: 0 };
       });
+      merged.budgetPools = normalizeBudgetPools(data.budgetPools, data.phaseBudgets, merged);
+      merged.planningWindows = normalizePlanningWindows(data.planningWindows, merged.budgetPools);
+      merged.money = (data.money || next.money).map((entry) => ({
+        id: entry.id || id(),
+        type: entry.type === "income" ? "income" : "expense",
+        date: entry.date || "",
+        category: entry.category || "Other",
+        subcategory: entry.subcategory || "",
+        phase: entry.phase || "Unassigned",
+        budgetPoolId: entry.budgetPoolId || "",
+        amount: Number(entry.amount) || 0,
+        note: entry.note || ""
+      }));
       merged.tasks = (data.tasks || next.tasks).map((task) => ({
         ...task,
         id: task.id || id(),
@@ -1902,16 +2141,150 @@
       }))).map((habit, index) => ({ ...habit, order: index + 1 }));
     }
 
+    function normalizeCategories(savedCategories) {
+      const source = savedCategories?.length ? savedCategories : defaultFinanceCategories.map((category, index) => ({ ...category, order: index + 1 }));
+      return orderedItems(source.map((category, index) => ({
+        id: category.id || id(),
+        area: category.area || "finance",
+        name: category.name || category.label || "Category",
+        subcategories: Array.isArray(category.subcategories)
+          ? category.subcategories.filter(Boolean)
+          : String(category.subcategories || "").split(",").map((item) => item.trim()).filter(Boolean),
+        order: Number(category.order) || index + 1,
+        archived: Boolean(category.archived)
+      }))).map((category, index) => ({ ...category, order: index + 1 }));
+    }
+
+    function departureFromSettings(settings) {
+      const dateItems = settings?.dateItems || [];
+      const travelDates = settings?.travelDates || [];
+      const direct = dateItems.find((entry) => entry.key === "departure" && !entry.archived && isDateString(entry.date));
+      if (direct) return direct.date;
+      const inferred = dateItems
+        .filter((entry) => !entry.archived && entry.pinned && isDateString(entry.date))
+        .find((entry) => `${entry.title || ""} ${entry.category || ""}`.toLowerCase().match(/departure|leaving|travel/));
+      if (inferred) return inferred.date;
+      return travelDates.find((entry) => entry.key === "departure" && !entry.archived && isDateString(entry.date))?.date || "";
+    }
+
+    function normalizeBudgetPools(savedPools, legacyPhaseBudgets, mergedState) {
+      const source = savedPools?.length ? savedPools : [];
+      if (!source.length) {
+        const amount = Number(mergedState.settings?.prepPot || mergedState.settings?.travelCurrent || 0);
+        if (amount > 0) {
+          source.push({
+            name: "Pre-departure pot",
+            amount,
+            startDate: (mergedState.meta?.createdAt || today()).slice(0, 10),
+            endDate: departureFromSettings(mergedState.settings),
+            phase: "Pre-departure",
+            notes: "Migrated from the old pre-departure money settings",
+            active: true
+          });
+        }
+        (legacyPhaseBudgets || []).forEach((entry) => {
+          if (!entry.phase || !Number(entry.allocation || 0) || entry.phase === "Pre-departure") return;
+          source.push({
+            name: `${entry.phase} fund`,
+            amount: Number(entry.allocation) || 0,
+            startDate: "",
+            endDate: "",
+            phase: entry.phase,
+            notes: "Migrated from old phase allocation",
+            active: true
+          });
+        });
+      }
+      return orderedItems(source.map((pool, index) => ({
+        id: pool.id || id(),
+        name: pool.name || pool.title || "Budget pool",
+        amount: Number(pool.amount ?? pool.allocation ?? pool.startingAmount) || 0,
+        startDate: pool.startDate || pool.start || "",
+        endDate: pool.endDate || pool.end || "",
+        phase: pool.phase || "",
+        notes: pool.notes || pool.note || "",
+        active: pool.active !== false,
+        archived: Boolean(pool.archived),
+        order: Number(pool.order) || index + 1
+      }))).map((pool, index) => ({ ...pool, order: index + 1 }));
+    }
+
+    function normalizePlanningWindows(savedWindows, budgetPools = []) {
+      return orderedItems((savedWindows || []).map((windowItem, index) => ({
+        id: windowItem.id || id(),
+        title: windowItem.title || windowItem.name || "Planning window",
+        startDate: windowItem.startDate || windowItem.start || "",
+        endDate: windowItem.endDate || windowItem.end || "",
+        budgetPoolId: budgetPools.some((pool) => pool.id === windowItem.budgetPoolId) ? windowItem.budgetPoolId : "",
+        phase: windowItem.phase || "",
+        archived: Boolean(windowItem.archived),
+        order: Number(windowItem.order) || index + 1
+      }))).map((windowItem, index) => ({ ...windowItem, order: index + 1 }));
+    }
+
     function phaseNames(includeArchived = false) {
       const names = orderedItems(state.settings.phases || [])
         .filter((phase) => includeArchived || !phase.archived)
         .map((phase) => phase.name)
         .filter(Boolean);
-      return names.length ? names : ["Pre-departure"];
+      return names.length ? names : ["Unassigned"];
     }
 
     function activeHabits() {
       return orderedItems(state.settings.habits || []).filter((habit) => !habit.archived);
+    }
+
+    function financeCategories(includeArchived = false) {
+      return orderedItems(state.settings.categories || [])
+        .filter((category) => category.area === "finance")
+        .filter((category) => includeArchived || !category.archived);
+    }
+
+    function activeBudgetPools() {
+      return orderedItems(state.budgetPools || []).filter((pool) => !pool.archived && pool.active !== false);
+    }
+
+    function isDateInRange(dateString, startDate, endDate) {
+      if (!dateString) return false;
+      const value = parseDate(dateString);
+      if (startDate && value < parseDate(startDate)) return false;
+      if (endDate && value > parseDate(endDate)) return false;
+      return true;
+    }
+
+    function activeBudgetPool() {
+      const pools = activeBudgetPools();
+      const current = today();
+      return pools.find((pool) => isDateInRange(current, pool.startDate, pool.endDate))
+        || pools.find((pool) => !pool.startDate && !pool.endDate)
+        || null;
+    }
+
+    function transactionBelongsToPool(entry, pool) {
+      if (!pool) return false;
+      if (entry.budgetPoolId) return entry.budgetPoolId === pool.id;
+      const dateMatches = !entry.date || isDateInRange(entry.date, pool.startDate, pool.endDate);
+      const phaseMatches = !pool.phase || !entry.phase || entry.phase === pool.phase;
+      return dateMatches && phaseMatches;
+    }
+
+    function poolTransactions(pool) {
+      return (state.money || []).filter((entry) => transactionBelongsToPool(entry, pool));
+    }
+
+    function poolTotals(pool) {
+      const entries = poolTransactions(pool);
+      const income = entries.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      const expenses = entries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      const remaining = Number(pool?.amount || 0) + income - expenses;
+      return { income, expenses, remaining };
+    }
+
+    function activePlanningWindow() {
+      const current = today();
+      return orderedItems(state.planningWindows || [])
+        .filter((windowItem) => !windowItem.archived)
+        .find((windowItem) => isDateInRange(current, windowItem.startDate, windowItem.endDate)) || null;
     }
 
     function saveLocalOnly() {
@@ -2479,9 +2852,12 @@
       const packingPacked = state.packing.filter((item) => item.status === "Packed").length;
       const adminTotal = state.documents.length + state.tasks.filter((task) => task.category === "Travel admin").length;
       const adminDone = state.documents.filter((doc) => doc.status === "Done" || doc.done).length + state.tasks.filter((task) => task.category === "Travel admin" && task.done).length;
+      const pool = activeBudgetPool();
+      const activePoolTotal = pool ? poolTotals(pool) : null;
       const budgetReadyParts = [
-        t.prepRemaining >= 0,
-        Number(state.settings.travelTarget || 0) === 0 || Number(state.settings.travelCurrent || 0) >= Number(state.settings.travelTarget || 0) * 0.5,
+        Boolean(pool),
+        !activePoolTotal || activePoolTotal.remaining >= 0,
+        (state.budgetPools || []).some((item) => !item.archived && Number(item.amount || 0) > 0),
         Number(state.settings.emergencyTarget || 0) === 0 || Number(state.settings.emergencyCurrent || 0) >= Number(state.settings.emergencyTarget || 0) * 0.5,
         state.money.length > 0
       ];
@@ -2521,20 +2897,23 @@
     }
 
     function budgetPace() {
-      const t = totals();
-      const departure = departureDate();
-      const remainingDays = departure ? Math.max(1, dayDiff(departure)) : null;
-      const safeDaily = remainingDays ? t.prepRemaining / remainingDays : null;
+      const pool = activeBudgetPool();
+      if (!pool) {
+        return { pool: null, remaining: null, remainingDays: null, safeDaily: null, safeWeekly: null, recentDaily: 0, warning: "No active budget pool" };
+      }
+      const poolTotal = poolTotals(pool);
+      const remainingDays = pool.endDate ? Math.max(1, dayDiff(pool.endDate)) : null;
+      const safeDaily = remainingDays ? poolTotal.remaining / remainingDays : null;
       const safeWeekly = safeDaily === null ? null : safeDaily * 7;
       const recentDaily = state.money
-        .filter((entry) => entry.type === "expense" && daysAgo(entry.date) < 7)
+        .filter((entry) => entry.type === "expense" && transactionBelongsToPool(entry, pool) && daysAgo(entry.date) < 7)
         .reduce((sum, entry) => sum + Number(entry.amount || 0), 0) / 7;
       let warning = "Within current pace";
-      if (!departure) warning = "Departure date not set";
-      else if (t.prepRemaining < 0) warning = "Over budget";
+      if (poolTotal.remaining < 0) warning = "Over budget";
+      else if (!pool.endDate) warning = "No pool end date";
       else if (recentDaily > safeDaily && recentDaily > 0) warning = "Recent spending is above safe pace";
-      else if (safeDaily < 10) warning = "Very tight daily budget";
-      return { remainingDays, safeDaily, safeWeekly, recentDaily, warning };
+      else if (safeDaily !== null && safeDaily < 10) warning = "Very tight daily budget";
+      return { pool, remaining: poolTotal.remaining, remainingDays, safeDaily, safeWeekly, recentDaily, warning };
     }
 
     function recommendedPriorities() {
@@ -2572,6 +2951,8 @@
       applyTheme();
       applyDashboardSettings();
       renderPhaseSelects();
+      renderFinanceSelects();
+      renderBudgetPoolSelects();
       applyActiveView();
       renderSetup();
       renderCountdown();
@@ -2614,7 +2995,7 @@
       const items = pinnedDateItems();
       root.innerHTML = "";
       if (!items.length) {
-        root.innerHTML = `<div class="pinned-date-item"><strong id="targetDepartureLabel">No date set</strong><span id="daysLeft" class="muted">Pin dates in Dates & Counters</span></div>`;
+        root.innerHTML = `<div class="pinned-date-item"><strong>No date set</strong><span class="muted">Pin dates in Dates & Counters</span></div>`;
         return;
       }
       items.forEach((entry) => {
@@ -2663,19 +3044,24 @@
       setText("prepPct", `${prepPercent}%`);
       document.getElementById("prepFill").style.width = `${prepPercent}%`;
       setText("prepMeta", `${t.readinessDone} of ${t.readinessTotal} readiness items`);
-      setText("prepMoney", money(t.prepRemaining));
-      setText("prepMoneyMeta", `From ${money(state.settings.prepPot)} starting pot plus income minus expenses. Edit these values in Settings & Data.`);
-      setText("travelFund", money(state.settings.travelCurrent));
-      const travelPct = pct(state.settings.travelCurrent, state.settings.travelTarget);
+      const activePool = activeBudgetPool();
+      const activePoolTotal = activePool ? poolTotals(activePool) : null;
+      setText("prepMoney", activePoolTotal ? money(activePoolTotal.remaining) : money(0));
+      setText("prepMoneyMeta", activePool ? `${activePool.name} active pool remaining.` : "No active budget pool. Add one in Budget.");
+      const visiblePools = (state.budgetPools || []).filter((pool) => !pool.archived);
+      const totalPoolAmount = visiblePools.reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
+      const totalPoolRemaining = visiblePools.reduce((sum, pool) => sum + poolTotals(pool).remaining, 0);
+      setText("travelFund", money(totalPoolRemaining));
+      const travelPct = pct(totalPoolRemaining, totalPoolAmount || state.settings.travelTarget);
       document.getElementById("travelFundFill").style.width = `${travelPct}%`;
-      setText("travelFundMeta", `${travelPct}% of ${money(state.settings.travelTarget)} target. Edit these values in Settings & Data.`);
+      setText("travelFundMeta", totalPoolAmount ? `${travelPct}% of ${money(totalPoolAmount)} across budget pools.` : `${travelPct}% of ${money(state.settings.travelTarget)} target.`);
       setText("emergencyFund", money(state.settings.emergencyCurrent));
       const emergencyPct = pct(state.settings.emergencyCurrent, state.settings.emergencyTarget);
       document.getElementById("emergencyFill").style.width = `${emergencyPct}%`;
-      setText("emergencyMeta", state.settings.emergencyTarget ? `${emergencyPct}% of ${money(state.settings.emergencyTarget)}. Edit these values in Settings & Data.` : "Set a target in Settings & Data.");
+      setText("emergencyMeta", state.settings.emergencyTarget ? `${emergencyPct}% of ${money(state.settings.emergencyTarget)}.` : "No emergency target set.");
       setText("teflPct", `${t.teflPercent}%`);
       document.getElementById("teflFill").style.width = `${t.teflPercent}%`;
-      setText("teflMeta", `${t.teflHours} of ${state.settings.teflTargetHours} hours, ${Math.max(0, state.settings.teflTargetHours - t.teflHours)} remaining. Edit these values in Settings & Data.`);
+      setText("teflMeta", `${t.teflHours} of ${state.settings.teflTargetHours} hours, ${Math.max(0, state.settings.teflTargetHours - t.teflHours)} remaining.`);
       const habit = habitStats();
       setText("habitScore", `${habit.rate}%`);
       setText("habitMeta", `${habit.done} of ${habit.total} completions, last 7 days`);
@@ -2706,8 +3092,11 @@
         ["Scheduled", String(state.content.filter((item) => item.status === "Scheduled").length)],
         ["Published", String(published)]
       ]);
+      const visiblePools = (state.budgetPools || []).filter((pool) => !pool.archived);
+      const poolAmount = visiblePools.reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
+      const poolRemaining = visiblePools.reduce((sum, pool) => sum + poolTotals(pool).remaining, 0);
       document.getElementById("milestoneStats").innerHTML = statsHtml([
-        ["Travel fund", `${pct(state.settings.travelCurrent, state.settings.travelTarget)}%`],
+        ["Budget pools", poolAmount ? `${pct(poolRemaining, poolAmount)}% remaining` : "No pools"],
         ["Emergency fund", `${pct(state.settings.emergencyCurrent, state.settings.emergencyTarget)}%`],
         ["Expenses logged", money(totals().expenses)],
         ["Income logged", money(totals().income)]
@@ -2731,12 +3120,14 @@
       const deadlines = upcomingDeadlines(14);
       const priorities = recommendedPriorities();
       const daysToDeparture = departureDaysRemaining();
+      const windowItem = activePlanningWindow();
       document.getElementById("dailyBriefing").innerHTML = `
         ${statsHtml([
           ["Today", new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })],
           ["Current phase", currentPhase()],
           ["Days until departure", daysToDeparture === null ? "Not set" : String(daysToDeparture)],
-          ["Budget status", `${money(t.prepRemaining)} left, ${budget.safeDaily === null ? "Not set" : money(budget.safeDaily)} safe daily spend`],
+          ["Active planning window", windowItem ? `${windowItem.title} (${Math.max(0, dayDiff(windowItem.endDate))} days left)` : "None"],
+          ["Budget status", budget.pool ? `${budget.pool.name}: ${money(budget.remaining)} left, ${budget.safeDaily === null ? "Not set" : money(budget.safeDaily)} safe daily spend` : "No active budget pool"],
           ["TEFL status", `${t.teflHours} hours done, ${tefl.remainingHours} remaining, ${tefl.status}`]
         ])}
         <h3>Top 3 Priorities</h3>
@@ -2801,16 +3192,8 @@
     function renderSettings() {
       setValue("themeSettingInput", state.settings.theme || "light");
       setValue("dashboardSubtitleInput", state.settings.dashboardSubtitle || defaultSubtitle);
-      setValue("prepPotInput", state.settings.prepPot);
-      setValue("travelTargetInput", state.settings.travelTarget);
-      setValue("travelCurrentInput", state.settings.travelCurrent);
-      setValue("emergencyTargetInput", state.settings.emergencyTarget);
-      setValue("emergencyCurrentInput", state.settings.emergencyCurrent);
       setValue("teflTargetInput", state.settings.teflTargetHours);
       renderSectionLabelSettings();
-      renderPhaseSettings();
-      renderHabitSettings();
-      renderTravelDateSettings();
     }
 
     function renderPhaseSelects() {
@@ -2819,6 +3202,34 @@
         const current = select.value;
         select.innerHTML = names.map((name) => `<option>${escapeHtml(name)}</option>`).join("");
         if (current && names.includes(current)) select.value = current;
+      });
+    }
+
+    function renderFinanceSelects() {
+      const categories = financeCategories();
+      const names = categories.map((category) => category.name);
+      document.querySelectorAll("select[data-finance-category-select]").forEach((select) => {
+        const current = select.value;
+        select.innerHTML = names.map((name) => `<option>${escapeHtml(name)}</option>`).join("");
+        if (current && names.includes(current)) select.value = current;
+      });
+      document.querySelectorAll("select[data-finance-subcategory-select]").forEach((select) => {
+        const form = select.closest("form");
+        const categoryName = form?.querySelector("[data-finance-category-select]")?.value || names[0] || "";
+        const category = categories.find((item) => item.name === categoryName);
+        const current = select.value;
+        const options = ["", ...(category?.subcategories || [])];
+        select.innerHTML = options.map((name) => `<option>${escapeHtml(name)}</option>`).join("");
+        if (current && options.includes(current)) select.value = current;
+      });
+    }
+
+    function renderBudgetPoolSelects() {
+      const pools = activeBudgetPools();
+      document.querySelectorAll("select[data-budget-pool-select]").forEach((select) => {
+        const current = select.value;
+        select.innerHTML = `<option value="">Auto</option>${pools.map((pool) => `<option value="${escapeHtml(pool.id)}">${escapeHtml(pool.name)}</option>`).join("")}`;
+        if (current && pools.some((pool) => pool.id === current)) select.value = current;
       });
     }
 
@@ -2968,14 +3379,16 @@
       const routeList = document.getElementById("routeList");
       routeList.innerHTML = "";
       orderedItems(state.route).forEach((stop, index) => {
+        const validPhase = phaseNames(true).includes(stop.phase);
         routeList.appendChild(rowItem(stop, [
           index + 1,
           `${stop.place}${stop.country ? ", " + stop.country : ""}`,
           stop.targetArrival || "Arrival TBD",
-          stop.phase,
+          validPhase ? stop.phase : "Unassigned",
           stop.notes || "No notes"
         ], "route", editRoute, true));
       });
+      renderPhaseSettings();
       renderList("documentList", state.documents, (doc) => docItem(doc));
       renderList("departureList", state.tasks.filter((task) => task.timeframe === "Final prep" || task.category === "Travel admin"), (task) => checkboxItem(task, "tasks"));
       renderPacking();
@@ -3035,12 +3448,6 @@
       setValue("travelCurrentInput", state.settings.travelCurrent);
       setValue("emergencyTargetInput", state.settings.emergencyTarget);
       setValue("emergencyCurrentInput", state.settings.emergencyCurrent);
-      document.getElementById("budgetSettingsSummary").innerHTML = statsHtml([
-        ["Pre-departure starting pot", money(state.settings.prepPot)],
-        ["Travel fund target", money(state.settings.travelTarget)],
-        ["Current travel fund", money(state.settings.travelCurrent)],
-        ["Emergency fund", `${money(state.settings.emergencyCurrent)} of ${money(state.settings.emergencyTarget)}`]
-      ]);
       const list = document.getElementById("moneyList");
       list.innerHTML = "";
       state.money.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach((entry) => {
@@ -3049,38 +3456,78 @@
       if (!state.money.length) list.innerHTML = `<div class="empty">No income or expense entries yet.</div>`;
       renderSpendingChart();
       renderBudgetSummaries();
-      renderPhaseBudgets();
+      renderBudgetPools();
+      renderFinanceCategories();
+      renderPlanningWindows();
       renderMilestones();
       renderBudgetPace();
     }
 
     function renderBudgetPace() {
       const pace = budgetPace();
+      if (!pace.pool) {
+        document.getElementById("budgetPace").innerHTML = `<div class="empty"><strong>No active budget pool</strong><span>Add a pool with active status to calculate safe daily and weekly spend.</span></div>`;
+        return;
+      }
+      const windowItem = activePlanningWindow();
       document.getElementById("budgetPace").innerHTML = statsHtml([
-        ["Amount remaining", money(totals().prepRemaining)],
-        ["Days until departure", pace.remainingDays === null ? "Not set" : String(pace.remainingDays)],
+        ["Active pool", pace.pool.name],
+        ["Amount remaining", money(pace.remaining)],
+        ["Days remaining", pace.remainingDays === null ? "Not set" : String(pace.remainingDays)],
         ["Safe daily spend", pace.safeDaily === null ? "Not set" : money(pace.safeDaily)],
         ["Safe weekly spend", pace.safeWeekly === null ? "Not set" : money(pace.safeWeekly)],
         ["Recent daily average", money(pace.recentDaily)],
+        ["Active window", windowItem ? `${windowItem.title} (${Math.max(0, dayDiff(windowItem.endDate))} days left)` : "None"],
         ["Warning", pace.warning]
       ]);
     }
 
-    function renderPhaseBudgets() {
-      const root = document.getElementById("phaseBudgetInputs");
-      root.innerHTML = "";
-      state.phaseBudgets = phaseNames().map((phase) => state.phaseBudgets.find((entry) => entry.phase === phase) || { id: id(), phase, allocation: 0 });
-      state.phaseBudgets.forEach((entry) => {
-        const label = document.createElement("label");
-        label.innerHTML = `${entry.phase}<input type="number" min="0" step="0.01">`;
-        const input = label.querySelector("input");
-        input.value = entry.allocation || 0;
-        input.addEventListener("input", (event) => {
-          entry.allocation = Number(event.target.value) || 0;
-          save();
-          renderBudgetSummaries();
-        });
-        root.appendChild(label);
+    function renderBudgetPools() {
+      renderList("budgetPoolList", orderedItems(state.budgetPools || []), (pool) => {
+        const totalsForPool = poolTotals(pool);
+        return settingRow(
+          { ...pool, label: pool.name },
+          `${pool.archived ? "Archived" : pool.active ? "Active" : "Inactive"} - ${money(totalsForPool.remaining)} remaining of ${money(pool.amount)}${pool.endDate ? " - ends " + formatDate(pool.endDate) : ""}`,
+          () => editBudgetPool(pool),
+          () => {
+            pool.archived = !pool.archived;
+            render();
+          },
+          pool.archived ? "Unarchive" : "Archive",
+          () => removeBudgetPool(pool.id)
+        );
+      });
+    }
+
+    function renderFinanceCategories() {
+      renderList("financeCategoryList", financeCategories(true), (category) => settingRow(
+        category,
+        `${category.archived ? "Archived" : "Active"} - ${(category.subcategories || []).join(", ") || "No subcategories"}`,
+        () => editFinanceCategory(category),
+        () => {
+          category.archived = !category.archived;
+          normaliseOrderedList(state.settings.categories);
+          render();
+        },
+        category.archived ? "Unarchive" : "Archive",
+        () => removeFinanceCategory(category.id)
+      ));
+    }
+
+    function renderPlanningWindows() {
+      renderList("planningWindowList", orderedItems(state.planningWindows || []), (windowItem) => {
+        const pool = (state.budgetPools || []).find((entry) => entry.id === windowItem.budgetPoolId);
+        return settingRow(
+          { ...windowItem, name: windowItem.title },
+          `${windowItem.archived ? "Archived" : "Active"} - ${formatDate(windowItem.startDate)} to ${formatDate(windowItem.endDate)}${pool ? " - " + pool.name : ""}${windowItem.phase ? " - " + windowItem.phase : ""}`,
+          () => editPlanningWindow(windowItem),
+          () => {
+            windowItem.archived = !windowItem.archived;
+            render();
+          },
+          windowItem.archived ? "Unarchive" : "Archive",
+          () => removePlanningWindow(windowItem.id)
+        );
       });
     }
 
@@ -3109,17 +3556,20 @@
       const expenses = state.money.filter((entry) => entry.type === "expense");
       const week = expenses.filter((entry) => daysAgo(entry.date) <= 7).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const month = expenses.filter((entry) => daysAgo(entry.date) <= 31).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      const phaseHtml = phaseNames(true).map((phase) => {
-        const spent = expenses.filter((entry) => entry.phase === phase).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-        const allocation = state.phaseBudgets.find((entry) => entry.phase === phase)?.allocation || 0;
-        return `<div class="stat-line"><span>${phase}</span><strong>${money(spent)}${allocation ? " / " + money(allocation) : ""}</strong></div>`;
+      const poolHtml = (state.budgetPools || []).filter((pool) => !pool.archived).map((pool) => {
+        const totalsForPool = poolTotals(pool);
+        return `<div class="stat-line"><span>${escapeHtml(pool.name)}</span><strong>${money(totalsForPool.remaining)} / ${money(pool.amount)}</strong></div>`;
+      }).join("");
+      const categoryHtml = financeCategories(true).map((category) => {
+        const spent = expenses.filter((entry) => entry.category === category.name).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+        return `<div class="stat-line"><span>${escapeHtml(category.name)}</span><strong>${money(spent)}</strong></div>`;
       }).join("");
       document.getElementById("budgetSummaries").innerHTML = statsHtml([
         ["Last 7 days", money(week)],
         ["Last 31 days", money(month)],
         ["Total expenses", money(totals().expenses)],
         ["Total income", money(totals().income)]
-      ]) + `<h3>Phase allocation</h3>${phaseHtml}`;
+      ]) + `<h3>Budget pools</h3>${poolHtml || '<div class="empty">No budget pools yet.</div>'}<h3>Category spending</h3>${categoryHtml}`;
     }
 
     function renderMilestones() {
@@ -3200,6 +3650,7 @@
 
     function renderHabits() {
       renderHabitQuickForm();
+      renderHabitSettings();
       const root = document.getElementById("habitTable");
       root.innerHTML = "";
       activeHabits().forEach(({ key, label }) => {
@@ -3246,6 +3697,7 @@
     function renderDates() {
       renderDateCounterList("dateItemList", (state.settings.dateItems || []).filter((entry) => !entry.archived));
       renderDateCounterList("archivedDateItemList", (state.settings.dateItems || []).filter((entry) => entry.archived));
+      renderTravelDateSettings();
     }
 
     function renderDateCounterList(idName, items) {
@@ -3396,8 +3848,8 @@
       [
         entry.type || "expense",
         entry.date || "No date",
-        entry.category || "Uncategorised",
-        entry.phase || "Pre-departure",
+        `${entry.category || "Uncategorised"}${entry.subcategory ? " / " + entry.subcategory : ""}`,
+        entry.phase || "Unassigned",
         money(entry.amount),
         entry.note || ""
       ].forEach((cell, index) => {
@@ -3522,10 +3974,49 @@
       render();
     }
 
+    function removeBudgetPool(poolId) {
+      if (!confirm("Delete this budget pool? Existing transactions will stay, but their pool link will be cleared.")) return;
+      state.budgetPools = (state.budgetPools || []).filter((pool) => pool.id !== poolId);
+      state.money.forEach((entry) => {
+        if (entry.budgetPoolId === poolId) entry.budgetPoolId = "";
+      });
+      state.planningWindows = state.planningWindows || [];
+      state.planningWindows.forEach((windowItem) => {
+        if (windowItem.budgetPoolId === poolId) windowItem.budgetPoolId = "";
+      });
+      normaliseOrderedList(state.budgetPools);
+      render();
+    }
+
+    function removeFinanceCategory(categoryId) {
+      if (!confirm("Delete this category? Existing transactions keep their saved category text.")) return;
+      state.settings.categories = (state.settings.categories || []).filter((category) => category.id !== categoryId);
+      normaliseOrderedList(state.settings.categories);
+      render();
+    }
+
+    function removePlanningWindow(windowId) {
+      if (!confirm("Delete this planning window?")) return;
+      state.planningWindows = (state.planningWindows || []).filter((windowItem) => windowItem.id !== windowId);
+      normaliseOrderedList(state.planningWindows);
+      render();
+    }
+
     function syncDailySpendingEntry(entry) {
-      state.money = state.money.filter((item) => !(item.date === entry.date && item.category === "Daily spending" && item.note === "From daily check-in"));
+      state.money = state.money.filter((item) => !(item.date === entry.date && item.note === "From daily check-in"));
       if (Number(entry.spending || 0) > 0) {
-        state.money.push({ id: id(), type: "expense", date: entry.date, category: "Daily spending", phase: "Pre-departure", amount: Number(entry.spending || 0), note: "From daily check-in" });
+        const pool = activeBudgetPool();
+        state.money.push({
+          id: id(),
+          type: "expense",
+          date: entry.date,
+          category: "Other",
+          subcategory: "Misc",
+          phase: pool?.phase || currentPhase() || "Unassigned",
+          budgetPoolId: pool?.id || "",
+          amount: Number(entry.spending || 0),
+          note: "From daily check-in"
+        });
       }
     }
 
@@ -3602,8 +4093,12 @@
       if (date === null) return;
       const category = promptValue("Category", item.category || "");
       if (category === null) return;
-      const phase = promptValue(`Phase (${phaseNames(true).join(", ")})`, item.phase || phaseNames()[0] || "Pre-departure");
+      const subcategory = promptValue("Subcategory", item.subcategory || "");
+      if (subcategory === null) return;
+      const phase = promptValue(`Phase (${phaseNames(true).join(", ")})`, item.phase || phaseNames()[0] || "Unassigned");
       if (phase === null) return;
+      const poolName = promptValue(`Budget pool (${activeBudgetPools().map((pool) => pool.name).join(", ") || "none"})`, (state.budgetPools || []).find((pool) => pool.id === item.budgetPoolId)?.name || "");
+      if (poolName === null) return;
       const amount = promptValue("Amount", item.amount);
       if (amount === null) return;
       const note = promptValue("Note", item.note || "");
@@ -3612,9 +4107,69 @@
       item.type = normalType;
       item.date = date || item.date || today();
       item.category = category;
-      item.phase = phase || item.phase || "Pre-departure";
+      item.subcategory = subcategory;
+      item.phase = phase || item.phase || phaseNames()[0] || "Unassigned";
+      item.budgetPoolId = (state.budgetPools || []).find((pool) => pool.name.toLowerCase() === poolName.toLowerCase())?.id || "";
       item.amount = Number(amount) || 0;
       item.note = note;
+      render();
+    }
+
+    function editBudgetPool(pool) {
+      const name = promptValue("Pool name", pool.name || "");
+      if (name === null) return;
+      const amount = promptValue("Pool amount", pool.amount || 0);
+      if (amount === null) return;
+      const startDate = promptValue("Start date YYYY-MM-DD", pool.startDate || "");
+      if (startDate === null) return;
+      const endDate = promptValue("End date YYYY-MM-DD", pool.endDate || "");
+      if (endDate === null) return;
+      const phase = promptValue(`Linked phase (${phaseNames(true).join(", ")})`, pool.phase || "");
+      if (phase === null) return;
+      const active = promptValue("Active? yes/no", pool.active === false ? "no" : "yes");
+      if (active === null) return;
+      const notes = promptValue("Notes", pool.notes || "");
+      if (notes === null) return;
+      pool.name = name || pool.name || "Budget pool";
+      pool.amount = Number(amount) || 0;
+      pool.startDate = startDate || "";
+      pool.endDate = endDate || "";
+      pool.phase = phase || "";
+      pool.active = /^(yes|y|true|active)$/i.test(active);
+      pool.notes = notes || "";
+      render();
+    }
+
+    function editFinanceCategory(category) {
+      const name = promptValue("Category name", category.name || "");
+      if (name === null) return;
+      const subcategories = promptValue("Subcategories, comma separated", (category.subcategories || []).join(", "));
+      if (subcategories === null) return;
+      const position = promptValue("Position", category.order || "");
+      if (position === null) return;
+      category.name = name || category.name || "Category";
+      category.subcategories = subcategories.split(",").map((item) => item.trim()).filter(Boolean);
+      moveOrderedItem(state.settings.categories, category, position);
+      normaliseOrderedList(state.settings.categories);
+      render();
+    }
+
+    function editPlanningWindow(windowItem) {
+      const title = promptValue("Window title", windowItem.title || "");
+      if (title === null) return;
+      const startDate = promptValue("Start date YYYY-MM-DD", windowItem.startDate || "");
+      if (startDate === null) return;
+      const endDate = promptValue("End date YYYY-MM-DD", windowItem.endDate || "");
+      if (endDate === null) return;
+      const poolName = promptValue(`Budget pool (${activeBudgetPools().map((pool) => pool.name).join(", ") || "none"})`, (state.budgetPools || []).find((pool) => pool.id === windowItem.budgetPoolId)?.name || "");
+      if (poolName === null) return;
+      const phase = promptValue(`Linked phase (${phaseNames(true).join(", ")})`, windowItem.phase || "");
+      if (phase === null) return;
+      windowItem.title = title || windowItem.title || "Planning window";
+      windowItem.startDate = startDate || "";
+      windowItem.endDate = endDate || "";
+      windowItem.budgetPoolId = (state.budgetPools || []).find((pool) => pool.name.toLowerCase() === poolName.toLowerCase())?.id || "";
+      windowItem.phase = phase || "";
       render();
     }
 
@@ -4165,6 +4720,50 @@
     bindForm("documentForm", (data) => state.documents.push({ id: id(), ...data, done: data.status === "Done" }));
     bindForm("packingForm", (data) => state.packing.push({ id: id(), ...data }));
     bindForm("moneyForm", (data) => state.money.push({ id: id(), ...data, amount: Number(data.amount) || 0 }));
+    bindForm("budgetPoolForm", (data) => {
+      const pool = {
+        id: id(),
+        name: data.name || "Budget pool",
+        amount: Number(data.amount) || 0,
+        startDate: data.startDate || "",
+        endDate: data.endDate || "",
+        phase: data.phase || "",
+        notes: data.notes || "",
+        active: bool(data.active),
+        archived: false,
+        order: (state.budgetPools || []).length + 1
+      };
+      state.budgetPools = state.budgetPools || [];
+      state.budgetPools.push(pool);
+      normaliseOrderedList(state.budgetPools);
+    });
+    bindForm("financeCategoryForm", (data) => {
+      const category = {
+        id: id(),
+        area: "finance",
+        name: data.name || "Category",
+        subcategories: String(data.subcategories || "").split(",").map((item) => item.trim()).filter(Boolean),
+        order: financeCategories(true).length + 1,
+        archived: false
+      };
+      state.settings.categories = state.settings.categories || [];
+      state.settings.categories.push(category);
+      normaliseOrderedList(state.settings.categories);
+    });
+    bindForm("planningWindowForm", (data) => {
+      state.planningWindows = state.planningWindows || [];
+      state.planningWindows.push({
+        id: id(),
+        title: data.title || "Planning window",
+        startDate: data.startDate || "",
+        endDate: data.endDate || "",
+        budgetPoolId: data.budgetPoolId || "",
+        phase: data.phase || "",
+        archived: false,
+        order: state.planningWindows.length + 1
+      });
+      normaliseOrderedList(state.planningWindows);
+    });
     bindForm("milestoneForm", (data) => state.milestones.push({ id: id(), title: data.title, target: Number(data.target) || 0, current: Number(data.current) || 0 }));
     bindForm("teflModuleForm", (data) => state.teflModules.push({ id: id(), ...data, hours: Number(data.hours) || 0 }));
     bindForm("studyLogForm", (data) => state.studyLog.push({ id: id(), date: data.date || today(), hours: Number(data.hours) || 0, notes: data.notes || "" }));
@@ -4241,9 +4840,17 @@
       ["teflTargetInput", "teflTargetHours"],
       ["teflManualHoursInput", "teflManualHours"]
     ].forEach(([elementId, key]) => {
-      document.getElementById(elementId).addEventListener("input", (event) => {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      element.addEventListener("input", (event) => {
         state.settings[key] = Number(event.target.value) || 0;
         render();
+      });
+    });
+
+    document.querySelectorAll("select[data-finance-category-select]").forEach((select) => {
+      select.addEventListener("change", () => {
+        renderFinanceSelects();
       });
     });
 
@@ -4303,6 +4910,8 @@
           state = normalize(JSON.parse(reader.result));
           dirtyForms.clear();
           render();
+          closeResetDialog();
+          if (authGate !== "login") showDashboard();
           alert("Backup imported.");
         } catch (error) {
           alert("That backup could not be imported.");

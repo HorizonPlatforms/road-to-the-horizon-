@@ -17,7 +17,19 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.11.0`.
+Current app version: `0.13.0`.
+
+## Structure and planning model
+
+The app is organised so normal editing happens close to the section that uses the data:
+
+- Travel contains route stops and the editable phase manager.
+- Budget contains savings targets, flexible budget pools, finance categories/subcategories, planning windows, transactions and milestones.
+- Dates & Counters contains editable counters and key travel dates.
+- Habits contains daily habit logging and habit management.
+- Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
+
+Budget Pace now reads from the currently active budget pool instead of relying on one pre-departure pot or one departure date. A budget pool can have a name, amount, start date, end date, linked phase, notes and active/archive status. Older pre-departure money values are migrated into a default budget pool for existing users.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
@@ -96,19 +108,19 @@ Then open the served file in the browser.
 ## Main Sections
 
 - `Command` - daily briefing, countdowns, check-ins, priorities and readiness scores.
-- `Travel` - route planner, travel dates, documents, packing and timeline.
-- `Budget` - settings summary, income, expenses, transaction history, charts and milestones.
+- `Travel` - route planner, phase manager, documents, packing and timeline.
+- `Budget` - savings targets, budget pools, planning windows, finance categories, income, expenses, charts and milestones.
 - `TEFL` - target hours, completed hours, modules, study log and pace tracking.
 - `Content` - content ideas and pipeline tracking.
 - `Writing` - writing ideas, notes and sessions.
 - `Life` - daily check-ins and trends.
-- `Habits` - habit tracking based on saved daily logs.
+- `Habits` - daily habit logging, habit management and habit tracking.
 - `Journal` - journal entries and reflections.
 - `Weekly Review` - weekly summaries and review notes.
-- `Dates & Counters` - editable countdowns and count-up counters, with dashboard pinning.
-- `Settings & Data` - rarely changed global settings, targets, dates, labels and backup tools.
+- `Dates & Counters` - editable countdowns, count-up counters and key travel dates, with dashboard pinning.
+- `Settings` - account/sync status, backup/import/export, preferences, labels, About/version details and the protected reset flow.
 
-Daily entries stay inside their own sections. Settings & Data is for global configuration, not everyday logging.
+Daily entries stay inside their own sections. Settings is for app-level controls, not everyday logging.
 
 ## Backup And Restore
 
