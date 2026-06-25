@@ -850,6 +850,105 @@
       grid-template-columns: 1fr 120px 110px 120px 90px auto;
     }
 
+    .budget-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .budget-tab {
+      min-height: 34px;
+      padding: 6px 10px;
+      background: var(--soft);
+      color: var(--muted);
+    }
+
+    .budget-tab.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #ffffff;
+    }
+
+    .budget-panel { display: none; }
+    .budget-panel.active { display: block; }
+
+    .finance-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .finance-kpi {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .finance-kpi strong {
+      display: block;
+      color: var(--blue);
+      font-size: 1.35rem;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    .finance-chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .pie-chart {
+      width: min(180px, 58vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--soft-2);
+      margin: 10px auto;
+    }
+
+    .line-chart {
+      width: 100%;
+      min-height: 180px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .line-chart svg {
+      display: block;
+      width: 100%;
+      height: 180px;
+    }
+
+    .chart-card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .chart-card h3 { margin-top: 0; }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: .86rem;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      margin-right: 5px;
+    }
+
     .auth-panel {
       border-color: color-mix(in srgb, var(--blue) 42%, var(--line));
     }
@@ -919,6 +1018,8 @@
       .task-columns,
       .settings-route-row,
       .date-counter-row,
+      .finance-kpis,
+      .finance-chart-grid,
       .setup-actions,
       .timeline-item {
         grid-template-columns: 1fr;
@@ -1351,13 +1452,35 @@
 
     <section id="budget" class="view">
       <div class="grid">
-        <div class="panel span-4">
+        <div class="panel span-12">
+          <h2>Budget 2.0</h2>
+          <div class="budget-tabs" aria-label="Budget views">
+            <button class="budget-tab active" type="button" data-budget-view="overview">Overview</button>
+            <button class="budget-tab" type="button" data-budget-view="pools">Pools</button>
+            <button class="budget-tab" type="button" data-budget-view="transactions">Transactions</button>
+            <button class="budget-tab" type="button" data-budget-view="categories">Categories</button>
+            <button class="budget-tab" type="button" data-budget-view="analytics">Analytics</button>
+          </div>
+        </div>
+        <div class="panel span-12 budget-panel active" data-budget-panel="overview">
+          <h2>Finance Overview</h2>
+          <div id="budgetOverviewCards" class="finance-kpis"></div>
+          <div class="inline-actions">
+            <button class="primary-btn" type="button" data-budget-jump="transactions">Quick Add Transaction</button>
+            <button class="secondary-btn" type="button" data-budget-jump="pools">Manage Pools</button>
+          </div>
+        </div>
+        <div class="panel span-6 budget-panel active" data-budget-panel="overview">
           <h2>Budget Pace</h2>
           <div id="budgetPace"></div>
         </div>
-        <div class="panel span-8">
+        <div class="panel span-6 budget-panel active" data-budget-panel="overview">
+          <h2>Recent Transactions</h2>
+          <div id="recentMoneyList" class="list"></div>
+        </div>
+        <div class="panel span-12 budget-panel active" data-budget-panel="overview">
           <h2>Savings Targets</h2>
-          <p class="hint">Older target cards read from these values. Day-to-day planning should use budget pools below.</p>
+          <p class="hint">Travel fund cards use these editable values. Day-to-day planning uses pools.</p>
           <div class="form-grid">
             <label class="field-4">Starting balance<input id="prepPotInput" type="number" min="0" step="0.01"></label>
             <label class="field-4">Travel fund target<input id="travelTargetInput" type="number" min="0" step="0.01"></label>
@@ -1366,12 +1489,13 @@
             <label class="field-4">Emergency fund current<input id="emergencyCurrentInput" type="number" min="0" step="0.01"></label>
           </div>
         </div>
-        <div class="panel span-8">
+        <div class="panel span-12 budget-panel" data-budget-panel="pools">
           <h2>Budget Pools</h2>
           <p class="hint">Use pools for time-boxed money planning, such as a pre-departure pot, Europe fund or short city budget.</p>
           <form id="budgetPoolForm" class="form-grid">
             <label class="field-3">Name<input name="name" required placeholder="Europe fund"></label>
-            <label class="field-2">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
+            <label class="field-2">Pool amount<input name="amount" type="number" min="0" step="0.01" required></label>
+            <label class="field-2">Starting amount<input name="startingAmount" type="number" min="0" step="0.01" placeholder="Optional"></label>
             <label class="field-2">Start<input name="startDate" type="date"></label>
             <label class="field-2">End<input name="endDate" type="date"></label>
             <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
@@ -1381,19 +1505,20 @@
           </form>
           <div id="budgetPoolList" class="list"></div>
         </div>
-        <div class="panel span-4">
+        <div class="panel span-12 budget-panel" data-budget-panel="categories">
           <h2>Finance Categories</h2>
           <p class="hint">Flexible categories and subcategories for spending reports.</p>
           <form id="financeCategoryForm" class="form-grid">
-            <label class="field-6">Category<input name="name" required placeholder="Food"></label>
-            <label class="field-6">Subcategories<input name="subcategories" placeholder="Groceries, Eating out, Coffee"></label>
+            <label class="field-3">Category<input name="name" required placeholder="Food"></label>
+            <label class="field-5">Subcategories<input name="subcategories" placeholder="Groceries, Eating out, Coffee"></label>
+            <label class="field-12">Notes<input name="notes" placeholder="Optional category notes"></label>
             <button class="field-4 primary-btn" type="submit">Add Category</button>
           </form>
           <div id="financeCategoryList" class="list"></div>
         </div>
-        <div class="panel span-8">
+        <div class="panel span-12 budget-panel" data-budget-panel="pools">
           <h2>Planning Windows</h2>
-          <p class="hint">Short time boxes for things like “10 days until departure with this pool of money”.</p>
+          <p class="hint">Short time boxes for things like "10 days until departure with this pool of money".</p>
           <form id="planningWindowForm" class="form-grid">
             <label class="field-3">Title<input name="title" required placeholder="Final 10 days"></label>
             <label class="field-2">Start<input name="startDate" type="date"></label>
@@ -1404,25 +1529,30 @@
           </form>
           <div id="planningWindowList" class="list"></div>
         </div>
-        <div class="panel span-8">
-          <h2>Income And Expenses</h2>
+        <div class="panel span-12 budget-panel" data-budget-panel="transactions">
+          <h2>Transactions</h2>
           <form id="moneyForm" class="form-grid">
             <label class="field-2">Type<select name="type"><option value="expense">Expense</option><option value="income">Income</option></select></label>
             <label class="field-2">Date<input name="date" type="date"></label>
+            <label class="field-2">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
+            <label class="field-3">Description<input name="description" placeholder="Train ticket, invoice, groceries"></label>
             <label class="field-2">Budget pool<select name="budgetPoolId" data-budget-pool-select></select></label>
             <label class="field-2">Category<select name="category" data-finance-category-select></select></label>
             <label class="field-2">Subcategory<select name="subcategory" data-finance-subcategory-select></select></label>
             <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
-            <label class="field-2">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
-            <label class="field-12">Note<input name="note" placeholder="Optional detail"></label>
-            <button class="field-2" type="submit">Add Entry</button>
+            <label class="field-12">Notes<input name="note" placeholder="Optional detail"></label>
+            <button class="field-2 primary-btn" type="submit">Add Transaction</button>
           </form>
           <h3>Transaction History</h3>
           <div id="moneyList" class="table-ish"></div>
         </div>
-        <div class="panel span-6"><h2>Spending Chart</h2><div id="spendingChart" class="chart"></div></div>
-        <div class="panel span-6">
-          <h2>Weekly And Monthly Summaries</h2>
+        <div class="panel span-12 budget-panel" data-budget-panel="analytics">
+          <h2>Analytics</h2>
+          <div id="financeAnalytics" class="finance-chart-grid"></div>
+        </div>
+        <div class="panel span-12 budget-panel" data-budget-panel="analytics">
+          <h2>Finance Summaries</h2>
+          <div id="spendingChart" class="chart"></div>
           <div id="budgetSummaries"></div>
           <h3>Financial Milestones</h3>
           <form id="milestoneForm" class="form-grid">
@@ -1684,7 +1814,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.13.0";
+    const APP_VERSION = "0.14.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -2020,6 +2150,7 @@
         phase: entry.phase || "Unassigned",
         budgetPoolId: entry.budgetPoolId || "",
         amount: Number(entry.amount) || 0,
+        description: entry.description || entry.title || "",
         note: entry.note || ""
       }));
       merged.tasks = (data.tasks || next.tasks).map((task) => ({
@@ -2147,12 +2278,26 @@
         id: category.id || id(),
         area: category.area || "finance",
         name: category.name || category.label || "Category",
-        subcategories: Array.isArray(category.subcategories)
-          ? category.subcategories.filter(Boolean)
-          : String(category.subcategories || "").split(",").map((item) => item.trim()).filter(Boolean),
+        notes: category.notes || category.note || "",
+        subcategories: normalizeSubcategories(category.subcategories),
         order: Number(category.order) || index + 1,
         archived: Boolean(category.archived)
       }))).map((category, index) => ({ ...category, order: index + 1 }));
+    }
+
+    function normalizeSubcategories(subcategories) {
+      const source = Array.isArray(subcategories)
+        ? subcategories
+        : String(subcategories || "").split(",").map((item) => item.trim()).filter(Boolean);
+      return source.map((subcategory) => {
+        if (typeof subcategory === "string") return { id: id(), name: subcategory, notes: "", archived: false };
+        return {
+          id: subcategory.id || id(),
+          name: subcategory.name || subcategory.label || "Subcategory",
+          notes: subcategory.notes || subcategory.note || "",
+          archived: Boolean(subcategory.archived)
+        };
+      }).filter((subcategory) => subcategory.name);
     }
 
     function departureFromSettings(settings) {
@@ -2199,6 +2344,7 @@
         id: pool.id || id(),
         name: pool.name || pool.title || "Budget pool",
         amount: Number(pool.amount ?? pool.allocation ?? pool.startingAmount) || 0,
+        startingAmount: Number(pool.startingAmount ?? pool.startAmount ?? pool.amount ?? pool.allocation) || 0,
         startDate: pool.startDate || pool.start || "",
         endDate: pool.endDate || pool.end || "",
         phase: pool.phase || "",
@@ -2240,6 +2386,10 @@
         .filter((category) => includeArchived || !category.archived);
     }
 
+    function activeSubcategories(category) {
+      return (category?.subcategories || []).filter((subcategory) => !subcategory.archived);
+    }
+
     function activeBudgetPools() {
       return orderedItems(state.budgetPools || []).filter((pool) => !pool.archived && pool.active !== false);
     }
@@ -2260,6 +2410,10 @@
         || null;
     }
 
+    function getActiveBudgetPool() {
+      return activeBudgetPool();
+    }
+
     function transactionBelongsToPool(entry, pool) {
       if (!pool) return false;
       if (entry.budgetPoolId) return entry.budgetPoolId === pool.id;
@@ -2272,12 +2426,95 @@
       return (state.money || []).filter((entry) => transactionBelongsToPool(entry, pool));
     }
 
+    function poolBaseAmount(pool) {
+      return Number(pool?.startingAmount ?? pool?.amount ?? 0);
+    }
+
     function poolTotals(pool) {
       const entries = poolTransactions(pool);
       const income = entries.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const expenses = entries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      const remaining = Number(pool?.amount || 0) + income - expenses;
+      const remaining = poolBaseAmount(pool) + income - expenses;
       return { income, expenses, remaining };
+    }
+
+    function getTravelFundTotal() {
+      const saved = Number(state.settings.travelCurrent || 0);
+      if (saved) return saved;
+      return (state.budgetPools || []).filter((pool) => !pool.archived).reduce((sum, pool) => sum + Math.max(0, getPoolRemaining(pool.id)), 0);
+    }
+
+    function getTravelFundTarget() {
+      const saved = Number(state.settings.travelTarget || 0);
+      if (saved) return saved;
+      return (state.budgetPools || []).filter((pool) => !pool.archived).reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
+    }
+
+    function getPoolRemaining(poolId) {
+      const pool = (state.budgetPools || []).find((entry) => entry.id === poolId);
+      return pool ? poolTotals(pool).remaining : 0;
+    }
+
+    function getDaysRemainingForPool(poolId) {
+      const pool = (state.budgetPools || []).find((entry) => entry.id === poolId);
+      if (!pool?.endDate) return null;
+      return Math.max(0, dayDiff(pool.endDate));
+    }
+
+    function getSafeDailySpend(poolId) {
+      const days = getDaysRemainingForPool(poolId);
+      if (days === null) return null;
+      return getPoolRemaining(poolId) / Math.max(1, days);
+    }
+
+    function getSafeWeeklySpend(poolId) {
+      const daily = getSafeDailySpend(poolId);
+      return daily === null ? null : daily * 7;
+    }
+
+    function getSpendingByCategory() {
+      return state.money.filter((entry) => entry.type === "expense").reduce((map, entry) => {
+        const key = entry.category || "Uncategorised";
+        map[key] = (map[key] || 0) + Number(entry.amount || 0);
+        return map;
+      }, {});
+    }
+
+    function getSpendingOverTime() {
+      return Object.entries(state.money.filter((entry) => entry.type === "expense" && entry.date).reduce((map, entry) => {
+        map[entry.date] = (map[entry.date] || 0) + Number(entry.amount || 0);
+        return map;
+      }, {})).sort((a, b) => a[0].localeCompare(b[0])).map(([date, amount]) => ({ date, amount }));
+    }
+
+    function getPoolSpending() {
+      return (state.budgetPools || []).filter((pool) => !pool.archived).map((pool) => ({
+        label: pool.name,
+        amount: poolTransactions(pool).filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0)
+      })).filter((item) => item.amount > 0);
+    }
+
+    function getMonthlyIncomeExpense() {
+      const months = {};
+      state.money.filter((entry) => entry.date).forEach((entry) => {
+        const month = entry.date.slice(0, 7);
+        months[month] = months[month] || { label: month, income: 0, expenses: 0 };
+        if (entry.type === "income") months[month].income += Number(entry.amount || 0);
+        else months[month].expenses += Number(entry.amount || 0);
+      });
+      return Object.values(months).sort((a, b) => a.label.localeCompare(b.label));
+    }
+
+    function getTravelFundProgressOverTime() {
+      let running = Number(state.settings.travelCurrent || 0);
+      return state.money
+        .filter((entry) => entry.date && (entry.type === "income" || entry.type === "expense"))
+        .slice()
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((entry) => {
+          running += entry.type === "income" ? Number(entry.amount || 0) : -Number(entry.amount || 0);
+          return { date: entry.date, amount: Math.max(0, running) };
+        });
     }
 
     function activePlanningWindow() {
@@ -2852,7 +3089,7 @@
       const packingPacked = state.packing.filter((item) => item.status === "Packed").length;
       const adminTotal = state.documents.length + state.tasks.filter((task) => task.category === "Travel admin").length;
       const adminDone = state.documents.filter((doc) => doc.status === "Done" || doc.done).length + state.tasks.filter((task) => task.category === "Travel admin" && task.done).length;
-      const pool = activeBudgetPool();
+      const pool = getActiveBudgetPool();
       const activePoolTotal = pool ? poolTotals(pool) : null;
       const budgetReadyParts = [
         Boolean(pool),
@@ -2897,14 +3134,14 @@
     }
 
     function budgetPace() {
-      const pool = activeBudgetPool();
+      const pool = getActiveBudgetPool();
       if (!pool) {
         return { pool: null, remaining: null, remainingDays: null, safeDaily: null, safeWeekly: null, recentDaily: 0, warning: "No active budget pool" };
       }
       const poolTotal = poolTotals(pool);
-      const remainingDays = pool.endDate ? Math.max(1, dayDiff(pool.endDate)) : null;
-      const safeDaily = remainingDays ? poolTotal.remaining / remainingDays : null;
-      const safeWeekly = safeDaily === null ? null : safeDaily * 7;
+      const remainingDays = getDaysRemainingForPool(pool.id);
+      const safeDaily = getSafeDailySpend(pool.id);
+      const safeWeekly = getSafeWeeklySpend(pool.id);
       const recentDaily = state.money
         .filter((entry) => entry.type === "expense" && transactionBelongsToPool(entry, pool) && daysAgo(entry.date) < 7)
         .reduce((sum, entry) => sum + Number(entry.amount || 0), 0) / 7;
@@ -3044,15 +3281,14 @@
       setText("prepPct", `${prepPercent}%`);
       document.getElementById("prepFill").style.width = `${prepPercent}%`;
       setText("prepMeta", `${t.readinessDone} of ${t.readinessTotal} readiness items`);
-      const activePool = activeBudgetPool();
+      const activePool = getActiveBudgetPool();
       const activePoolTotal = activePool ? poolTotals(activePool) : null;
       setText("prepMoney", activePoolTotal ? money(activePoolTotal.remaining) : money(0));
       setText("prepMoneyMeta", activePool ? `${activePool.name} active pool remaining.` : "No active budget pool. Add one in Budget.");
-      const visiblePools = (state.budgetPools || []).filter((pool) => !pool.archived);
-      const totalPoolAmount = visiblePools.reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
-      const totalPoolRemaining = visiblePools.reduce((sum, pool) => sum + poolTotals(pool).remaining, 0);
+      const totalPoolAmount = getTravelFundTarget();
+      const totalPoolRemaining = getTravelFundTotal();
       setText("travelFund", money(totalPoolRemaining));
-      const travelPct = pct(totalPoolRemaining, totalPoolAmount || state.settings.travelTarget);
+      const travelPct = pct(totalPoolRemaining, totalPoolAmount);
       document.getElementById("travelFundFill").style.width = `${travelPct}%`;
       setText("travelFundMeta", totalPoolAmount ? `${travelPct}% of ${money(totalPoolAmount)} across budget pools.` : `${travelPct}% of ${money(state.settings.travelTarget)} target.`);
       setText("emergencyFund", money(state.settings.emergencyCurrent));
@@ -3210,15 +3446,15 @@
       const names = categories.map((category) => category.name);
       document.querySelectorAll("select[data-finance-category-select]").forEach((select) => {
         const current = select.value;
-        select.innerHTML = names.map((name) => `<option>${escapeHtml(name)}</option>`).join("");
+        select.innerHTML = `<option value="">Uncategorised</option>${names.map((name) => `<option>${escapeHtml(name)}</option>`).join("")}`;
         if (current && names.includes(current)) select.value = current;
       });
       document.querySelectorAll("select[data-finance-subcategory-select]").forEach((select) => {
         const form = select.closest("form");
-        const categoryName = form?.querySelector("[data-finance-category-select]")?.value || names[0] || "";
+        const categoryName = form?.querySelector("[data-finance-category-select]")?.value || "";
         const category = categories.find((item) => item.name === categoryName);
         const current = select.value;
-        const options = ["", ...(category?.subcategories || [])];
+        const options = ["", ...activeSubcategories(category).map((subcategory) => subcategory.name)];
         select.innerHTML = options.map((name) => `<option>${escapeHtml(name)}</option>`).join("");
         if (current && options.includes(current)) select.value = current;
       });
@@ -3448,6 +3684,8 @@
       setValue("travelCurrentInput", state.settings.travelCurrent);
       setValue("emergencyTargetInput", state.settings.emergencyTarget);
       setValue("emergencyCurrentInput", state.settings.emergencyCurrent);
+      renderBudgetTabs();
+      renderBudgetOverview();
       const list = document.getElementById("moneyList");
       list.innerHTML = "";
       state.money.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach((entry) => {
@@ -3461,6 +3699,57 @@
       renderPlanningWindows();
       renderMilestones();
       renderBudgetPace();
+      renderFinanceAnalytics();
+    }
+
+    function renderBudgetTabs() {
+      const validViews = ["overview", "pools", "transactions", "categories", "analytics"];
+      const view = validViews.includes(state.settings.budgetView) ? state.settings.budgetView : "overview";
+      state.settings.budgetView = view;
+      document.querySelectorAll("[data-budget-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.budgetView === view);
+      });
+      document.querySelectorAll("[data-budget-panel]").forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.budgetPanel === view);
+      });
+    }
+
+    function renderBudgetOverview() {
+      const root = document.getElementById("budgetOverviewCards");
+      if (!root) return;
+      const pool = getActiveBudgetPool();
+      const target = getTravelFundTarget();
+      const total = getTravelFundTotal();
+      const progress = pct(total, target);
+      const remaining = pool ? getPoolRemaining(pool.id) : null;
+      const days = pool ? getDaysRemainingForPool(pool.id) : null;
+      const daily = pool ? getSafeDailySpend(pool.id) : null;
+      const weekly = pool ? getSafeWeeklySpend(pool.id) : null;
+      root.innerHTML = [
+        ["Travel fund", money(total), target ? `${progress}% of ${money(target)}` : "Target not set"],
+        ["Active pool", pool?.name || "No active pool", pool ? `${money(remaining)} remaining` : "Create or activate a pool"],
+        ["Pool window", days === null ? "Not set" : `${days} days`, pool?.endDate ? `Ends ${formatDate(pool.endDate)}` : "No end date"],
+        ["Safe spend", daily === null ? "Not set" : money(daily), weekly === null ? "Weekly not set" : `${money(weekly)} / week`]
+      ].map(([label, value, detail]) => `<div class="finance-kpi"><span class="muted">${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong><span class="hint">${escapeHtml(String(detail))}</span></div>`).join("");
+
+      const recentRoot = document.getElementById("recentMoneyList");
+      if (!recentRoot) return;
+      const recent = state.money.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 5);
+      recentRoot.innerHTML = "";
+      if (!recent.length) {
+        recentRoot.innerHTML = `<div class="empty">No recent transactions yet.</div>`;
+        return;
+      }
+      recent.forEach((entry) => {
+        const node = document.createElement("div");
+        node.className = "item compact";
+        node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn">Edit</button><button type="button" class="danger-btn">Delete</button></div>`;
+        node.querySelector(".item-title").textContent = `${entry.type === "income" ? "Income" : "Expense"} - ${money(entry.amount)}`;
+        node.querySelector(".item-body").textContent = [entry.date || "No date", entry.description || entry.note || "", entry.category || "Uncategorised"].filter(Boolean).join(" - ");
+        node.querySelector(".ghost-btn").addEventListener("click", () => editMoney(entry));
+        node.querySelector(".danger-btn").addEventListener("click", () => removeItem("money", entry.id));
+        recentRoot.appendChild(node);
+      });
     }
 
     function renderBudgetPace() {
@@ -3483,26 +3772,50 @@
     }
 
     function renderBudgetPools() {
-      renderList("budgetPoolList", orderedItems(state.budgetPools || []), (pool) => {
+      const root = document.getElementById("budgetPoolList");
+      root.innerHTML = "";
+      const pools = orderedItems(state.budgetPools || []);
+      if (!pools.length) {
+        root.innerHTML = `<div class="empty">No budget pools yet. Add one for a date range or phase.</div>`;
+        return;
+      }
+      pools.forEach((pool) => {
         const totalsForPool = poolTotals(pool);
-        return settingRow(
-          { ...pool, label: pool.name },
-          `${pool.archived ? "Archived" : pool.active ? "Active" : "Inactive"} - ${money(totalsForPool.remaining)} remaining of ${money(pool.amount)}${pool.endDate ? " - ends " + formatDate(pool.endDate) : ""}`,
-          () => editBudgetPool(pool),
-          () => {
-            pool.archived = !pool.archived;
-            render();
-          },
-          pool.archived ? "Unarchive" : "Archive",
-          () => removeBudgetPool(pool.id)
-        );
+        const node = document.createElement("div");
+        node.className = "item compact";
+        node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn edit-pool">Edit</button><button type="button" class="ghost-btn active-pool"></button><button type="button" class="ghost-btn archive-pool"></button><button type="button" class="danger-btn delete-pool">Delete</button></div>`;
+        node.querySelector(".item-title").textContent = pool.name;
+        node.querySelector(".item-body").textContent = [
+          pool.archived ? "Archived" : pool.active ? "Active" : "Inactive",
+          `${money(totalsForPool.remaining)} remaining`,
+          `${money(poolBaseAmount(pool))} starting`,
+          pool.amount ? `${money(pool.amount)} target` : "",
+          pool.startDate || pool.endDate ? `${formatDate(pool.startDate)} to ${formatDate(pool.endDate)}` : "No dates",
+          pool.phase || "No phase",
+          pool.notes || ""
+        ].filter(Boolean).join(" - ");
+        node.querySelector(".edit-pool").addEventListener("click", () => editBudgetPool(pool));
+        const activeButton = node.querySelector(".active-pool");
+        activeButton.textContent = pool.active === false ? "Set Active" : "Deactivate";
+        activeButton.addEventListener("click", () => {
+          pool.active = pool.active === false;
+          render();
+        });
+        const archiveButton = node.querySelector(".archive-pool");
+        archiveButton.textContent = pool.archived ? "Unarchive" : "Archive";
+        archiveButton.addEventListener("click", () => {
+          pool.archived = !pool.archived;
+          render();
+        });
+        node.querySelector(".delete-pool").addEventListener("click", () => removeBudgetPool(pool.id));
+        root.appendChild(node);
       });
     }
 
     function renderFinanceCategories() {
       renderList("financeCategoryList", financeCategories(true), (category) => settingRow(
         category,
-        `${category.archived ? "Archived" : "Active"} - ${(category.subcategories || []).join(", ") || "No subcategories"}`,
+        `${category.archived ? "Archived" : "Active"} - ${activeSubcategories(category).map((subcategory) => subcategory.name).join(", ") || "No subcategories"}${category.notes ? " - " + category.notes : ""}`,
         () => editFinanceCategory(category),
         () => {
           category.archived = !category.archived;
@@ -3532,11 +3845,7 @@
     }
 
     function renderSpendingChart() {
-      const byCategory = {};
-      state.money.filter((entry) => entry.type === "expense").forEach((entry) => {
-        const key = entry.category || "Uncategorised";
-        byCategory[key] = (byCategory[key] || 0) + Number(entry.amount || 0);
-      });
+      const byCategory = getSpendingByCategory();
       const max = Math.max(1, ...Object.values(byCategory));
       const chart = document.getElementById("spendingChart");
       chart.innerHTML = "";
@@ -3550,6 +3859,81 @@
         chart.appendChild(row);
       });
       if (!Object.keys(byCategory).length) chart.innerHTML = `<div class="empty">Add expense entries to see charts.</div>`;
+    }
+
+    function renderFinanceAnalytics() {
+      const root = document.getElementById("financeAnalytics");
+      if (!root) return;
+      const byCategory = Object.entries(getSpendingByCategory()).sort((a, b) => b[1] - a[1]);
+      const byPool = getPoolSpending().sort((a, b) => b.amount - a.amount);
+      const spendingOverTime = getSpendingOverTime();
+      const fundProgress = getTravelFundProgressOverTime();
+      const monthly = getMonthlyIncomeExpense();
+      root.innerHTML = [
+        chartCard("Spending by Category", byCategory.length ? pieChart(byCategory) : emptyChart("Add expenses with categories.")),
+        chartCard("Spending by Pool", byPool.length ? barChart(byPool) : emptyChart("Link transactions to pools.")),
+        chartCard("Spending Over Time", spendingOverTime.length > 1 ? lineChart(spendingOverTime, "amount") : emptyChart("Add expenses on at least two dates.")),
+        chartCard("Travel Fund Progress", fundProgress.length > 1 ? lineChart(fundProgress, "amount") : emptyChart("Add dated income or expenses to build a trend.")),
+        chartCard("Income vs Expenses by Month", monthly.length ? groupedMonthlyBars(monthly) : emptyChart("Add dated transactions to compare months."))
+      ].join("");
+    }
+
+    function chartCard(title, content) {
+      return `<div class="chart-card"><h3>${escapeHtml(title)}</h3>${content}</div>`;
+    }
+
+    function emptyChart(message) {
+      return `<div class="empty">${escapeHtml(message)}</div>`;
+    }
+
+    function chartColour(index) {
+      return ["#2f6f73", "#d28a32", "#8aa6a3", "#6f7f95", "#c65f5f", "#7a6fa8", "#4f8f5f"][index % 7];
+    }
+
+    function pieChart(entries) {
+      const total = entries.reduce((sum, [, amount]) => sum + amount, 0);
+      let cursor = 0;
+      const stops = entries.map(([, amount], index) => {
+        const start = cursor;
+        cursor += (amount / Math.max(1, total)) * 100;
+        return `${chartColour(index)} ${start}% ${cursor}%`;
+      }).join(", ");
+      const legend = entries.map(([label, amount], index) => `<span><i class="legend-dot" style="background:${chartColour(index)}"></i>${escapeHtml(label)} ${money(amount)}</span>`).join("");
+      return `<div class="pie-chart" style="background: conic-gradient(${stops})"></div><div class="chart-legend">${legend}</div>`;
+    }
+
+    function barChart(items) {
+      const max = Math.max(1, ...items.map((item) => item.amount));
+      return items.map((item) => `<div class="bar-row"><span>${escapeHtml(item.label)}</span><div class="bar-track"><div class="bar-fill" style="width:${pct(item.amount, max)}%"></div></div><strong>${money(item.amount)}</strong></div>`).join("");
+    }
+
+    function lineChart(items, valueKey) {
+      const values = items.map((item) => Number(item[valueKey] || 0));
+      const max = Math.max(1, ...values);
+      const min = Math.min(0, ...values);
+      const range = Math.max(1, max - min);
+      const points = items.map((item, index) => {
+        const x = items.length === 1 ? 50 : (index / (items.length - 1)) * 100;
+        const y = 90 - ((Number(item[valueKey] || 0) - min) / range) * 76;
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      }).join(" ");
+      const first = items[0]?.date || "";
+      const last = items[items.length - 1]?.date || "";
+      return `<div class="line-chart"><svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Finance trend"><polyline points="${points}" fill="none" stroke="#2f6f73" stroke-width="3" vector-effect="non-scaling-stroke"></polyline></svg></div><div class="chart-legend"><span>${escapeHtml(formatDate(first))}</span><span>${escapeHtml(formatDate(last))}</span></div>`;
+    }
+
+    function groupedMonthlyBars(months) {
+      const max = Math.max(1, ...months.flatMap((item) => [item.income, item.expenses]));
+      return months.map((item) => `
+        <div class="bar-row">
+          <span>${escapeHtml(item.label)}</span>
+          <div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct(item.income, max)}%; background:#2f6f73"></div></div>
+            <div class="bar-track" style="margin-top:4px"><div class="bar-fill" style="width:${pct(item.expenses, max)}%; background:#c65f5f"></div></div>
+          </div>
+          <strong>${money(item.income)} / ${money(item.expenses)}</strong>
+        </div>
+      `).join("") + `<div class="chart-legend"><span><i class="legend-dot" style="background:#2f6f73"></i>Income</span><span><i class="legend-dot" style="background:#c65f5f"></i>Expenses</span></div>`;
     }
 
     function renderBudgetSummaries() {
@@ -3851,7 +4235,7 @@
         `${entry.category || "Uncategorised"}${entry.subcategory ? " / " + entry.subcategory : ""}`,
         entry.phase || "Unassigned",
         money(entry.amount),
-        entry.note || ""
+        [entry.description, entry.note].filter(Boolean).join(" - ")
       ].forEach((cell, index) => {
         const element = document.createElement(index === 4 ? "strong" : "span");
         element.textContent = cell;
@@ -4005,7 +4389,7 @@
     function syncDailySpendingEntry(entry) {
       state.money = state.money.filter((item) => !(item.date === entry.date && item.note === "From daily check-in"));
       if (Number(entry.spending || 0) > 0) {
-        const pool = activeBudgetPool();
+        const pool = getActiveBudgetPool();
         state.money.push({
           id: id(),
           type: "expense",
@@ -4091,6 +4475,8 @@
       if (type === null) return;
       const date = promptValue("Date YYYY-MM-DD", item.date || today());
       if (date === null) return;
+      const description = promptValue("Description", item.description || "");
+      if (description === null) return;
       const category = promptValue("Category", item.category || "");
       if (category === null) return;
       const subcategory = promptValue("Subcategory", item.subcategory || "");
@@ -4106,6 +4492,7 @@
       const normalType = type.toLowerCase().startsWith("in") ? "income" : "expense";
       item.type = normalType;
       item.date = date || item.date || today();
+      item.description = description || "";
       item.category = category;
       item.subcategory = subcategory;
       item.phase = phase || item.phase || phaseNames()[0] || "Unassigned";
@@ -4120,6 +4507,8 @@
       if (name === null) return;
       const amount = promptValue("Pool amount", pool.amount || 0);
       if (amount === null) return;
+      const startingAmount = promptValue("Starting amount", pool.startingAmount || pool.amount || 0);
+      if (startingAmount === null) return;
       const startDate = promptValue("Start date YYYY-MM-DD", pool.startDate || "");
       if (startDate === null) return;
       const endDate = promptValue("End date YYYY-MM-DD", pool.endDate || "");
@@ -4132,6 +4521,7 @@
       if (notes === null) return;
       pool.name = name || pool.name || "Budget pool";
       pool.amount = Number(amount) || 0;
+      pool.startingAmount = startingAmount === "" ? Number(amount) || 0 : Number(startingAmount) || 0;
       pool.startDate = startDate || "";
       pool.endDate = endDate || "";
       pool.phase = phase || "";
@@ -4143,12 +4533,19 @@
     function editFinanceCategory(category) {
       const name = promptValue("Category name", category.name || "");
       if (name === null) return;
-      const subcategories = promptValue("Subcategories, comma separated", (category.subcategories || []).join(", "));
+      const subcategories = promptValue("Subcategories, comma separated", activeSubcategories(category).map((entry) => entry.name).join(", "));
       if (subcategories === null) return;
+      const notes = promptValue("Notes", category.notes || "");
+      if (notes === null) return;
       const position = promptValue("Position", category.order || "");
       if (position === null) return;
+      const existing = category.subcategories || [];
       category.name = name || category.name || "Category";
-      category.subcategories = subcategories.split(",").map((item) => item.trim()).filter(Boolean);
+      category.notes = notes || "";
+      category.subcategories = String(subcategories || "").split(",").map((item) => item.trim()).filter(Boolean).map((name) => {
+        const old = existing.find((entry) => entry.name.toLowerCase() === name.toLowerCase());
+        return old ? { ...old, name, archived: false } : { id: id(), name, notes: "", archived: false };
+      });
       moveOrderedItem(state.settings.categories, category, position);
       normaliseOrderedList(state.settings.categories);
       render();
@@ -4719,12 +5116,22 @@
     });
     bindForm("documentForm", (data) => state.documents.push({ id: id(), ...data, done: data.status === "Done" }));
     bindForm("packingForm", (data) => state.packing.push({ id: id(), ...data }));
-    bindForm("moneyForm", (data) => state.money.push({ id: id(), ...data, amount: Number(data.amount) || 0 }));
+    bindForm("moneyForm", (data) => state.money.push({
+      id: id(),
+      ...data,
+      date: data.date || today(),
+      description: data.description || "",
+      category: data.category || "",
+      subcategory: data.subcategory || "",
+      budgetPoolId: data.budgetPoolId || "",
+      amount: Number(data.amount) || 0
+    }));
     bindForm("budgetPoolForm", (data) => {
       const pool = {
         id: id(),
         name: data.name || "Budget pool",
         amount: Number(data.amount) || 0,
+        startingAmount: data.startingAmount === "" ? Number(data.amount) || 0 : Number(data.startingAmount) || 0,
         startDate: data.startDate || "",
         endDate: data.endDate || "",
         phase: data.phase || "",
@@ -4742,7 +5149,8 @@
         id: id(),
         area: "finance",
         name: data.name || "Category",
-        subcategories: String(data.subcategories || "").split(",").map((item) => item.trim()).filter(Boolean),
+        notes: data.notes || "",
+        subcategories: normalizeSubcategories(data.subcategories),
         order: financeCategories(true).length + 1,
         archived: false
       };
@@ -4851,6 +5259,20 @@
     document.querySelectorAll("select[data-finance-category-select]").forEach((select) => {
       select.addEventListener("change", () => {
         renderFinanceSelects();
+      });
+    });
+
+    document.querySelectorAll("[data-budget-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.settings.budgetView = button.dataset.budgetView || "overview";
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-budget-jump]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.settings.budgetView = button.dataset.budgetJump || "overview";
+        render();
       });
     });
 

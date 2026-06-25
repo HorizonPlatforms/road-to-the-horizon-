@@ -17,19 +17,19 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.13.0`.
+Current app version: `0.14.0`.
 
 ## Structure and planning model
 
 The app is organised so normal editing happens close to the section that uses the data:
 
 - Travel contains route stops and the editable phase manager.
-- Budget contains savings targets, flexible budget pools, finance categories/subcategories, planning windows, transactions and milestones.
+- Budget contains Budget 2.0: overview, pools, transactions, categories/subcategories, analytics, planning windows and milestones.
 - Dates & Counters contains editable counters and key travel dates.
 - Habits contains daily habit logging and habit management.
 - Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
 
-Budget Pace now reads from the currently active budget pool instead of relying on one pre-departure pot or one departure date. A budget pool can have a name, amount, start date, end date, linked phase, notes and active/archive status. Older pre-departure money values are migrated into a default budget pool for existing users.
+Budget 2.0 reads from shared finance helpers for travel fund totals, active pools, pool remaining amounts, safe daily/weekly spend, category spending and spending over time. A budget pool can have a name, target amount, starting amount, start date, end date, linked phase, notes and active/archive status. Older pre-departure money values are migrated into a default budget pool for existing users.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
@@ -109,7 +109,7 @@ Then open the served file in the browser.
 
 - `Command` - daily briefing, countdowns, check-ins, priorities and readiness scores.
 - `Travel` - route planner, phase manager, documents, packing and timeline.
-- `Budget` - savings targets, budget pools, planning windows, finance categories, income, expenses, charts and milestones.
+- `Budget` - Budget 2.0 overview, pools, transactions, categories, analytics, planning windows and milestones.
 - `TEFL` - target hours, completed hours, modules, study log and pace tracking.
 - `Content` - content ideas and pipeline tracking.
 - `Writing` - writing ideas, notes and sessions.
