@@ -1532,6 +1532,7 @@
             <label class="field-2">End<input name="endDate" type="date"></label>
             <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
             <label class="field-2"><span>Status</span><select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>
+            <label class="field-2"><span>Total</span><select name="includedInTotalMoney"><option value="true">Included</option><option value="false">Separate</option></select></label>
             <label class="field-12">Notes<input name="notes" placeholder="Purpose, constraints, reminders"></label>
             <button class="field-2 primary-btn" type="submit">Add Pot</button>
           </form>
@@ -1561,6 +1562,7 @@
             <label class="field-2"><span>Status</span><select name="active"><option value="false">Inactive</option><option value="true">Active</option></select></label>
             <button class="field-2 primary-btn" type="submit">Add Window</button>
           </form>
+          <div id="spendingWindowNote" class="hint"></div>
           <div id="planningWindowList" class="list"></div>
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="transactions">
@@ -1850,7 +1852,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.17.0";
+    const APP_VERSION = "0.19.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -2188,6 +2190,7 @@
       merged.wallets = normalizeWallets(data.wallets, merged);
       merged.allocations = normalizeAllocations(data.allocations, merged.wallets, merged);
       merged.budgetPools = normalizeBudgetPools(data.budgetPools, data.phaseBudgets, merged);
+      normaliseFinanceState(merged);
       merged.planningWindows = normalizePlanningWindows(data.planningWindows, merged.budgetPools);
       merged.money = (data.money || next.money).map((entry) => ({
         id: entry.id || id(),
@@ -2454,8 +2457,10 @@
       return orderedItems(source.map((pool, index) => ({
         id: pool.id || id(),
         name: pool.name || pool.title || "Money pot",
+        type: pool.type || pool.tag || "",
         amount: Number(pool.amount ?? pool.allocation ?? pool.startingAmount) || 0,
         startingAmount: Number(pool.startingAmount ?? pool.startAmount ?? pool.amount ?? pool.allocation) || 0,
+        includedInTotalMoney: pool.includedInTotalMoney !== false,
         allocationId: mergedState.allocations?.some((allocation) => allocation.id === pool.allocationId) ? pool.allocationId : (mergedState.allocations?.find((allocation) => allocation.name.toLowerCase().includes("travel"))?.id || mergedState.allocations?.[0]?.id || ""),
         startDate: pool.startDate || pool.start || "",
         endDate: pool.endDate || pool.end || "",
@@ -2465,6 +2470,35 @@
         archived: Boolean(pool.archived),
         order: Number(pool.order) || index + 1
       }))).map((pool, index) => ({ ...pool, order: index + 1 }));
+    }
+
+    function normaliseFinanceState(mergedState) {
+      mergedState.budgetPools = mergedState.budgetPools || [];
+      const emergencyAmount = Number(mergedState.settings?.emergencyCurrent || 0);
+      const hasEmergencyPot = mergedState.budgetPools.some((pool) => {
+        const label = `${pool.name || ""} ${pool.type || ""}`.toLowerCase();
+        return label.includes("emergency");
+      });
+      if (emergencyAmount > 0 && !hasEmergencyPot && !mergedState.settings?.emergencyPotDismissed) {
+        mergedState.budgetPools.push({
+          id: id(),
+          name: "Emergency fund",
+          type: "emergency",
+          amount: emergencyAmount,
+          startingAmount: emergencyAmount,
+          includedInTotalMoney: true,
+          allocationId: mergedState.allocations?.find((allocation) => allocation.name.toLowerCase().includes("emergency"))?.id || "",
+          startDate: "",
+          endDate: "",
+          phase: "",
+          notes: "Protected emergency money",
+          active: false,
+          archived: false,
+          order: mergedState.budgetPools.length + 1
+        });
+      }
+      normaliseOrderedList(mergedState.budgetPools);
+      return mergedState;
     }
 
     function normalizePlanningWindows(savedWindows, budgetPools = []) {
@@ -2509,6 +2543,14 @@
 
     function visibleBudgetPots() {
       return orderedItems(state.budgetPools || []).filter((pool) => !pool.archived);
+    }
+
+    function getAllMoneyPots() {
+      return visibleBudgetPots();
+    }
+
+    function isPotIncludedInTotalMoney(pool) {
+      return pool?.includedInTotalMoney !== false;
     }
 
     function activeWallets() {
@@ -2622,14 +2664,24 @@
       return Number(state.settings.travelCurrent || 0) || getAllocationTotal("Travel");
     }
 
+    function getTravelMoney() {
+      return getTravelFundTotal();
+    }
+
     function getEmergencyFundTotal() {
       return Number(state.settings.emergencyCurrent || 0) || getAllocationTotal("Emergency");
+    }
+
+    function getEmergencyMoney() {
+      return getEmergencyFundTotal();
     }
 
     function getTravelFundTarget() {
       const saved = Number(state.settings.travelTarget || 0);
       if (saved) return saved;
-      return (state.budgetPools || []).filter((pool) => !pool.archived).reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
+      return getAllMoneyPots()
+        .filter((pool) => !`${pool.name || ""} ${pool.type || ""}`.toLowerCase().includes("emergency"))
+        .reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
     }
 
     function getPoolRemaining(poolId) {
@@ -3172,7 +3224,7 @@
     function totals() {
       const income = state.money.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const expenses = state.money.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      const prepRemaining = Number(state.settings.prepPot || 0) + income - expenses;
+      const prepRemaining = getTotalMoney();
       const teflModuleHours = state.teflModules.reduce((sum, entry) => sum + Number(entry.hours || 0), 0);
       const studyHours = state.studyLog.reduce((sum, entry) => sum + Number(entry.hours || 0), 0);
       const teflHours = Math.max(teflModuleHours, studyHours, Number(state.settings.teflManualHours || 0));
@@ -3314,13 +3366,12 @@
       const packingPacked = state.packing.filter((item) => item.status === "Packed").length;
       const adminTotal = state.documents.length + state.tasks.filter((task) => task.category === "Travel admin").length;
       const adminDone = state.documents.filter((doc) => doc.status === "Done" || doc.done).length + state.tasks.filter((task) => task.category === "Travel admin" && task.done).length;
-      const pool = getActiveBudgetPool();
-      const activePoolTotal = pool ? poolTotals(pool) : null;
+      const budget = getBudgetPace();
       const budgetReadyParts = [
-        Boolean(pool),
-        !activePoolTotal || activePoolTotal.remaining >= 0,
-        (state.budgetPools || []).some((item) => !item.archived && Number(item.amount || 0) > 0),
-        Number(state.settings.emergencyTarget || 0) === 0 || Number(state.settings.emergencyCurrent || 0) >= Number(state.settings.emergencyTarget || 0) * 0.5,
+        Boolean(budget.pots?.length),
+        budget.remaining === null || budget.remaining >= 0,
+        getAllMoneyPots().some((item) => Number(item.amount || 0) > 0),
+        Number(state.settings.emergencyTarget || 0) === 0 || getEmergencyMoney() >= Number(state.settings.emergencyTarget || 0) * 0.5,
         state.money.length > 0
       ];
       const contentTotal = state.content.length || 1;
@@ -3385,6 +3436,22 @@
 
     function getBudgetPace() {
       return budgetPace();
+    }
+
+    function getBudgetPaceSource() {
+      const pace = getBudgetPace();
+      const windowItem = getActiveSpendingWindow();
+      if (!pace.pots?.length) {
+        const suggested = getSuggestedPots();
+        return suggested.length ? `Suggested by date: ${suggested.map((pot) => pot.name).join(", ")}` : "No active pot selected";
+      }
+      if (windowItem) return `Spending window: ${windowItem.title}`;
+      if (pace.pots.length === 1) {
+        const pot = pace.pots[0];
+        if (pot.startDate || pot.endDate) return `Active pot date range: ${pot.name}`;
+        return `Active pot: ${pot.name}`;
+      }
+      return `Active pots: ${pace.pots.map((pot) => pot.name).join(", ")}`;
     }
 
     function recommendedPriorities() {
@@ -3569,7 +3636,7 @@
       const poolRemaining = visiblePools.reduce((sum, pool) => sum + poolTotals(pool).remaining, 0);
       document.getElementById("milestoneStats").innerHTML = statsHtml([
         ["Money pots", poolAmount ? `${pct(poolRemaining, poolAmount)}% remaining` : "No pots"],
-        ["Emergency fund", `${pct(state.settings.emergencyCurrent, state.settings.emergencyTarget)}%`],
+        ["Emergency fund", `${pct(getEmergencyMoney(), state.settings.emergencyTarget)}%`],
         ["Expenses logged", money(totals().expenses)],
         ["Income logged", money(totals().income)]
       ]);
@@ -3933,6 +4000,7 @@
     }
 
     function renderBudget() {
+      normaliseFinanceState(state);
       setValue("prepPotInput", state.settings.prepPot);
       setValue("travelTargetInput", state.settings.travelTarget);
       setValue("travelCurrentInput", state.settings.travelCurrent);
@@ -3975,10 +4043,11 @@
       if (!root) return;
       const pace = getBudgetPace();
       const target = getTravelFundTarget();
-      const total = getTravelFundTotal();
+      const total = getTravelMoney();
       const totalMoney = getTotalMoney();
-      const emergency = getAllocationTotal("Emergency") || Number(state.settings.emergencyCurrent || 0);
+      const emergency = getEmergencyMoney();
       const windowItem = getActiveSpendingWindow();
+      const paceSource = getBudgetPaceSource();
       const progress = pct(total, target);
       const activePotLabel = pace.pots?.length > 1 ? `${pace.pots.length} active pots` : pace.pool?.name || "No active pot";
       const activePotDetail = pace.pots?.length ? `${money(pace.remaining)} available` : "Activate a pot or spending window";
@@ -3987,7 +4056,7 @@
         ["Travel money", money(total), target ? `${progress}% of ${money(target)}` : "Target not set"],
         ["Emergency money", money(emergency), "Protected money"],
         ["Active pot", activePotLabel, activePotDetail],
-        ["Spending window", windowItem?.title || "No active window", pace.remainingDays === null ? "No end date" : `${pace.remainingDays} days left`],
+        ["Pace source", paceSource, pace.remainingDays === null ? "No end date" : `${pace.remainingDays} days left`],
         ["Safe spend", pace.safeDaily === null ? "Not set" : money(pace.safeDaily), pace.safeWeekly === null ? "Weekly not set" : `${money(pace.safeWeekly)} / week`]
       ].map(([label, value, detail]) => `<div class="finance-kpi"><span class="muted">${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong><span class="hint">${escapeHtml(String(detail))}</span></div>`).join("");
 
@@ -4020,6 +4089,7 @@
       }
       const windowItem = activePlanningWindow();
       document.getElementById("budgetPace").innerHTML = statsHtml([
+        ["Pace source", getBudgetPaceSource()],
         ["Active pots", pace.pots.length > 1 ? pace.pots.map((pot) => pot.name).join(", ") : pace.pool.name],
         ["Amount remaining", money(pace.remaining)],
         ["Days remaining", pace.remainingDays === null ? "Not set" : String(pace.remainingDays)],
@@ -4093,6 +4163,7 @@
           `${money(totalsForPool.remaining)} remaining`,
           `${money(poolBaseAmount(pool))} starting`,
           pool.amount ? `${money(pool.amount)} target` : "",
+          isPotIncludedInTotalMoney(pool) ? "Included in total money" : "Separate money",
           pool.startDate || pool.endDate ? `${formatDate(pool.startDate)} to ${formatDate(pool.endDate)}` : "No dates",
           pool.phase || "No phase",
           pool.notes || ""
@@ -4131,6 +4202,12 @@
     }
 
     function renderPlanningWindows() {
+      const note = document.getElementById("spendingWindowNote");
+      if (note) note.textContent = getActiveSpendingWindow()
+        ? ""
+        : getActivePots().some((pot) => pot.startDate || pot.endDate)
+          ? `No formal spending window is active. Budget Pace is using ${getBudgetPaceSource()}.`
+          : "No active spending window. Activate a pot or create a window to calculate safe spend.";
       renderList("planningWindowList", orderedItems(state.planningWindows || []), (windowItem) => {
         const potIds = [...(windowItem.budgetPoolIds || []), windowItem.budgetPoolId].filter(Boolean);
         const pots = visibleBudgetPots().filter((entry) => potIds.includes(entry.id));
@@ -4457,7 +4534,8 @@
           dateItemList: ["No active dates", "Add countdowns and count-up counters here."],
           archivedDateItemList: ["No archived dates", "Archived dates will appear here."],
           travelDateList: ["No active travel dates", "Add key dates to power countdowns and timelines."],
-          archivedTravelDateList: ["No archived dates", "Archived travel dates will appear here."]
+          archivedTravelDateList: ["No archived dates", "Archived travel dates will appear here."],
+          planningWindowList: ["No spending windows yet", "Budget Pace can still use active pot date ranges, or you can add a window here."]
         };
         const [title, body] = messages[idName] || ["Nothing here yet", "New entries will appear here after you add them."];
         root.innerHTML = `<div class="empty"><strong>${title}</strong><span>${body}</span></div>`;
@@ -4675,7 +4753,13 @@
     }
 
     function removeBudgetPool(poolId) {
-      if (!confirm("Delete this money pot? Existing transactions will stay, but their pot link will be cleared.")) return;
+      const pot = (state.budgetPools || []).find((pool) => pool.id === poolId);
+      const isEmergency = `${pot?.name || ""} ${pot?.type || ""}`.toLowerCase().includes("emergency");
+      const warning = isEmergency
+        ? "Delete this emergency fund pot? Emergency money may disappear from pot-based views, but your emergency money setting will remain editable in Money Settings."
+        : "Delete this money pot? Existing transactions will stay, but their pot link will be cleared.";
+      if (!confirm(warning)) return;
+      if (isEmergency) state.settings.emergencyPotDismissed = true;
       state.budgetPools = (state.budgetPools || []).filter((pool) => pool.id !== poolId);
       state.money.forEach((entry) => {
         if (entry.budgetPoolId === poolId) entry.budgetPoolId = "";
@@ -4733,7 +4817,8 @@
     function syncDailySpendingEntry(entry) {
       state.money = state.money.filter((item) => !(item.date === entry.date && item.note === "From daily check-in"));
       if (Number(entry.spending || 0) > 0) {
-        const pool = getActiveBudgetPool();
+        const activePots = getActivePots();
+        const pool = activePots.length === 1 ? activePots[0] : null;
         state.money.push({
           id: id(),
           type: "expense",
@@ -4901,6 +4986,8 @@
       if (phase === null) return;
       const active = promptValue("Active? yes/no", pool.active === false ? "no" : "yes");
       if (active === null) return;
+      const included = promptValue("Included in total money? yes/no", isPotIncludedInTotalMoney(pool) ? "yes" : "no");
+      if (included === null) return;
       const notes = promptValue("Notes", pool.notes || "");
       if (notes === null) return;
       pool.name = name || pool.name || "Money pot";
@@ -4910,6 +4997,7 @@
       pool.endDate = endDate || "";
       pool.phase = phase || "";
       pool.active = /^(yes|y|true|active)$/i.test(active);
+      pool.includedInTotalMoney = /^(yes|y|true|included)$/i.test(included);
       pool.notes = notes || "";
       render();
     }
@@ -5559,6 +5647,7 @@
         amount: Number(data.amount) || 0,
         startingAmount: data.startingAmount === "" ? Number(data.amount) || 0 : Number(data.startingAmount) || 0,
         allocationId: data.allocationId || "",
+        includedInTotalMoney: data.includedInTotalMoney !== "false",
         startDate: data.startDate || "",
         endDate: data.endDate || "",
         phase: data.phase || "",
@@ -5686,6 +5775,7 @@
       if (!element) return;
       element.addEventListener("input", (event) => {
         state.settings[key] = Number(event.target.value) || 0;
+        if (key === "emergencyCurrent") state.settings.emergencyPotDismissed = false;
         render();
       });
     });

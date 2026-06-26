@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.17.0`.
+Current app version: `0.19.0`.
 
 ## Structure and planning model
 
@@ -29,7 +29,7 @@ The app is organised so normal editing happens close to the section that uses th
 - Habits contains daily habit logging and habit management.
 - Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
 
-Budget keeps the surface model simple: total money, money pots, spending windows and transactions. Pots organise money but do not create extra money. Budget Pace combines active pots when more than one is active, spending windows can link to one or more pots, and dashboard money cards read from the same shared helpers. Older travel fund, emergency fund and pre-departure values are preserved and migrated into compatible records for existing users.
+Budget keeps the surface model simple: total money, money pots, spending windows and transactions. Emergency money is represented as an editable emergency pot when needed, pots can be marked included or separate, and Budget Pace clearly states whether it is using an active window or active pot date ranges. Older travel fund, emergency fund and pre-departure values are preserved and migrated into compatible records for existing users.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
