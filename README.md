@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.25.0`.
+Current app version: `0.26.0`.
 
 ## Structure and planning model
 
@@ -30,9 +30,11 @@ The app is organised so normal editing happens close to the section that uses th
 - Habits contains the habit manager and history summaries.
 - Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
 
-Budget keeps the surface model simple: total available money, travel allocation, current spending pot, budget period and transactions. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Travel allocation and emergency reserve are normal editable pots, and add/remove/transfer/correction actions are saved as transaction records so balances remain auditable. Older finance values are preserved and migrated into compatible records for existing users.
+Budget keeps the surface model simple: total money, travel fund, emergency fund, current budget, budget period and transactions. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Travel and emergency funds are reserved money groups, and add/remove/transfer/correction actions are saved as transaction records so balances remain auditable. Older finance values are preserved and migrated into compatible records for existing users.
 
 Journal and Finance are connected without duplicating spending records. Finance remains the source of truth for transactions, balances, pots, Safe Spend and analytics. Journal entries show same-day Finance transactions, can link to transaction IDs, and ask before creating a new Finance transaction from a journal spending item.
+
+Finance reconciliation model: wallets represent top-level money, allocations represent reserved funds such as Travel or Emergency, and pots are budgets inside those funds. The current budget is a pot inside a fund, not extra money. The overview shows a warning when reserved funds or included pots exceed total money.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
