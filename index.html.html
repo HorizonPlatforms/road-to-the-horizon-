@@ -1296,8 +1296,8 @@
       </div>
       <form id="setupForm" class="form-grid">
         <label class="field-3">Departure date<input name="departureDate" type="date" required></label>
-        <label class="field-3">Starting budget<input name="startingBudget" type="number" min="0" step="0.01" placeholder="0.00"></label>
-        <label class="field-3">Travel fund target<input name="travelTarget" type="number" min="0" step="0.01" placeholder="0.00"></label>
+        <label class="field-3">Total money<input name="startingBudget" type="number" min="0" step="0.01" placeholder="0.00"></label>
+        <label class="field-3">Travel pot target<input name="travelTarget" type="number" min="0" step="0.01" placeholder="0.00"></label>
         <label class="field-3">TEFL target hours<input name="teflTarget" type="number" min="1" step="1" value="120"></label>
         <label class="field-12">Route stops<textarea name="route" placeholder="One per line: City | Country | Target date | Phase | Notes"></textarea></label>
         <label class="field-12">Key dates<textarea name="keyDates" placeholder="One per line: Title | Start date | End date | Location or phase | Notes"></textarea></label>
@@ -1504,6 +1504,7 @@
           <h2>Budget</h2>
           <div class="budget-tabs" aria-label="Budget views">
             <button class="budget-tab active" type="button" data-budget-view="overview">Overview</button>
+            <button class="budget-tab" type="button" data-budget-view="wallets">Wallet</button>
             <button class="budget-tab" type="button" data-budget-view="pools">Pots</button>
             <button class="budget-tab" type="button" data-budget-view="transactions">Transactions</button>
             <button class="budget-tab" type="button" data-budget-view="categories">Categories</button>
@@ -1526,41 +1527,17 @@
           <h2>Recent Transactions</h2>
           <div id="recentMoneyList" class="list"></div>
         </div>
-        <div class="panel span-12 budget-panel active" data-budget-panel="overview">
-          <h2>Money Settings</h2>
-          <p class="hint">Set your main money figures here. Pots organise this money; they do not create extra money.</p>
-          <div class="form-grid">
-            <label class="field-4">Starting money<input id="prepPotInput" type="number" min="0" step="0.01"></label>
-            <label class="field-4">Travel fund target<input id="travelTargetInput" type="number" min="0" step="0.01"></label>
-            <label class="field-4">Current travel fund<input id="travelCurrentInput" type="number" min="0" step="0.01"></label>
-            <label class="field-4">Emergency fund target<input id="emergencyTargetInput" type="number" min="0" step="0.01"></label>
-            <label class="field-4">Emergency fund current<input id="emergencyCurrentInput" type="number" min="0" step="0.01"></label>
-          </div>
-        </div>
         <div class="panel span-12 budget-panel" data-budget-panel="wallets">
-          <h2>Wallets / Accounts</h2>
-          <p class="hint">Wallets are actual money. Total wealth is the sum of active wallet balances.</p>
+          <h2>Master Wallet / Total Money</h2>
+          <p class="hint">Wallets represent real money that exists. Pots organise that money and do not create extra money.</p>
           <form id="walletForm" class="form-grid">
-            <label class="field-4">Name<input name="name" required placeholder="Current account"></label>
+            <label class="field-4">Name<input name="name" required placeholder="Master wallet"></label>
             <label class="field-3">Balance<input name="balance" type="number" step="0.01" required></label>
             <label class="field-2"><span>Status</span><select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>
             <label class="field-12">Notes<input name="notes" placeholder="Optional wallet notes"></label>
             <button class="field-2 primary-btn" type="submit">Add Wallet</button>
           </form>
           <div id="walletList" class="list"></div>
-        </div>
-        <div class="panel span-12 budget-panel" data-budget-panel="allocations">
-          <h2>Allocations</h2>
-          <p class="hint">Allocations divide wallet money into purposes. They do not create extra money.</p>
-          <form id="allocationForm" class="form-grid">
-            <label class="field-3">Name<input name="name" required placeholder="Travel"></label>
-            <label class="field-3">Wallet<select name="walletId" data-wallet-select></select></label>
-            <label class="field-2">Amount<input name="amount" type="number" step="0.01" required></label>
-            <label class="field-2"><span>Status</span><select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>
-            <label class="field-12">Notes<input name="notes" placeholder="Purpose, rules or reminders"></label>
-            <button class="field-2 primary-btn" type="submit">Add Allocation</button>
-          </form>
-          <div id="allocationList" class="list"></div>
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="pools">
           <h2>Money Pots</h2>
@@ -1579,6 +1556,7 @@
             <button class="field-2 primary-btn" type="submit">Add Pot</button>
           </form>
           <h3>Move Money</h3>
+          <p class="hint">Add/remove changes total money for included pots. Transfers move money between pots without changing total money. Corrections record an adjustment.</p>
           <form id="potMovementForm" class="form-grid">
             <label class="field-3">Action<select name="action"><option value="add">Add money</option><option value="remove">Remove money</option><option value="transfer">Transfer between pots</option><option value="set">Set pot balance</option></select></label>
             <label class="field-3">Pot<select name="potId" data-budget-pool-select></select></label>
@@ -1903,7 +1881,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.20.0";
+    const APP_VERSION = "0.21.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -2036,11 +2014,6 @@
       const demo = clone(defaults);
       demo.meta.setupComplete = true;
       demo.meta.demoMode = true;
-      demo.settings.prepPot = 750;
-      demo.settings.travelTarget = 3500;
-      demo.settings.travelCurrent = 900;
-      demo.settings.emergencyTarget = 600;
-      demo.settings.emergencyCurrent = 150;
       demo.settings.teflTargetHours = 120;
       demo.settings.teflManualHours = 18;
       demo.settings.travelDates = [
@@ -2065,21 +2038,17 @@
         { id: id(), category: "Route", timeframe: "Final prep", due: "2027-03-20", title: "Research first destination accommodation", done: false },
         { id: id(), category: "TEFL", timeframe: "Final prep", due: "", title: "Complete another study block", done: true }
       ];
-      demo.money = [
-        { id: id(), type: "income", date: "2027-02-03", category: "Other", subcategory: "Misc", phase: "Pre-departure", amount: 250, note: "Demo income" },
-        { id: id(), type: "expense", date: "2027-02-08", category: "Gear", subcategory: "Tech", phase: "Pre-departure", amount: 45, note: "Demo expense" }
-      ];
       demo.wallets = [
-        { id: id(), name: "Demo current account", balance: 900, notes: "Fake demo wallet", active: true, archived: false, order: 1 },
-        { id: id(), name: "Demo cash wallet", balance: 150, notes: "Fake demo cash", active: true, archived: false, order: 2 }
-      ];
-      demo.allocations = [
-        { id: id(), name: "Travel", walletId: demo.wallets[0].id, amount: 900, notes: "Fake travel allocation", active: true, archived: false, order: 1 },
-        { id: id(), name: "Emergency", walletId: demo.wallets[1].id, amount: 150, notes: "Fake emergency allocation", active: true, archived: false, order: 2 }
+        { id: id(), name: "Demo master wallet", balance: 2400, notes: "Fake demo total money", active: true, archived: false, order: 1 }
       ];
       demo.budgetPools = [
-        { id: id(), name: "Demo pre-departure pot", amount: 750, startingAmount: 750, allocationId: demo.allocations[0].id, startDate: "2027-02-01", endDate: "2027-04-30", phase: "Pre-departure", notes: "Sample local planning pool", active: true, archived: false, order: 1 },
-        { id: id(), name: "Demo Europe fund", amount: 1200, startingAmount: 1200, allocationId: demo.allocations[0].id, startDate: "2027-05-01", endDate: "2027-06-15", phase: "Europe", notes: "Fake route fund example", active: true, archived: false, order: 2 }
+        { id: id(), name: "Demo Travel Money", type: "travel", amount: 1600, startingAmount: 1500, allocationId: "", includedInTotalMoney: true, startDate: "2027-02-01", endDate: "2027-04-30", phase: "Pre-departure", notes: "Sample travel pot", active: true, archived: false, order: 1 },
+        { id: id(), name: "Demo Emergency Fund", type: "emergency", amount: 600, startingAmount: 600, allocationId: "", includedInTotalMoney: true, startDate: "", endDate: "", phase: "", notes: "Sample protected pot", active: false, archived: false, order: 2 },
+        { id: id(), name: "Demo Europe Fund", type: "travel", amount: 900, startingAmount: 300, allocationId: "", includedInTotalMoney: true, startDate: "2027-05-01", endDate: "2027-06-15", phase: "Europe", notes: "Fake route fund example", active: true, archived: false, order: 3 }
+      ];
+      demo.money = [
+        { id: id(), type: "income", date: "2027-02-03", category: "Other", subcategory: "Misc", phase: "Pre-departure", potId: demo.budgetPools[0].id, budgetPoolId: demo.budgetPools[0].id, amount: 250, note: "Demo income", kind: "" },
+        { id: id(), type: "expense", date: "2027-02-08", category: "Gear", subcategory: "Tech", phase: "Pre-departure", potId: demo.budgetPools[0].id, budgetPoolId: demo.budgetPools[0].id, amount: 45, note: "Demo expense", kind: "" }
       ];
       demo.planningWindows = [
         { id: id(), title: "Demo final prep window", startDate: "2027-04-20", endDate: "2027-04-30", budgetPoolId: demo.budgetPools[0].id, phase: "Pre-departure", archived: false, order: 1 }
@@ -2590,27 +2559,47 @@
 
     function normaliseFinanceState(mergedState) {
       mergedState.budgetPools = mergedState.budgetPools || [];
-      const emergencyAmount = Number(mergedState.settings?.emergencyCurrent || 0);
-      const hasEmergencyPot = mergedState.budgetPools.some((pool) => {
-        const label = `${pool.name || ""} ${pool.type || ""}`.toLowerCase();
-        return label.includes("emergency");
-      });
-      if (emergencyAmount > 0 && !hasEmergencyPot && !mergedState.settings?.emergencyPotDismissed) {
+      const hasPotLike = (matcher) => mergedState.budgetPools.some((pool) => matcher(`${pool.name || ""} ${pool.type || ""}`.toLowerCase()));
+      const addLegacyPot = (pool) => {
         mergedState.budgetPools.push({
           id: id(),
-          name: "Emergency fund",
-          type: "emergency",
-          amount: emergencyAmount,
-          startingAmount: emergencyAmount,
           includedInTotalMoney: true,
-          allocationId: mergedState.allocations?.find((allocation) => allocation.name.toLowerCase().includes("emergency"))?.id || "",
+          allocationId: "",
           startDate: "",
           endDate: "",
           phase: "",
-          notes: "Protected emergency money",
           active: false,
           archived: false,
-          order: mergedState.budgetPools.length + 1
+          order: mergedState.budgetPools.length + 1,
+          ...pool
+        });
+      };
+      const travelAmount = Number(mergedState.settings?.travelCurrent || mergedState.settings?.prepPot || 0);
+      const travelTarget = Number(mergedState.settings?.travelTarget || 0);
+      if ((travelAmount > 0 || travelTarget > 0) && !hasPotLike((label) => label.includes("travel") || label.includes("pre-departure")) && !mergedState.settings?.legacyTravelPotDismissed) {
+        addLegacyPot({
+          name: "Travel Money",
+          type: "travel",
+          amount: travelTarget || travelAmount,
+          startingAmount: travelAmount || travelTarget,
+          endDate: departureFromSettings(mergedState.settings),
+          phase: "Pre-departure",
+          notes: "Migrated from older travel money settings",
+          active: true
+        });
+      }
+      const emergencyAmount = Number(mergedState.settings?.emergencyCurrent || 0);
+      const emergencyTarget = Number(mergedState.settings?.emergencyTarget || 0);
+      if ((emergencyAmount > 0 || emergencyTarget > 0) && !hasPotLike((label) => label.includes("emergency")) && !mergedState.settings?.emergencyPotDismissed) {
+        addLegacyPot({
+          name: "Emergency fund",
+          type: "emergency",
+          amount: emergencyTarget || emergencyAmount,
+          startingAmount: emergencyAmount || emergencyTarget,
+          includedInTotalMoney: true,
+          allocationId: mergedState.allocations?.find((allocation) => allocation.name.toLowerCase().includes("emergency"))?.id || "",
+          notes: "Protected emergency money",
+          active: false
         });
       }
       normaliseOrderedList(mergedState.budgetPools);
@@ -2667,6 +2656,34 @@
 
     function isPotIncludedInTotalMoney(pool) {
       return pool?.includedInTotalMoney !== false;
+    }
+
+    function getIncludedPots(includeArchived = false) {
+      return getAllMoneyPots()
+        .filter((pool) => includeArchived || !pool.archived)
+        .filter(isPotIncludedInTotalMoney);
+    }
+
+    function getExternalPots(includeArchived = false) {
+      return getAllMoneyPots()
+        .filter((pool) => includeArchived || !pool.archived)
+        .filter((pool) => !isPotIncludedInTotalMoney(pool));
+    }
+
+    function isEmergencyPot(pool) {
+      return `${pool?.name || ""} ${pool?.type || ""}`.toLowerCase().includes("emergency");
+    }
+
+    function isTravelPot(pool) {
+      return !isEmergencyPot(pool);
+    }
+
+    function transactionAffectsTotal(entry) {
+      if (entry.kind === "transfer") return false;
+      const poolId = entry.potId || entry.budgetPoolId || "";
+      if (!poolId) return true;
+      const pool = (state.budgetPools || []).find((item) => item.id === poolId);
+      return !pool || isPotIncludedInTotalMoney(pool);
     }
 
     function activeWallets() {
@@ -2765,7 +2782,9 @@
     function adjustPotBalance(poolId, difference, note = "Manual correction") {
       const amount = Math.abs(Number(difference) || 0);
       if (amount < 0.01) return null;
-      return createPotTransaction(poolId, difference >= 0 ? "income" : "expense", amount, note, "adjustment");
+      const pool = (state.budgetPools || []).find((entry) => entry.id === poolId);
+      const totalNote = pool && !isPotIncludedInTotalMoney(pool) ? "total money unchanged because pot is separate" : "total money adjusted";
+      return createPotTransaction(poolId, difference >= 0 ? "income" : "expense", amount, `${note} (${totalNote})`, "adjustment");
     }
 
     function transferBetweenPots(fromPoolId, toPoolId, amount, note = "") {
@@ -2791,11 +2810,12 @@
     }
 
     function getTotalMoney() {
-      const settingsTotal = Number(state.settings.travelCurrent || 0) + Number(state.settings.emergencyCurrent || 0);
       const walletTotal = getTotalWealth();
-      const base = settingsTotal || Number(state.settings.prepPot || 0) || walletTotal;
-      const income = state.money.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      const expenses = state.money.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      const includedPotBase = getIncludedPots().reduce((sum, pool) => sum + poolBaseAmount(pool), 0);
+      const base = walletTotal || includedPotBase;
+      const totalEntries = (state.money || []).filter(transactionAffectsTotal);
+      const income = totalEntries.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      const expenses = totalEntries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       return base + income - expenses;
     }
 
@@ -2826,7 +2846,9 @@
     }
 
     function getTravelFundTotal() {
-      return Number(state.settings.travelCurrent || 0) || getAllocationTotal("Travel");
+      return getAllMoneyPots()
+        .filter((pool) => !pool.archived && isTravelPot(pool))
+        .reduce((sum, pool) => sum + Math.max(0, getPotBalance(pool.id)), 0);
     }
 
     function getTravelMoney() {
@@ -2834,7 +2856,9 @@
     }
 
     function getEmergencyFundTotal() {
-      return Number(state.settings.emergencyCurrent || 0) || getAllocationTotal("Emergency");
+      return getAllMoneyPots()
+        .filter((pool) => !pool.archived && isEmergencyPot(pool))
+        .reduce((sum, pool) => sum + Math.max(0, getPotBalance(pool.id)), 0);
     }
 
     function getEmergencyMoney() {
@@ -2842,10 +2866,14 @@
     }
 
     function getTravelFundTarget() {
-      const saved = Number(state.settings.travelTarget || 0);
-      if (saved) return saved;
       return getAllMoneyPots()
-        .filter((pool) => !`${pool.name || ""} ${pool.type || ""}`.toLowerCase().includes("emergency"))
+        .filter((pool) => !pool.archived && isTravelPot(pool))
+        .reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
+    }
+
+    function getEmergencyFundTarget() {
+      return getAllMoneyPots()
+        .filter((pool) => !pool.archived && isEmergencyPot(pool))
         .reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
     }
 
@@ -2934,9 +2962,12 @@
     }
 
     function getTravelFundProgressOverTime() {
-      let running = Number(state.settings.travelCurrent || 0);
+      const travelPots = getAllMoneyPots().filter((pool) => !pool.archived && isTravelPot(pool));
+      const travelPotIds = new Set(travelPots.map((pool) => pool.id));
+      let running = travelPots.reduce((sum, pool) => sum + poolBaseAmount(pool), 0);
       return state.money
         .filter((entry) => entry.date && entry.kind !== "transfer" && (entry.type === "income" || entry.type === "expense"))
+        .filter((entry) => !travelPotIds.size || travelPotIds.has(entry.potId || entry.budgetPoolId || ""))
         .slice()
         .sort((a, b) => a.date.localeCompare(b.date))
         .map((entry) => {
@@ -3396,8 +3427,9 @@
     }
 
     function totals() {
-      const income = state.money.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      const expenses = state.money.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      const nonTransferMoney = state.money.filter((entry) => entry.kind !== "transfer");
+      const income = nonTransferMoney.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      const expenses = nonTransferMoney.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const prepRemaining = getTotalMoney();
       const teflModuleHours = state.teflModules.reduce((sum, entry) => sum + Number(entry.hours || 0), 0);
       const studyHours = state.studyLog.reduce((sum, entry) => sum + Number(entry.hours || 0), 0);
@@ -3545,7 +3577,7 @@
         Boolean(budget.pots?.length),
         budget.remaining === null || budget.remaining >= 0,
         getAllMoneyPots().some((item) => Number(item.amount || 0) > 0),
-        Number(state.settings.emergencyTarget || 0) === 0 || getEmergencyMoney() >= Number(state.settings.emergencyTarget || 0) * 0.5,
+        getEmergencyFundTarget() === 0 || getEmergencyMoney() >= getEmergencyFundTarget() * 0.5,
         state.money.length > 0
       ];
       const contentTotal = state.content.length || 1;
@@ -3597,7 +3629,7 @@
       const safeDaily = remainingDays === null ? null : remaining / Math.max(1, remainingDays);
       const safeWeekly = safeDaily === null ? null : safeDaily * 7;
       const recentDaily = state.money
-        .filter((entry) => entry.type === "expense" && pots.some((pot) => transactionBelongsToPool(entry, pot)) && daysAgo(entry.date) < 7)
+        .filter((entry) => isSpendingEntry(entry) && pots.some((pot) => transactionBelongsToPool(entry, pot)) && daysAgo(entry.date) < 7)
         .reduce((sum, entry) => sum + Number(entry.amount || 0), 0) / 7;
       let warning = "Within current pace";
       if (remaining < 0) warning = "Over budget";
@@ -3619,10 +3651,10 @@
         const suggested = getSuggestedPots();
         return suggested.length ? `Suggested by date: ${suggested.map((pot) => pot.name).join(", ")}` : "No active pot selected";
       }
-      if (windowItem) return `Spending window: ${windowItem.title}`;
+      if (windowItem) return `Active spending window: ${windowItem.title}`;
       if (pace.pots.length === 1) {
         const pot = pace.pots[0];
-        if (pot.startDate || pot.endDate) return `Active pot date range: ${pot.name}`;
+        if (pot.startDate || pot.endDate) return `Pace based on active pot date range: ${pot.name}`;
         return `Active pot: ${pot.name}`;
       }
       return `Active pots: ${pace.pots.map((pot) => pot.name).join(", ")}`;
@@ -3769,9 +3801,10 @@
       setText("travelFundMeta", totalPoolAmount ? `${travelPct}% of ${money(totalPoolAmount)} target.` : "No travel target set.");
       const emergencyCurrent = getEmergencyFundTotal();
       setText("emergencyFund", money(emergencyCurrent));
-      const emergencyPct = pct(emergencyCurrent, state.settings.emergencyTarget);
+      const emergencyTarget = getEmergencyFundTarget();
+      const emergencyPct = pct(emergencyCurrent, emergencyTarget);
       document.getElementById("emergencyFill").style.width = `${emergencyPct}%`;
-      setText("emergencyMeta", state.settings.emergencyTarget ? `${emergencyPct}% of ${money(state.settings.emergencyTarget)}.` : "No emergency target set.");
+      setText("emergencyMeta", emergencyTarget ? `${emergencyPct}% of ${money(emergencyTarget)} target.` : "No emergency pot target set.");
       setText("teflPct", `${t.teflPercent}%`);
       document.getElementById("teflFill").style.width = `${t.teflPercent}%`;
       setText("teflMeta", `${t.teflHours} of ${state.settings.teflTargetHours} hours, ${Math.max(0, state.settings.teflTargetHours - t.teflHours)} remaining.`);
@@ -3810,7 +3843,7 @@
       const poolRemaining = visiblePools.reduce((sum, pool) => sum + poolTotals(pool).remaining, 0);
       document.getElementById("milestoneStats").innerHTML = statsHtml([
         ["Money pots", poolAmount ? `${pct(poolRemaining, poolAmount)}% remaining` : "No pots"],
-        ["Emergency fund", `${pct(getEmergencyMoney(), state.settings.emergencyTarget)}%`],
+        ["Emergency fund", `${pct(getEmergencyMoney(), getEmergencyFundTarget())}%`],
         ["Expenses logged", money(totals().expenses)],
         ["Income logged", money(totals().income)]
       ]);
@@ -4175,11 +4208,6 @@
 
     function renderBudget() {
       normaliseFinanceState(state);
-      setValue("prepPotInput", state.settings.prepPot);
-      setValue("travelTargetInput", state.settings.travelTarget);
-      setValue("travelCurrentInput", state.settings.travelCurrent);
-      setValue("emergencyTargetInput", state.settings.emergencyTarget);
-      setValue("emergencyCurrentInput", state.settings.emergencyCurrent);
       renderBudgetTabs();
       renderBudgetOverview();
       const list = document.getElementById("moneyList");
@@ -4191,7 +4219,6 @@
       renderSpendingChart();
       renderBudgetSummaries();
       renderWallets();
-      renderAllocations();
       renderBudgetPools();
       renderFinanceCategories();
       renderPlanningWindows();
@@ -4201,7 +4228,7 @@
     }
 
     function renderBudgetTabs() {
-      const validViews = ["overview", "pools", "transactions", "categories", "analytics"];
+      const validViews = ["overview", "wallets", "pools", "transactions", "categories", "analytics"];
       const view = validViews.includes(state.settings.budgetView) ? state.settings.budgetView : "overview";
       state.settings.budgetView = view;
       document.querySelectorAll("[data-budget-view]").forEach((button) => {
@@ -4220,15 +4247,16 @@
       const total = getTravelMoney();
       const totalMoney = getTotalMoney();
       const emergency = getEmergencyMoney();
-      const windowItem = getActiveSpendingWindow();
       const paceSource = getBudgetPaceSource();
       const progress = pct(total, target);
+      const emergencyTarget = getEmergencyFundTarget();
+      const emergencyProgress = pct(emergency, emergencyTarget);
       const activePotLabel = pace.pots?.length > 1 ? `${pace.pots.length} active pots` : pace.pool?.name || "No active pot";
       const activePotDetail = pace.pots?.length ? `${money(pace.remaining)} available` : "Activate a pot or spending window";
       root.innerHTML = [
-        ["Total money", money(totalMoney), "Pots are not double-counted"],
+        ["Total money", money(totalMoney), activeWallets().length ? "From active wallet balance and transactions" : "From included pots and transactions"],
         ["Travel money", money(total), target ? `${progress}% of ${money(target)}` : "Target not set"],
-        ["Emergency money", money(emergency), "Protected money"],
+        ["Emergency money", money(emergency), emergencyTarget ? `${emergencyProgress}% of ${money(emergencyTarget)}` : "No emergency pot target"],
         ["Active pot", activePotLabel, activePotDetail],
         ["Pace source", paceSource, pace.remainingDays === null ? "No end date" : `${pace.remainingDays} days left`],
         ["Safe spend", pace.safeDaily === null ? "Not set" : money(pace.safeDaily), pace.safeWeekly === null ? "Weekly not set" : `${money(pace.safeWeekly)} / week`]
@@ -4244,7 +4272,7 @@
       }
       recent.forEach((entry) => {
         const node = document.createElement("div");
-        node.className = `item compact ${pool.active ? "active-money" : ""}`;
+        node.className = `item compact ${entry.type === "income" ? "income-row" : "expense-row"}`;
         node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn">Edit</button><button type="button" class="danger-btn">Delete</button></div>`;
         node.querySelector(".item-title").textContent = `${entry.type === "income" ? "Income" : "Expense"} - ${money(entry.amount)}`;
         node.querySelector(".item-body").textContent = [entry.date || "No date", entry.description || entry.note || "", entry.category || "Uncategorised"].filter(Boolean).join(" - ");
@@ -4284,6 +4312,11 @@
         root.innerHTML = `<div class="empty">Add a wallet or account to track actual money.</div>`;
         return;
       }
+      const summary = document.createElement("div");
+      summary.className = "item compact";
+      summary.innerHTML = `<div><div class="item-title">Current total money</div><div class="item-body"></div></div>`;
+      summary.querySelector(".item-body").textContent = `${money(getTotalMoney())} after income, expenses and included pot adjustments`;
+      root.appendChild(summary);
       wallets.forEach((wallet) => {
         root.appendChild(settingRow(
           wallet,
@@ -4292,28 +4325,6 @@
           () => { wallet.archived = !wallet.archived; render(); },
           wallet.archived ? "Unarchive" : "Archive",
           () => removeWallet(wallet.id)
-        ));
-      });
-    }
-
-    function renderAllocations() {
-      const root = document.getElementById("allocationList");
-      if (!root) return;
-      root.innerHTML = "";
-      const allocations = orderedItems(state.allocations || []);
-      if (!allocations.length) {
-        root.innerHTML = `<div class="empty">Add allocations to divide wallet money by purpose.</div>`;
-        return;
-      }
-      allocations.forEach((allocation) => {
-        const wallet = (state.wallets || []).find((entry) => entry.id === allocation.walletId);
-        root.appendChild(settingRow(
-          allocation,
-          `${allocation.archived ? "Archived" : allocation.active ? "Active" : "Inactive"} - ${money(allocation.amount)} from ${wallet?.name || "Unassigned wallet"} - ${money(getAllocationRemaining(allocation.id))} unallocated${allocation.notes ? " - " + allocation.notes : ""}`,
-          () => editAllocation(allocation),
-          () => { allocation.archived = !allocation.archived; render(); },
-          allocation.archived ? "Unarchive" : "Archive",
-          () => removeAllocation(allocation.id)
         ));
       });
     }
@@ -4506,7 +4517,7 @@
     }
 
     function renderBudgetSummaries() {
-      const expenses = state.money.filter((entry) => entry.type === "expense");
+      const expenses = state.money.filter(isSpendingEntry);
       const week = expenses.filter((entry) => daysAgo(entry.date) <= 7).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const month = expenses.filter((entry) => daysAgo(entry.date) <= 31).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const poolHtml = (state.budgetPools || []).filter((pool) => !pool.archived).map((pool) => {
@@ -4950,11 +4961,13 @@
     function removeBudgetPool(poolId) {
       const pot = (state.budgetPools || []).find((pool) => pool.id === poolId);
       const isEmergency = `${pot?.name || ""} ${pot?.type || ""}`.toLowerCase().includes("emergency");
+      const isLegacyTravel = `${pot?.name || ""} ${pot?.type || ""}`.toLowerCase().match(/travel|pre-departure/);
       const warning = isEmergency
-        ? "Delete this emergency fund pot? Emergency money may disappear from pot-based views, but your emergency money setting will remain editable in Money Settings."
+        ? "Delete this emergency fund pot? Emergency money will be removed from pot-based finance views. You can restore it later by creating a new emergency pot."
         : "Delete this money pot? Existing transactions will stay, but their pot link will be cleared.";
       if (!confirm(warning)) return;
       if (isEmergency) state.settings.emergencyPotDismissed = true;
+      if (isLegacyTravel) state.settings.legacyTravelPotDismissed = true;
       state.budgetPools = (state.budgetPools || []).filter((pool) => pool.id !== poolId);
       state.money.forEach((entry) => {
         if (entry.budgetPoolId === poolId) entry.budgetPoolId = "";
@@ -5401,7 +5414,9 @@
     }
 
     function bindForm(idName, handler, afterSubmit) {
-      document.getElementById(idName).addEventListener("submit", (event) => {
+      const form = document.getElementById(idName);
+      if (!form) return;
+      form.addEventListener("submit", (event) => {
         event.preventDefault();
         const data = Object.fromEntries(new FormData(event.target).entries());
         handler(data);
@@ -5471,13 +5486,42 @@
       const next = clone(defaults);
       next.meta.setupComplete = true;
       next.meta.demoMode = false;
-      next.settings.prepPot = Number(data.startingBudget) || 0;
-      next.settings.travelTarget = Number(data.travelTarget) || 0;
       next.settings.teflTargetHours = Number(data.teflTarget) || 120;
       next.settings.travelDates = parseSetupDates(data.keyDates, data.departureDate);
       next.route = parseSetupRoute(data.route);
       next.settings.timelinePhases = timelineFromRoute(next.route);
       next.tasks = parseSetupTasks(data.tasks);
+      const startingBudget = Number(data.startingBudget) || 0;
+      const travelTarget = Number(data.travelTarget) || 0;
+      if (startingBudget > 0) {
+        next.wallets = [{
+          id: id(),
+          name: "Master wallet",
+          balance: startingBudget,
+          notes: "Created during first-run setup",
+          active: true,
+          archived: false,
+          order: 1
+        }];
+      }
+      if (startingBudget > 0 || travelTarget > 0) {
+        next.budgetPools = [{
+          id: id(),
+          name: "Travel Money",
+          type: "travel",
+          amount: travelTarget || startingBudget,
+          startingAmount: startingBudget || travelTarget,
+          includedInTotalMoney: true,
+          allocationId: "",
+          startDate: today(),
+          endDate: data.departureDate || "",
+          phase: "Pre-departure",
+          notes: "Created during first-run setup",
+          active: true,
+          archived: false,
+          order: 1
+        }];
+      }
       state = normalize(next);
     }
 
@@ -5847,20 +5891,6 @@
       });
       normaliseOrderedList(state.wallets);
     });
-    bindForm("allocationForm", (data) => {
-      state.allocations = state.allocations || [];
-      state.allocations.push({
-        id: id(),
-        name: data.name || "Allocation",
-        walletId: data.walletId || "",
-        amount: Number(data.amount) || 0,
-        notes: data.notes || "",
-        active: bool(data.active),
-        archived: false,
-        order: state.allocations.length + 1
-      });
-      normaliseOrderedList(state.allocations);
-    });
     bindForm("budgetPoolForm", (data) => {
       const pool = {
         id: id(),
@@ -6008,11 +6038,6 @@
     });
 
     [
-      ["prepPotInput", "prepPot"],
-      ["travelTargetInput", "travelTarget"],
-      ["travelCurrentInput", "travelCurrent"],
-      ["emergencyTargetInput", "emergencyTarget"],
-      ["emergencyCurrentInput", "emergencyCurrent"],
       ["teflTargetInput", "teflTargetHours"],
       ["teflManualHoursInput", "teflManualHours"]
     ].forEach(([elementId, key]) => {
@@ -6020,7 +6045,6 @@
       if (!element) return;
       element.addEventListener("input", (event) => {
         state.settings[key] = Number(event.target.value) || 0;
-        if (key === "emergencyCurrent") state.settings.emergencyPotDismissed = false;
         render();
       });
     });
