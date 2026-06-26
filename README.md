@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.21.0`.
+Current app version: `0.22.0`.
 
 ## Structure and planning model
 
@@ -29,7 +29,7 @@ The app is organised so normal editing happens close to the section that uses th
 - Habits contains daily habit logging and habit management.
 - Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
 
-Budget keeps the surface model simple: Master Wallet / Total Money, money pots, spending windows and transactions. Travel money and emergency money are normal editable pots, pots can be marked included or separate, and Budget Pace clearly states whether it is using an active window or active pot date ranges. Pot edits use an in-app editor, and add/remove/transfer/correction actions are saved as transaction records so balances remain auditable. Older travel fund, emergency fund and pre-departure values are preserved and migrated into compatible records for existing users.
+Budget keeps the surface model simple: total available money, travel allocation, current spending pot, spending windows and transactions. Travel allocation and emergency reserve are normal editable pots, and Safe Spend clearly states which budget period is controlling the daily amount. Pot edits use an in-app editor, and add/remove/transfer/correction actions are saved as transaction records so balances remain auditable. Older finance values are preserved and migrated into compatible records for existing users.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
@@ -75,7 +75,7 @@ When the app opens without saved local data, it shows a setup screen for:
 
 - Departure date
 - Starting budget
-- Travel fund target
+- Travel pot target
 - Route stops
 - Key dates
 - TEFL target hours

@@ -1323,7 +1323,7 @@
         <div id="prepMoneyMeta" class="hint">Add a money pot to start</div>
       </div>
       <div class="metric-card">
-        <div class="muted">Travel fund</div>
+        <div class="muted">Travel budget</div>
         <div id="travelFund" class="metric">&pound;0</div>
         <div class="progress-bar"><div id="travelFundFill" class="progress-fill"></div></div>
         <div id="travelFundMeta" class="hint">Targets live in Budget</div>
@@ -1520,7 +1520,7 @@
           </div>
         </div>
         <div class="panel span-6 budget-panel active" data-budget-panel="overview">
-          <h2>Budget Pace</h2>
+          <h2>Safe Spend</h2>
           <div id="budgetPace"></div>
         </div>
         <div class="panel span-6 budget-panel active" data-budget-panel="overview">
@@ -1529,7 +1529,7 @@
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="wallets">
           <h2>Master Wallet / Total Money</h2>
-          <p class="hint">Wallets represent real money that exists. Pots organise that money and do not create extra money.</p>
+          <p class="hint">Your wallet is the money you actually have available.</p>
           <form id="walletForm" class="form-grid">
             <label class="field-4">Name<input name="name" required placeholder="Master wallet"></label>
             <label class="field-3">Balance<input name="balance" type="number" step="0.01" required></label>
@@ -1541,7 +1541,7 @@
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="pools">
           <h2>Money Pots</h2>
-          <p class="hint">Pots organise your money. Multiple active pots can be combined in Budget Pace.</p>
+          <p class="hint">Pots divide your money into useful budgets for trips, phases or savings goals.</p>
           <form id="budgetPoolForm" class="form-grid">
             <label class="field-3">Name<input name="name" required placeholder="Europe fund"></label>
             <label class="field-3" hidden>Allocation<select name="allocationId" data-allocation-select></select></label>
@@ -1556,7 +1556,7 @@
             <button class="field-2 primary-btn" type="submit">Add Pot</button>
           </form>
           <h3>Move Money</h3>
-          <p class="hint">Add/remove changes total money for included pots. Transfers move money between pots without changing total money. Corrections record an adjustment.</p>
+          <p class="hint">Add or remove money when your real balance changes; transfer money when you only move it between pots.</p>
           <form id="potMovementForm" class="form-grid">
             <label class="field-3">Action<select name="action"><option value="add">Add money</option><option value="remove">Remove money</option><option value="transfer">Transfer between pots</option><option value="set">Set pot balance</option></select></label>
             <label class="field-3">Pot<select name="potId" data-budget-pool-select></select></label>
@@ -1569,7 +1569,7 @@
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="categories">
           <h2>Finance Categories</h2>
-          <p class="hint">Flexible categories and subcategories for spending reports.</p>
+          <p class="hint">Categories explain where transactions go and power spending reports.</p>
           <form id="financeCategoryForm" class="form-grid">
             <label class="field-3">Category<input name="name" required placeholder="Food"></label>
             <label class="field-5">Subcategories<input name="subcategories" placeholder="Groceries, Eating out, Coffee"></label>
@@ -1596,6 +1596,7 @@
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="transactions">
           <h2>Transactions</h2>
+          <p class="hint">Transactions record money coming in, money going out, and the pot each entry belongs to.</p>
           <form id="moneyForm" class="form-grid">
             <label class="field-2">Type<select name="type"><option value="expense">Expense</option><option value="income">Income</option></select></label>
             <label class="field-2">Date<input name="date" type="date"></label>
@@ -1881,7 +1882,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.21.0";
+    const APP_VERSION = "0.22.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -2257,17 +2258,17 @@
       const base = (savedDates && savedDates.length ? savedDates : defaultTravelDates()).map((entry) => ({ ...entry }));
       const defaultByKey = new Map(defaultTravelDates().map((entry) => [entry.key, entry]));
       const legacyDateMeta = {
-        departure: { title: "Departure", location: "Travel Phase", notes: "Migrated departure date" },
-        julyPaidTrip: { title: "Paid trip", location: "Trip Phase", notes: "Migrated trip date" },
-        julyTripReturn: { title: "Trip return", location: "Setup Phase", notes: "Migrated return date" },
-        lateAugustPaidTrip: { title: "Paid trip", location: "Trip Phase", notes: "Migrated trip date" },
-        septemberConference: { title: "Conference", location: "Conference Phase", notes: "Migrated conference date" }
+        departure: { title: "Departure", location: "Travel Phase", notes: "" },
+        julyPaidTrip: { title: "Paid trip", location: "Trip Phase", notes: "" },
+        julyTripReturn: { title: "Trip return", location: "Setup Phase", notes: "" },
+        lateAugustPaidTrip: { title: "Paid trip", location: "Trip Phase", notes: "" },
+        septemberConference: { title: "Conference", location: "Conference Phase", notes: "" }
       };
       Object.entries(datesByKey).forEach(([key, date]) => {
         if (key === "septemberConferenceEnd") return;
         const existing = base.find((entry) => entry.key === key);
         const fallback = defaultByKey.get(key);
-        const meta = legacyDateMeta[key] || { title: "Travel date", location: "", notes: "Migrated date" };
+        const meta = legacyDateMeta[key] || { title: "Travel date", location: "", notes: "" };
         if (existing) {
           existing.date = existing.date || date || fallback?.date || "";
           if (key === "septemberConference") existing.endDate = existing.endDate || datesByKey.septemberConferenceEnd || fallback?.endDate || "";
@@ -2469,7 +2470,7 @@
           source.push({
             name: "Main wallet",
             balance,
-            notes: "Migrated from older savings target fields",
+            notes: "",
             active: true
           });
         }
@@ -2493,10 +2494,10 @@
         const travelAmount = Number(mergedState.settings?.travelCurrent || mergedState.settings?.prepPot || legacyPoolAmount || 0);
         const emergencyAmount = Number(mergedState.settings?.emergencyCurrent || 0);
         if (travelAmount > 0) {
-          source.push({ name: "Travel", walletId: defaultWalletId, amount: travelAmount, notes: "Migrated travel allocation", active: true });
+          source.push({ name: "Travel", walletId: defaultWalletId, amount: travelAmount, notes: "", active: true });
         }
         if (emergencyAmount > 0) {
-          source.push({ name: "Emergency", walletId: defaultWalletId, amount: emergencyAmount, notes: "Migrated emergency allocation", active: true });
+          source.push({ name: "Emergency", walletId: defaultWalletId, amount: emergencyAmount, notes: "", active: true });
         }
       }
       return orderedItems(source.map((allocation, index) => ({
@@ -2522,7 +2523,7 @@
             startDate: (mergedState.meta?.createdAt || today()).slice(0, 10),
             endDate: departureFromSettings(mergedState.settings),
             phase: "Pre-departure",
-            notes: "Migrated from the old pre-departure money settings",
+            notes: "",
             active: true
           });
         }
@@ -2534,7 +2535,7 @@
             startDate: "",
             endDate: "",
             phase: entry.phase,
-            notes: "Migrated from old phase allocation",
+            notes: "",
             active: true
           });
         });
@@ -2584,7 +2585,7 @@
           startingAmount: travelAmount || travelTarget,
           endDate: departureFromSettings(mergedState.settings),
           phase: "Pre-departure",
-          notes: "Migrated from older travel money settings",
+          notes: "",
           active: true
         });
       }
@@ -3618,7 +3619,7 @@
     function budgetPace() {
       const pots = getActivePots();
       if (!pots.length) {
-        return { pool: null, pots: [], remaining: null, remainingDays: null, safeDaily: null, safeWeekly: null, recentDaily: 0, warning: "No active pot selected" };
+        return { pool: null, pots: [], remaining: null, remainingDays: null, safeDaily: null, safeWeekly: null, recentDaily: 0, warning: "No current spending pot selected" };
       }
       const pool = pots[0];
       const remaining = pots.reduce((sum, pot) => sum + getPotBalance(pot.id), 0);
@@ -3633,7 +3634,7 @@
         .reduce((sum, entry) => sum + Number(entry.amount || 0), 0) / 7;
       let warning = "Within current pace";
       if (remaining < 0) warning = "Over budget";
-      else if (pots.length > 1) warning = `${pots.length} active pots combined`;
+      else if (pots.length > 1) warning = `${pots.length} current budgets combined`;
       else if (remainingDays === null) warning = "No end date set";
       else if (recentDaily > safeDaily && recentDaily > 0) warning = "Recent spending is above safe pace";
       else if (safeDaily !== null && safeDaily < 10) warning = "Very tight daily budget";
@@ -3649,15 +3650,14 @@
       const windowItem = getActiveSpendingWindow();
       if (!pace.pots?.length) {
         const suggested = getSuggestedPots();
-        return suggested.length ? `Suggested by date: ${suggested.map((pot) => pot.name).join(", ")}` : "No active pot selected";
+        return suggested.length ? `Suggested budget: ${suggested.map((pot) => pot.name).join(", ")}` : "No active budget selected";
       }
-      if (windowItem) return `Active spending window: ${windowItem.title}`;
+      if (windowItem) return `${windowItem.title}`;
       if (pace.pots.length === 1) {
         const pot = pace.pots[0];
-        if (pot.startDate || pot.endDate) return `Pace based on active pot date range: ${pot.name}`;
-        return `Active pot: ${pot.name}`;
+        return pot.name;
       }
-      return `Active pots: ${pace.pots.map((pot) => pot.name).join(", ")}`;
+      return pace.pots.map((pot) => pot.name).join(", ");
     }
 
     function recommendedPriorities() {
@@ -3792,13 +3792,13 @@
       setText("prepMeta", `${t.readinessDone} of ${t.readinessTotal} readiness items`);
       const pace = getBudgetPace();
       setText("prepMoney", pace.pots?.length ? money(pace.remaining) : money(0));
-      setText("prepMoneyMeta", pace.pots?.length ? `${pace.pots.length > 1 ? pace.pots.length + " active pots" : pace.pool.name} remaining.` : "No active pot selected. Add one in Budget.");
+      setText("prepMoneyMeta", pace.pots?.length ? `${pace.pots.length > 1 ? pace.pots.length + " current budgets" : pace.pool.name} remaining.` : "Choose a current spending pot in Budget.");
       const totalPoolAmount = getTravelFundTarget();
       const totalPoolRemaining = getTravelFundTotal();
       setText("travelFund", money(totalPoolRemaining));
       const travelPct = pct(totalPoolRemaining, totalPoolAmount);
       document.getElementById("travelFundFill").style.width = `${travelPct}%`;
-      setText("travelFundMeta", totalPoolAmount ? `${travelPct}% of ${money(totalPoolAmount)} target.` : "No travel target set.");
+      setText("travelFundMeta", totalPoolAmount ? `${travelPct}% of ${money(totalPoolAmount)} reserved for travel.` : "Create a travel pot to track this.");
       const emergencyCurrent = getEmergencyFundTotal();
       setText("emergencyFund", money(emergencyCurrent));
       const emergencyTarget = getEmergencyFundTarget();
@@ -3873,7 +3873,7 @@
           ["Current phase", currentPhase()],
           ["Days until departure", daysToDeparture === null ? "Not set" : String(daysToDeparture)],
           ["Active planning window", windowItem ? `${windowItem.title} (${Math.max(0, dayDiff(windowItem.endDate))} days left)` : "None"],
-          ["Budget status", budget.pool ? `${budget.pots.length > 1 ? budget.pots.length + " active pots" : budget.pool.name}: ${money(budget.remaining)} left, ${budget.safeDaily === null ? "Not set" : money(budget.safeDaily)} safe daily spend` : "No active pot selected"],
+          ["Budget status", budget.pool ? `${budget.pots.length > 1 ? budget.pots.length + " current budgets" : budget.pool.name}: ${money(budget.remaining)} left, ${budget.safeDaily === null ? "Not set" : money(budget.safeDaily)} safe daily spend` : "No current spending pot selected"],
           ["TEFL status", `${t.teflHours} hours done, ${tefl.remainingHours} remaining, ${tefl.status}`]
         ])}
         <h3>Top 3 Priorities</h3>
@@ -4251,15 +4251,16 @@
       const progress = pct(total, target);
       const emergencyTarget = getEmergencyFundTarget();
       const emergencyProgress = pct(emergency, emergencyTarget);
-      const activePotLabel = pace.pots?.length > 1 ? `${pace.pots.length} active pots` : pace.pool?.name || "No active pot";
-      const activePotDetail = pace.pots?.length ? `${money(pace.remaining)} available` : "Activate a pot or spending window";
+      const activePotLabel = pace.pots?.length > 1 ? `${pace.pots.length} active budgets` : pace.pool?.name || "No current budget";
+      const activePotDetail = pace.pots?.length ? "The pot currently setting your daily budget." : "Activate a pot or spending window.";
+      const periodDetail = pace.remainingDays === null ? "Add an end date to calculate safe spend." : `${pace.remainingDays} days remaining`;
       root.innerHTML = [
-        ["Total money", money(totalMoney), activeWallets().length ? "From active wallet balance and transactions" : "From included pots and transactions"],
-        ["Travel money", money(total), target ? `${progress}% of ${money(target)}` : "Target not set"],
-        ["Emergency money", money(emergency), emergencyTarget ? `${emergencyProgress}% of ${money(emergencyTarget)}` : "No emergency pot target"],
-        ["Active pot", activePotLabel, activePotDetail],
-        ["Pace source", paceSource, pace.remainingDays === null ? "No end date" : `${pace.remainingDays} days left`],
-        ["Safe spend", pace.safeDaily === null ? "Not set" : money(pace.safeDaily), pace.safeWeekly === null ? "Weekly not set" : `${money(pace.safeWeekly)} / week`]
+        ["Total money", money(totalMoney), "All money currently available."],
+        ["Travel allocation", money(total), target ? `Money reserved for travel. ${progress}% of ${money(target)} target.` : "Money currently allocated to travel."],
+        ["Emergency reserve", money(emergency), emergencyTarget ? `Protected money. ${emergencyProgress}% of ${money(emergencyTarget)} target.` : "Protected money kept separate from daily spending."],
+        ["Current spending pot", activePotLabel, activePotDetail],
+        ["Budget period", paceSource, periodDetail],
+        ["Safe spend today", pace.safeDaily === null ? "Not set" : money(pace.safeDaily), pace.safeWeekly === null ? "Weekly not set" : `${money(pace.safeWeekly)} safe per week`]
       ].map(([label, value, detail]) => `<div class="finance-kpi"><span class="muted">${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong><span class="hint">${escapeHtml(String(detail))}</span></div>`).join("");
 
       const recentRoot = document.getElementById("recentMoneyList");
@@ -4286,13 +4287,13 @@
       const pace = budgetPace();
       if (!pace.pool) {
         const suggested = getSuggestedPots();
-        document.getElementById("budgetPace").innerHTML = `<div class="empty"><strong>No active pot selected.</strong><span>${escapeHtml(suggested.length ? `Suggested: ${suggested.map((pot) => pot.name).join(", ")}` : "Activate a pot or spending window to calculate safe spend.")}</span></div>`;
+        document.getElementById("budgetPace").innerHTML = `<div class="empty"><strong>No current spending pot selected.</strong><span>${escapeHtml(suggested.length ? `Suggested budget: ${suggested.map((pot) => pot.name).join(", ")}` : "Activate a pot or spending window to calculate safe spend.")}</span></div>`;
         return;
       }
       const windowItem = activePlanningWindow();
       document.getElementById("budgetPace").innerHTML = statsHtml([
-        ["Pace source", getBudgetPaceSource()],
-        ["Active pots", pace.pots.length > 1 ? pace.pots.map((pot) => pot.name).join(", ") : pace.pool.name],
+        ["Budget period", getBudgetPaceSource()],
+        ["Current spending pot", pace.pots.length > 1 ? pace.pots.map((pot) => pot.name).join(", ") : pace.pool.name],
         ["Amount remaining", money(pace.remaining)],
         ["Days remaining", pace.remainingDays === null ? "Not set" : String(pace.remainingDays)],
         ["Safe daily spend", pace.safeDaily === null ? "Not set" : money(pace.safeDaily)],
@@ -4314,13 +4315,14 @@
       }
       const summary = document.createElement("div");
       summary.className = "item compact";
-      summary.innerHTML = `<div><div class="item-title">Current total money</div><div class="item-body"></div></div>`;
-      summary.querySelector(".item-body").textContent = `${money(getTotalMoney())} after income, expenses and included pot adjustments`;
+      summary.innerHTML = `<div><div class="item-title">Total available money</div><div class="item-body"></div></div>`;
+      summary.querySelector(".item-body").textContent = `${money(getTotalMoney())} available now`;
       root.appendChild(summary);
       wallets.forEach((wallet) => {
+        const note = userFacingNote(wallet.notes);
         root.appendChild(settingRow(
           wallet,
-          `${wallet.archived ? "Archived" : wallet.active ? "Active" : "Inactive"} - ${money(wallet.balance)} balance - ${money(getWalletUnallocated(wallet.id))} unallocated${wallet.notes ? " - " + wallet.notes : ""}`,
+          `${wallet.archived ? "Archived" : wallet.active ? "Active" : "Inactive"} - ${money(wallet.balance)} balance${note ? " - " + note : ""}`,
           () => editWallet(wallet),
           () => { wallet.archived = !wallet.archived; render(); },
           wallet.archived ? "Unarchive" : "Archive",
@@ -4339,20 +4341,16 @@
       }
       pools.forEach((pool) => {
         const totalsForPool = poolTotals(pool);
-        const phaseLabel = pool.phase && phaseNames(true).includes(pool.phase) ? pool.phase : "Unassigned";
+        const statusLabel = pool.archived ? "Archived" : pool.active ? "Active" : "Inactive";
+        const dateLabel = pool.startDate || pool.endDate ? `${formatDate(pool.startDate)} to ${formatDate(pool.endDate)}` : "No dates";
         const node = document.createElement("div");
         node.className = "item compact";
         node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn edit-pool">Edit</button><button type="button" class="ghost-btn active-pool"></button><button type="button" class="ghost-btn archive-pool"></button><button type="button" class="danger-btn delete-pool">Delete</button></div>`;
         node.querySelector(".item-title").textContent = pool.name;
         node.querySelector(".item-body").textContent = [
-          pool.archived ? "Archived" : pool.active ? "Active" : "Inactive",
           `${money(totalsForPool.remaining)} remaining`,
-          `${money(poolBaseAmount(pool))} starting`,
-          pool.amount ? `${money(pool.amount)} target` : "",
-          isPotIncludedInTotalMoney(pool) ? "Included in total money" : "Separate money",
-          pool.startDate || pool.endDate ? `${formatDate(pool.startDate)} to ${formatDate(pool.endDate)}` : "No dates",
-          phaseLabel,
-          pool.notes || ""
+          dateLabel,
+          statusLabel
         ].filter(Boolean).join(" - ");
         node.querySelector(".edit-pool").addEventListener("click", () => editBudgetPool(pool));
         const activeButton = node.querySelector(".active-pool");
@@ -4401,8 +4399,8 @@
       if (note) note.textContent = getActiveSpendingWindow()
         ? ""
         : getActivePots().some((pot) => pot.startDate || pot.endDate)
-          ? `No formal spending window is active. Budget Pace is using ${getBudgetPaceSource()}.`
-          : "No active spending window. Activate a pot or create a window to calculate safe spend.";
+          ? `No spending window is active. Safe spend is using ${getBudgetPaceSource()}.`
+          : "No spending window is active. Activate a pot or create a window to calculate safe spend.";
       renderList("planningWindowList", orderedItems(state.planningWindows || []), (windowItem) => {
         const potIds = [...(windowItem.budgetPoolIds || []), windowItem.budgetPoolId].filter(Boolean);
         const pots = visibleBudgetPots().filter((entry) => potIds.includes(entry.id));
@@ -4733,7 +4731,7 @@
           archivedDateItemList: ["No archived dates", "Archived dates will appear here."],
           travelDateList: ["No active travel dates", "Add key dates to power countdowns and timelines."],
           archivedTravelDateList: ["No archived dates", "Archived travel dates will appear here."],
-          planningWindowList: ["No spending windows yet", "Budget Pace can still use active pot date ranges, or you can add a window here."]
+          planningWindowList: ["No spending windows yet", "Safe spend can use current pot dates, or you can add a window here."]
         };
         const [title, body] = messages[idName] || ["Nothing here yet", "New entries will appear here after you add them."];
         root.innerHTML = `<div class="empty"><strong>${title}</strong><span>${body}</span></div>`;
@@ -4864,6 +4862,11 @@
         '"': "&quot;",
         "'": "&#39;"
       }[char]));
+    }
+
+    function userFacingNote(value) {
+      const note = String(value || "").trim();
+      return /migrated from|migrated travel|migrated emergency|old pre-departure|old phase allocation|older savings|older travel/i.test(note) ? "" : note;
     }
 
     function removeItem(collection, itemId) {
@@ -5151,7 +5154,7 @@
       if (balance === null) return;
       const active = promptValue("Active? yes/no", wallet.active === false ? "no" : "yes");
       if (active === null) return;
-      const notes = promptValue("Notes", wallet.notes || "");
+      const notes = promptValue("Notes", userFacingNote(wallet.notes));
       if (notes === null) return;
       wallet.name = name || wallet.name || "Wallet";
       wallet.balance = Number(balance) || 0;
@@ -5196,7 +5199,7 @@
       form.elements.active.value = String(pool.active !== false);
       form.elements.includedInTotalMoney.value = String(isPotIncludedInTotalMoney(pool));
       form.elements.archived.value = String(Boolean(pool.archived));
-      form.elements.notes.value = pool.notes || "";
+      form.elements.notes.value = userFacingNote(pool.notes);
       document.getElementById("potEditModal").hidden = false;
     }
 
