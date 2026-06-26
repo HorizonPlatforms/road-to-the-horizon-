@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "travel-life-os-v0.28.1";
+﻿const CACHE_NAME = "travel-life-os-v0.28.2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -44,4 +44,5 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")))
   );
 });
+
 
