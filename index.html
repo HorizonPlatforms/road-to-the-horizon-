@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -2006,7 +2006,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.28.0";
+    const APP_VERSION = "0.28.1";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -4946,14 +4946,14 @@
         const fundTotal = getFundTotal(group);
         const children = childPotsForFund(group);
         if (!(fundTotal > 0) && !children.length) return;
-        const topFundPot = !allocationsForGroup(group).length ? getTopLevelFundPots().find((pool) => getPotFinanceGroup(pool) === group) : null;
+        const topFundPot = getTopLevelFundPots().find((pool) => getPotFinanceGroup(pool) === group) || null;
         const section = document.createElement("div");
         section.className = "item compact";
         const unassigned = getUnassignedFundMoney(group);
-        section.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div><div class="list child-pot-list"></div></div>${topFundPot ? '<div class="item-actions"><button type="button" class="ghost-btn edit-parent-fund">Edit Fund</button></div>' : ''}`;
+        section.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div><div class="list child-pot-list"></div></div>${topFundPot ? '<div class="item-actions"><button type="button" class="ghost-btn edit-parent-fund">Edit Fund</button><button type="button" class="danger-btn delete-parent-fund">Delete Fund</button></div>' : ''}`;
         section.querySelector(".item-title").textContent = `${group} Fund - ${money(fundTotal)} total`;
         section.querySelector(".item-body").textContent = `${children.length ? `${children.length} child budget${children.length === 1 ? "" : "s"}` : "No child budgets"} - ${money(Math.max(0, unassigned))} unassigned`;
-        if (topFundPot) section.querySelector(".edit-parent-fund").addEventListener("click", () => editBudgetPool(topFundPot));
+        if (topFundPot) { section.querySelector(".edit-parent-fund").addEventListener("click", () => editBudgetPool(topFundPot)); section.querySelector(".delete-parent-fund").addEventListener("click", () => removeBudgetPool(topFundPot.id)); }
         const childList = section.querySelector(".child-pot-list");
         children.forEach((pool) => addPotRow(pool, childList));
         root.appendChild(section);
@@ -7246,3 +7246,4 @@
   </script>
 </body>
 </html>
+
