@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.27.0`.
+Current app version: `0.28.0`.
 
 ## Structure and planning model
 
@@ -34,7 +34,7 @@ Budget keeps the surface model simple: total money, travel fund, emergency fund,
 
 Journal and Finance are connected without duplicating spending records. Finance remains the source of truth for transactions, balances, pots, Safe Spend and analytics. Journal entries show same-day Finance transactions, can link to transaction IDs, and ask before creating a new Finance transaction from a journal spending item.
 
-Finance reconciliation model: wallets represent top-level money, allocations represent reserved funds such as Travel or Emergency, and child pots are budgets inside those funds. The current budget is a child pot inside a parent fund, not extra money. The overview warns only when parent funds exceed total money or child budgets exceed their parent fund.
+Finance reconciliation model: wallets represent top-level money, editable fund groups reserve money for custom purposes, and child pots are budgets inside those funds. Creating a new top-level fund can add new real wallet money; creating a child budget subdivides an existing fund without increasing total money. The overview warns only when parent funds exceed total money or child budgets exceed their parent fund.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
