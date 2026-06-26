@@ -1218,6 +1218,48 @@
     </div>
   </section>
 
+  <section id="potEditModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <h2>Edit Money Pot</h2>
+      <form id="potEditForm" class="form-grid">
+        <input name="id" type="hidden">
+        <label class="field-4">Name<input name="name" required></label>
+        <label class="field-2">Current amount<input name="currentAmount" type="number" min="0" step="0.01"></label>
+        <label class="field-2">Target amount<input name="amount" type="number" min="0" step="0.01"></label>
+        <label class="field-2">Starting amount<input name="startingAmount" type="number" min="0" step="0.01"></label>
+        <label class="field-3">Start<input name="startDate" type="date"></label>
+        <label class="field-3">End<input name="endDate" type="date"></label>
+        <label class="field-3">Phase<select name="phase" data-phase-select></select></label>
+        <label class="field-3"><span>Status</span><select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>
+        <label class="field-3"><span>Total</span><select name="includedInTotalMoney"><option value="true">Included</option><option value="false">Separate</option></select></label>
+        <label class="field-3"><span>Archive</span><select name="archived"><option value="false">Active list</option><option value="true">Archived</option></select></label>
+        <label class="field-12">Notes<textarea name="notes"></textarea></label>
+        <div class="field-12 modal-actions">
+          <button id="cancelPotEditBtn" class="ghost-btn" type="button">Cancel</button>
+          <button class="primary-btn" type="submit">Save Pot</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="categoryEditModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <h2>Edit Category</h2>
+      <form id="categoryEditForm" class="form-grid">
+        <input name="id" type="hidden">
+        <label class="field-4">Name<input name="name" required></label>
+        <label class="field-2">Position<input name="order" type="number" min="1"></label>
+        <label class="field-3"><span>Status</span><select name="archived"><option value="false">Active</option><option value="true">Archived</option></select></label>
+        <label class="field-12">Subcategories<input name="subcategories" placeholder="Groceries, Eating out, Coffee"></label>
+        <label class="field-12">Notes<textarea name="notes"></textarea></label>
+        <div class="field-12 modal-actions">
+          <button id="cancelCategoryEditBtn" class="ghost-btn" type="button">Cancel</button>
+          <button class="primary-btn" type="submit">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
   <div id="appShell" class="app-shell" hidden>
   <header>
     <div class="wrap header-grid">
@@ -1536,6 +1578,15 @@
             <label class="field-12">Notes<input name="notes" placeholder="Purpose, constraints, reminders"></label>
             <button class="field-2 primary-btn" type="submit">Add Pot</button>
           </form>
+          <h3>Move Money</h3>
+          <form id="potMovementForm" class="form-grid">
+            <label class="field-3">Action<select name="action"><option value="add">Add money</option><option value="remove">Remove money</option><option value="transfer">Transfer between pots</option><option value="set">Set pot balance</option></select></label>
+            <label class="field-3">Pot<select name="potId" data-budget-pool-select></select></label>
+            <label class="field-3">To pot<select name="toPotId" data-budget-pool-select></select></label>
+            <label class="field-2">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
+            <label class="field-12">Note<input name="note" placeholder="Optional note"></label>
+            <button class="field-2 primary-btn" type="submit">Apply</button>
+          </form>
           <div id="budgetPoolList" class="list"></div>
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="categories">
@@ -1852,7 +1903,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.19.0";
+    const APP_VERSION = "0.20.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -2173,7 +2224,8 @@
       if (merged.settings.sectionLabels?.settings === "Settings & Data") merged.settings.sectionLabels.settings = "Settings";
       merged.settings.keyDates = { ...next.settings.keyDates, ...(data.settings?.keyDates || {}) };
       merged.settings.travelDates = normalizeTravelDates(data.settings?.travelDates, merged.settings.keyDates);
-      merged.settings.dateItems = normalizeDateItems(data.settings?.dateItems, merged.settings.travelDates);
+      merged.settings.deletedDateItemRefs = data.settings?.deletedDateItemRefs || data.settings?.deletedCounterRefs || [];
+      merged.settings.dateItems = normalizeDateItems(data.settings?.dateItems, merged.settings.travelDates, merged.settings.deletedDateItemRefs);
       merged.settings.phases = normalizePhases(data.settings?.phases);
       merged.settings.habits = normalizeHabits(data.settings?.habits);
       merged.settings.categories = normalizeCategories(data.settings?.categories);
@@ -2205,7 +2257,9 @@
         budgetPoolId: entry.budgetPoolId || "",
         amount: Number(entry.amount) || 0,
         description: entry.description || entry.title || "",
-        note: entry.note || ""
+        note: entry.note || "",
+        kind: entry.kind || "",
+        transferId: entry.transferId || ""
       }));
       merged.money.forEach((entry) => {
         if (!entry.potId && entry.budgetPoolId) entry.potId = entry.budgetPoolId;
@@ -2275,7 +2329,51 @@
       }));
     }
 
-    function normalizeDateItems(savedItems, travelDates) {
+    function counterIdentity(entry) {
+      return [
+        entry.key || "",
+        String(entry.title || "").trim().toLowerCase(),
+        entry.date || "",
+        entry.type === "count-up" ? "count-up" : "countdown"
+      ].join("|");
+    }
+
+    function normaliseCounters(items) {
+      const seen = new Map();
+      const result = [];
+      (items || []).forEach((entry, index) => {
+        const normal = {
+          id: entry.id || id(),
+          key: entry.key || "",
+          title: entry.title || "Date",
+          date: entry.date || "",
+          type: entry.type === "count-up" ? "count-up" : "countdown",
+          note: entry.note ?? entry.notes ?? "",
+          category: entry.category || entry.location || "travel",
+          pinned: Boolean(entry.pinned || entry.key === "departure"),
+          archived: Boolean(entry.archived),
+          order: Number(entry.order) || index + 1
+        };
+        const identity = counterIdentity(normal);
+        const contentIdentity = counterIdentity({ ...normal, key: "" });
+        const existing = seen.get(identity) || seen.get(contentIdentity);
+        if (existing) {
+          existing.pinned = existing.pinned || normal.pinned;
+          existing.archived = existing.archived && normal.archived;
+          existing.note = existing.note || normal.note;
+          existing.category = existing.category || normal.category;
+          existing.key = existing.key || normal.key;
+          return;
+        }
+        seen.set(identity, normal);
+        seen.set(contentIdentity, normal);
+        result.push(normal);
+      });
+      return orderedItems(result).map((entry, index) => ({ ...entry, order: index + 1 }));
+    }
+
+    function normalizeDateItems(savedItems, travelDates, deletedRefs = []) {
+      const deleted = new Set(deletedRefs || []);
       const items = (savedItems || []).map((entry) => ({
         id: entry.id || id(),
         key: entry.key || "",
@@ -2287,18 +2385,13 @@
         pinned: Boolean(entry.pinned),
         archived: Boolean(entry.archived)
       }));
+      const hasSavedItems = items.length > 0;
       const byKey = new Map(items.filter((entry) => entry.key).map((entry) => [entry.key, entry]));
       (travelDates || []).forEach((entry) => {
         if (!entry.date) return;
         const key = entry.key || "";
         const existing = key ? byKey.get(key) : null;
-        if (existing) {
-          existing.date = existing.date || entry.date;
-          existing.title = existing.title || entry.title || "Date";
-          if (key === "departure") existing.pinned = true;
-          return;
-        }
-        items.push({
+        const candidate = {
           id: id(),
           key,
           title: entry.title || "Travel date",
@@ -2308,9 +2401,32 @@
           category: entry.location || "travel",
           pinned: key === "departure",
           archived: Boolean(entry.archived)
+        };
+        if (existing) {
+          existing.date = existing.date || entry.date;
+          existing.title = existing.title || entry.title || "Date";
+          if (key === "departure") existing.pinned = true;
+          return;
+        }
+        const matchingSaved = items.find((item) => {
+          const sameIdentity = counterIdentity({ ...item, key: candidate.key || item.key }) === counterIdentity(candidate);
+          const sameTitleDate = !item.key && item.date === candidate.date && item.title === candidate.title;
+          const sameDepartureDate = key === "departure" && item.date === candidate.date && item.type !== "count-up" && (item.pinned || /departure|leaving/i.test(item.title || ""));
+          return sameIdentity || sameTitleDate || sameDepartureDate;
+        });
+        if (matchingSaved) {
+          matchingSaved.key = matchingSaved.key || candidate.key;
+          matchingSaved.pinned = matchingSaved.pinned || candidate.pinned;
+          matchingSaved.category = matchingSaved.category || candidate.category;
+          return;
+        }
+        if (hasSavedItems && key !== "departure") return;
+        if (deleted.has(counterIdentity(candidate)) || (candidate.key && deleted.has(candidate.key))) return;
+        items.push({
+          ...candidate
         });
       });
-      return items;
+      return normaliseCounters(items);
     }
 
     function normalizePhases(savedPhases) {
@@ -2605,6 +2721,10 @@
       return (state.money || []).filter((entry) => transactionBelongsToPool(entry, pool));
     }
 
+    function isSpendingEntry(entry) {
+      return entry.type === "expense" && entry.kind !== "transfer";
+    }
+
     function poolBaseAmount(pool) {
       return Number(pool?.startingAmount ?? pool?.amount ?? 0);
     }
@@ -2615,6 +2735,51 @@
       const expenses = entries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const remaining = poolBaseAmount(pool) + income - expenses;
       return { income, expenses, remaining };
+    }
+
+    function createPotTransaction(poolId, type, amount, note = "", kind = "adjustment") {
+      const pool = (state.budgetPools || []).find((entry) => entry.id === poolId);
+      if (!pool || !(Number(amount) > 0)) return null;
+      const allocation = (state.allocations || []).find((entry) => entry.id === pool.allocationId);
+      const entry = {
+        id: id(),
+        type: type === "income" ? "income" : "expense",
+        date: today(),
+        category: kind === "transfer" ? "Transfer" : "Adjustment",
+        subcategory: "",
+        phase: pool.phase || currentPhase() || "Unassigned",
+        walletId: allocation?.walletId || "",
+        allocationId: allocation?.id || "",
+        potId: pool.id,
+        budgetPoolId: pool.id,
+        amount: Number(amount) || 0,
+        description: kind === "transfer" ? "Pot transfer" : "Pot adjustment",
+        note,
+        kind
+      };
+      state.money = state.money || [];
+      state.money.push(entry);
+      return entry;
+    }
+
+    function adjustPotBalance(poolId, difference, note = "Manual correction") {
+      const amount = Math.abs(Number(difference) || 0);
+      if (amount < 0.01) return null;
+      return createPotTransaction(poolId, difference >= 0 ? "income" : "expense", amount, note, "adjustment");
+    }
+
+    function transferBetweenPots(fromPoolId, toPoolId, amount, note = "") {
+      const value = Number(amount) || 0;
+      if (!fromPoolId || !toPoolId || fromPoolId === toPoolId || value <= 0) return false;
+      const fromPool = (state.budgetPools || []).find((pool) => pool.id === fromPoolId);
+      const toPool = (state.budgetPools || []).find((pool) => pool.id === toPoolId);
+      if (!fromPool || !toPool) return false;
+      const transferId = id();
+      const out = createPotTransaction(fromPool.id, "expense", value, note || `Transfer to ${toPool.name}`, "transfer");
+      const incoming = createPotTransaction(toPool.id, "income", value, note || `Transfer from ${fromPool.name}`, "transfer");
+      if (out) out.transferId = transferId;
+      if (incoming) incoming.transferId = transferId;
+      return Boolean(out && incoming);
     }
 
     function getPotBalance(poolId) {
@@ -2710,15 +2875,24 @@
     }
 
     function getSpendingByCategory() {
-      return state.money.filter((entry) => entry.type === "expense").reduce((map, entry) => {
+      return state.money.filter(isSpendingEntry).reduce((map, entry) => {
         const key = entry.category || "Uncategorised";
         map[key] = (map[key] || 0) + Number(entry.amount || 0);
         return map;
       }, {});
     }
 
+    function getSpendingBySubcategory() {
+      return state.money.filter((entry) => isSpendingEntry(entry) && entry.subcategory).reduce((map, entry) => {
+        const category = entry.category || "Uncategorised";
+        const key = `${category} / ${entry.subcategory}`;
+        map[key] = (map[key] || 0) + Number(entry.amount || 0);
+        return map;
+      }, {});
+    }
+
     function getSpendingOverTime() {
-      return Object.entries(state.money.filter((entry) => entry.type === "expense" && entry.date).reduce((map, entry) => {
+      return Object.entries(state.money.filter((entry) => isSpendingEntry(entry) && entry.date).reduce((map, entry) => {
         map[entry.date] = (map[entry.date] || 0) + Number(entry.amount || 0);
         return map;
       }, {})).sort((a, b) => a[0].localeCompare(b[0])).map(([date, amount]) => ({ date, amount }));
@@ -2727,7 +2901,7 @@
     function getPoolSpending() {
       return (state.budgetPools || []).filter((pool) => !pool.archived).map((pool) => ({
         label: pool.name,
-        amount: poolTransactions(pool).filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0)
+        amount: poolTransactions(pool).filter(isSpendingEntry).reduce((sum, entry) => sum + Number(entry.amount || 0), 0)
       })).filter((item) => item.amount > 0);
     }
 
@@ -2739,14 +2913,14 @@
       return activeAllocations().map((allocation) => ({
         label: allocation.name,
         amount: state.money
-          .filter((entry) => entry.type === "expense" && entry.allocationId === allocation.id)
+          .filter((entry) => isSpendingEntry(entry) && entry.allocationId === allocation.id)
           .reduce((sum, entry) => sum + Number(entry.amount || 0), 0)
       })).filter((item) => item.amount > 0);
     }
 
     function getMonthlyIncomeExpense() {
       const months = {};
-      state.money.filter((entry) => entry.date).forEach((entry) => {
+      state.money.filter((entry) => entry.date && entry.kind !== "transfer").forEach((entry) => {
         const month = entry.date.slice(0, 7);
         months[month] = months[month] || { label: month, income: 0, expenses: 0 };
         if (entry.type === "income") months[month].income += Number(entry.amount || 0);
@@ -2762,7 +2936,7 @@
     function getTravelFundProgressOverTime() {
       let running = Number(state.settings.travelCurrent || 0);
       return state.money
-        .filter((entry) => entry.date && (entry.type === "income" || entry.type === "expense"))
+        .filter((entry) => entry.date && entry.kind !== "transfer" && (entry.type === "income" || entry.type === "expense"))
         .slice()
         .sort((a, b) => a.date.localeCompare(b.date))
         .map((entry) => {
@@ -3739,7 +3913,7 @@
       const names = phaseNames();
       document.querySelectorAll("select[data-phase-select]").forEach((select) => {
         const current = select.value;
-        select.innerHTML = names.map((name) => `<option>${escapeHtml(name)}</option>`).join("");
+        select.innerHTML = `<option value="">Unassigned</option>${names.map((name) => `<option>${escapeHtml(name)}</option>`).join("")}`;
         if (current && names.includes(current)) select.value = current;
       });
     }
@@ -4154,6 +4328,7 @@
       }
       pools.forEach((pool) => {
         const totalsForPool = poolTotals(pool);
+        const phaseLabel = pool.phase && phaseNames(true).includes(pool.phase) ? pool.phase : "Unassigned";
         const node = document.createElement("div");
         node.className = "item compact";
         node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn edit-pool">Edit</button><button type="button" class="ghost-btn active-pool"></button><button type="button" class="ghost-btn archive-pool"></button><button type="button" class="danger-btn delete-pool">Delete</button></div>`;
@@ -4165,7 +4340,7 @@
           pool.amount ? `${money(pool.amount)} target` : "",
           isPotIncludedInTotalMoney(pool) ? "Included in total money" : "Separate money",
           pool.startDate || pool.endDate ? `${formatDate(pool.startDate)} to ${formatDate(pool.endDate)}` : "No dates",
-          pool.phase || "No phase",
+          phaseLabel,
           pool.notes || ""
         ].filter(Boolean).join(" - ");
         node.querySelector(".edit-pool").addEventListener("click", () => editBudgetPool(pool));
@@ -4187,18 +4362,27 @@
     }
 
     function renderFinanceCategories() {
-      renderList("financeCategoryList", financeCategories(true), (category) => settingRow(
-        category,
-        `${category.archived ? "Archived" : "Active"} - ${activeSubcategories(category).map((subcategory) => subcategory.name).join(", ") || "No subcategories"}${category.notes ? " - " + category.notes : ""}`,
-        () => editFinanceCategory(category),
-        () => {
-          category.archived = !category.archived;
-          normaliseOrderedList(state.settings.categories);
-          render();
-        },
-        category.archived ? "Unarchive" : "Archive",
-        () => removeFinanceCategory(category.id)
-      ));
+      const spending = getSpendingByCategory();
+      renderList("financeCategoryList", financeCategories(true), (category) => {
+        const subcategories = activeSubcategories(category).map((subcategory) => subcategory.name);
+        return settingRow(
+          category,
+          [
+            category.archived ? "Archived" : "Active",
+            `${money(spending[category.name] || 0)} spent`,
+            subcategories.length ? subcategories.join(", ") : "No subcategories",
+            category.notes || ""
+          ].filter(Boolean).join(" - "),
+          () => editFinanceCategory(category),
+          () => {
+            category.archived = !category.archived;
+            normaliseOrderedList(state.settings.categories);
+            render();
+          },
+          category.archived ? "Unarchive" : "Archive",
+          () => removeFinanceCategory(category.id)
+        );
+      });
     }
 
     function renderPlanningWindows() {
@@ -4211,9 +4395,10 @@
       renderList("planningWindowList", orderedItems(state.planningWindows || []), (windowItem) => {
         const potIds = [...(windowItem.budgetPoolIds || []), windowItem.budgetPoolId].filter(Boolean);
         const pots = visibleBudgetPots().filter((entry) => potIds.includes(entry.id));
+        const phaseLabel = windowItem.phase && phaseNames(true).includes(windowItem.phase) ? windowItem.phase : "";
         return settingRow(
           { ...windowItem, name: windowItem.title },
-          `${windowItem.archived ? "Archived" : windowItem.active ? "Active" : "Inactive"} - ${formatDate(windowItem.startDate)} to ${formatDate(windowItem.endDate)}${pots.length ? " - " + pots.map((pot) => pot.name).join(", ") : ""}${windowItem.phase ? " - " + windowItem.phase : ""}`,
+          `${windowItem.archived ? "Archived" : windowItem.active ? "Active" : "Inactive"} - ${formatDate(windowItem.startDate)} to ${formatDate(windowItem.endDate)}${pots.length ? " - " + pots.map((pot) => pot.name).join(", ") : ""}${phaseLabel ? " - " + phaseLabel : ""}`,
           () => editPlanningWindow(windowItem),
           () => {
             windowItem.archived = !windowItem.archived;
@@ -4246,12 +4431,14 @@
       const root = document.getElementById("financeAnalytics");
       if (!root) return;
       const byCategory = Object.entries(getSpendingByCategory()).sort((a, b) => b[1] - a[1]);
+      const bySubcategory = Object.entries(getSpendingBySubcategory()).sort((a, b) => b[1] - a[1]);
       const byPool = getPoolSpending().sort((a, b) => b.amount - a.amount);
       const spendingOverTime = getSpendingOverTime();
       const fundProgress = getTravelFundProgressOverTime();
       const monthly = getMonthlyIncomeExpense();
       root.innerHTML = [
         chartCard("Spending by Category", byCategory.length ? pieChart(byCategory) : emptyChart("Add expenses with categories.")),
+        chartCard("Spending by Subcategory", bySubcategory.length ? barChart(bySubcategory.map(([label, amount]) => ({ label, amount }))) : emptyChart("Subcategories appear once assigned to transactions.")),
         chartCard("Spending by Pot", byPool.length ? barChart(byPool) : emptyChart("Link transactions to pots.")),
         chartCard("Pot Balances", visibleBudgetPots().length ? barChart(visibleBudgetPots().map((pool) => ({ label: pool.name, amount: Math.max(0, getPoolRemaining(pool.id)) }))) : emptyChart("Add money pots to see balances.")),
         chartCard("Spending Over Time", spendingOverTime.length > 1 ? lineChart(spendingOverTime, "amount") : emptyChart("Add expenses on at least two dates.")),
@@ -4683,6 +4870,14 @@
 
     function removeDateCounter(itemId) {
       if (!confirm("Delete this date item?")) return;
+      const item = (state.settings.dateItems || []).find((entry) => entry.id === itemId);
+      if (item) {
+        state.settings.deletedDateItemRefs = Array.from(new Set([
+          ...(state.settings.deletedDateItemRefs || []),
+          item.key || "",
+          counterIdentity(item)
+        ].filter(Boolean)));
+      }
       state.settings.dateItems = (state.settings.dateItems || []).filter((item) => item.id !== itemId);
       render();
     }
@@ -4894,7 +5089,7 @@
       if (item.phase && ![...form.elements.phase.options].some((option) => option.value === item.phase)) {
         form.elements.phase.appendChild(new Option(item.phase, item.phase));
       }
-      form.elements.phase.value = item.phase || phaseNames()[0] || "";
+      form.elements.phase.value = item.phase || "";
       form.elements.notes.value = item.notes || "";
       document.getElementById("routeEditModal").hidden = false;
     }
@@ -4972,55 +5167,35 @@
     }
 
     function editBudgetPool(pool) {
-      const name = promptValue("Pool name", pool.name || "");
-      if (name === null) return;
-      const amount = promptValue("Pool amount", pool.amount || 0);
-      if (amount === null) return;
-      const startingAmount = promptValue("Starting amount", pool.startingAmount || pool.amount || 0);
-      if (startingAmount === null) return;
-      const startDate = promptValue("Start date YYYY-MM-DD", pool.startDate || "");
-      if (startDate === null) return;
-      const endDate = promptValue("End date YYYY-MM-DD", pool.endDate || "");
-      if (endDate === null) return;
-      const phase = promptValue(`Linked phase (${phaseNames(true).join(", ")})`, pool.phase || "");
-      if (phase === null) return;
-      const active = promptValue("Active? yes/no", pool.active === false ? "no" : "yes");
-      if (active === null) return;
-      const included = promptValue("Included in total money? yes/no", isPotIncludedInTotalMoney(pool) ? "yes" : "no");
-      if (included === null) return;
-      const notes = promptValue("Notes", pool.notes || "");
-      if (notes === null) return;
-      pool.name = name || pool.name || "Money pot";
-      pool.amount = Number(amount) || 0;
-      pool.startingAmount = startingAmount === "" ? Number(amount) || 0 : Number(startingAmount) || 0;
-      pool.startDate = startDate || "";
-      pool.endDate = endDate || "";
-      pool.phase = phase || "";
-      pool.active = /^(yes|y|true|active)$/i.test(active);
-      pool.includedInTotalMoney = /^(yes|y|true|included)$/i.test(included);
-      pool.notes = notes || "";
-      render();
+      const form = document.getElementById("potEditForm");
+      renderPhaseSelects();
+      form.elements.id.value = pool.id;
+      form.elements.name.value = pool.name || "";
+      form.elements.currentAmount.value = Math.max(0, getPotBalance(pool.id)).toFixed(2);
+      form.elements.amount.value = Number(pool.amount || 0);
+      form.elements.startingAmount.value = Number(poolBaseAmount(pool));
+      form.elements.startDate.value = pool.startDate || "";
+      form.elements.endDate.value = pool.endDate || "";
+      if (pool.phase && ![...form.elements.phase.options].some((option) => option.value === pool.phase)) {
+        form.elements.phase.appendChild(new Option(`${pool.phase} (unassigned)`, pool.phase));
+      }
+      form.elements.phase.value = pool.phase || "";
+      form.elements.active.value = String(pool.active !== false);
+      form.elements.includedInTotalMoney.value = String(isPotIncludedInTotalMoney(pool));
+      form.elements.archived.value = String(Boolean(pool.archived));
+      form.elements.notes.value = pool.notes || "";
+      document.getElementById("potEditModal").hidden = false;
     }
 
     function editFinanceCategory(category) {
-      const name = promptValue("Category name", category.name || "");
-      if (name === null) return;
-      const subcategories = promptValue("Subcategories, comma separated", activeSubcategories(category).map((entry) => entry.name).join(", "));
-      if (subcategories === null) return;
-      const notes = promptValue("Notes", category.notes || "");
-      if (notes === null) return;
-      const position = promptValue("Position", category.order || "");
-      if (position === null) return;
-      const existing = category.subcategories || [];
-      category.name = name || category.name || "Category";
-      category.notes = notes || "";
-      category.subcategories = String(subcategories || "").split(",").map((item) => item.trim()).filter(Boolean).map((name) => {
-        const old = existing.find((entry) => entry.name.toLowerCase() === name.toLowerCase());
-        return old ? { ...old, name, archived: false } : { id: id(), name, notes: "", archived: false };
-      });
-      moveOrderedItem(state.settings.categories, category, position);
-      normaliseOrderedList(state.settings.categories);
-      render();
+      const form = document.getElementById("categoryEditForm");
+      form.elements.id.value = category.id;
+      form.elements.name.value = category.name || "";
+      form.elements.order.value = category.order || financeCategories(true).indexOf(category) + 1;
+      form.elements.archived.value = String(Boolean(category.archived));
+      form.elements.subcategories.value = activeSubcategories(category).map((entry) => entry.name).join(", ");
+      form.elements.notes.value = category.notes || "";
+      document.getElementById("categoryEditModal").hidden = false;
     }
 
     function editPlanningWindow(windowItem) {
@@ -5587,11 +5762,57 @@
       stop.place = data.place || stop.place;
       stop.country = data.country || "";
       stop.targetArrival = data.targetArrival || "";
-      stop.phase = data.phase || stop.phase || phaseNames()[0] || "";
+      stop.phase = data.phase || "";
       stop.notes = data.notes || "";
       moveOrderedItem(state.route, stop, data.order);
       dirtyForms.delete("routeEditForm");
       document.getElementById("routeEditModal").hidden = true;
+      render();
+    });
+    document.getElementById("cancelPotEditBtn").addEventListener("click", () => {
+      document.getElementById("potEditModal").hidden = true;
+    });
+    document.getElementById("potEditForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      const pool = (state.budgetPools || []).find((entry) => entry.id === data.id);
+      if (!pool) return;
+      pool.name = data.name || pool.name || "Money pot";
+      pool.amount = Number(data.amount) || 0;
+      pool.startingAmount = data.startingAmount === "" ? Number(data.amount) || 0 : Number(data.startingAmount) || 0;
+      pool.startDate = data.startDate || "";
+      pool.endDate = data.endDate || "";
+      pool.phase = phaseNames(true).includes(data.phase) ? data.phase : "";
+      pool.active = data.active === "true";
+      pool.includedInTotalMoney = data.includedInTotalMoney !== "false";
+      pool.archived = data.archived === "true";
+      pool.notes = data.notes || "";
+      const desiredBalance = Number(data.currentAmount);
+      if (!Number.isNaN(desiredBalance)) adjustPotBalance(pool.id, desiredBalance - getPotBalance(pool.id), "Manual correction from pot editor");
+      dirtyForms.delete("potEditForm");
+      document.getElementById("potEditModal").hidden = true;
+      render();
+    });
+    document.getElementById("cancelCategoryEditBtn").addEventListener("click", () => {
+      document.getElementById("categoryEditModal").hidden = true;
+    });
+    document.getElementById("categoryEditForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      const category = (state.settings.categories || []).find((entry) => entry.id === data.id);
+      if (!category) return;
+      const existing = category.subcategories || [];
+      category.name = data.name || category.name || "Category";
+      category.notes = data.notes || "";
+      category.archived = data.archived === "true";
+      category.subcategories = String(data.subcategories || "").split(",").map((item) => item.trim()).filter(Boolean).map((name) => {
+        const old = existing.find((entry) => entry.name.toLowerCase() === name.toLowerCase());
+        return old ? { ...old, name, archived: false } : { id: id(), name, notes: "", archived: false };
+      });
+      moveOrderedItem(state.settings.categories, category, data.order);
+      normaliseOrderedList(state.settings.categories);
+      dirtyForms.delete("categoryEditForm");
+      document.getElementById("categoryEditModal").hidden = true;
       render();
     });
     bindForm("documentForm", (data) => state.documents.push({ id: id(), ...data, done: data.status === "Done" }));
@@ -5659,6 +5880,30 @@
       state.budgetPools = state.budgetPools || [];
       state.budgetPools.push(pool);
       normaliseOrderedList(state.budgetPools);
+    });
+    bindForm("potMovementForm", (data) => {
+      const amount = Number(data.amount) || 0;
+      if (amount <= 0) {
+        alert("Enter an amount greater than zero.");
+        return;
+      }
+      if (data.action === "transfer") {
+        if (!transferBetweenPots(data.potId, data.toPotId, amount, data.note || "")) {
+          alert("Choose two different pots for the transfer.");
+        }
+        return;
+      }
+      if (!data.potId) {
+        alert("Choose a pot first.");
+        return;
+      }
+      if (data.action === "add") {
+        createPotTransaction(data.potId, "income", amount, data.note || "Added money", "adjustment");
+      } else if (data.action === "remove") {
+        createPotTransaction(data.potId, "expense", amount, data.note || "Removed money", "adjustment");
+      } else if (data.action === "set") {
+        adjustPotBalance(data.potId, amount - getPotBalance(data.potId), data.note || "Manual balance correction");
+      }
     });
     bindForm("financeCategoryForm", (data) => {
       const category = {
