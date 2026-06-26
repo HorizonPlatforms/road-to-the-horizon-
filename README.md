@@ -17,19 +17,22 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.22.0`.
+Current app version: `0.25.0`.
 
 ## Structure and planning model
 
 The app is organised so normal editing happens close to the section that uses the data:
 
 - Travel contains route stops and the editable phase manager.
-- Budget contains a simplified money dashboard: overview, money pots, spending windows, transactions, categories/subcategories, analytics and milestones.
+- Budget contains a simplified money dashboard: overview, money pots, optional advanced budget periods, transactions, categories/subcategories, analytics and milestones.
 - Dates & Counters contains editable counters and key travel dates.
-- Habits contains daily habit logging and habit management.
+- Journal contains the daily record for writing, mood, energy, sleep, habits, reflections and travel context.
+- Habits contains the habit manager and history summaries.
 - Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
 
-Budget keeps the surface model simple: total available money, travel allocation, current spending pot, spending windows and transactions. Travel allocation and emergency reserve are normal editable pots, and Safe Spend clearly states which budget period is controlling the daily amount. Pot edits use an in-app editor, and add/remove/transfer/correction actions are saved as transaction records so balances remain auditable. Older finance values are preserved and migrated into compatible records for existing users.
+Budget keeps the surface model simple: total available money, travel allocation, current spending pot, budget period and transactions. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Travel allocation and emergency reserve are normal editable pots, and add/remove/transfer/correction actions are saved as transaction records so balances remain auditable. Older finance values are preserved and migrated into compatible records for existing users.
+
+Journal and Finance are connected without duplicating spending records. Finance remains the source of truth for transactions, balances, pots, Safe Spend and analytics. Journal entries show same-day Finance transactions, can link to transaction IDs, and ask before creating a new Finance transaction from a journal spending item.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
@@ -41,7 +44,7 @@ Reset App Data uses a two-step confirmation, requires typing `RESET`, and prepar
 
 Departure-dependent calculations use one shared departure-date helper. If no departure date exists, pace widgets show `Not set` rather than using a fallback date.
 
-Phases and habits are editable settings. Route, budget and habit widgets read from those shared settings so changes update across the app.
+Phases and habits are editable settings. Route, budget and journal widgets read from those shared settings so changes update across the app.
 
 ## App Updates
 
@@ -65,7 +68,7 @@ Private user data is stored only in the browser's local storage under:
 road-to-australia-life-os-v3
 ```
 
-That local data can include travel dates, budgets, route stops, tasks, check-ins, journal entries and other planning details. It is not uploaded to GitHub Pages by this app.
+That local data can include travel dates, budgets, route stops, tasks, journal entries and other planning details. It is not uploaded to GitHub Pages by this app.
 
 Use `Export JSON Backup` to save a private backup. Keep exported backups out of public repositories.
 
@@ -107,20 +110,20 @@ Then open the served file in the browser.
 
 ## Main Sections
 
-- `Command` - daily briefing, countdowns, check-ins, priorities and readiness scores.
+- `Command` - daily briefing, countdowns, quick journal check-in, priorities and readiness scores.
 - `Travel` - route planner, phase manager, documents, packing and timeline.
-- `Budget` - money overview, pots, spending windows, transactions, categories, analytics and milestones.
+- `Budget` - money overview, pots, optional advanced budget periods, transactions, categories, analytics and milestones.
 - `TEFL` - target hours, completed hours, modules, study log and pace tracking.
 - `Content` - content ideas and pipeline tracking.
 - `Writing` - writing ideas, notes and sessions.
-- `Life` - daily check-ins and trends.
-- `Habits` - daily habit logging, habit management and habit tracking.
-- `Journal` - journal entries and reflections.
+- `Life` - journal-based mood, energy and habit trends.
+- `Habits` - habit management and journal-based habit history.
+- `Journal` - daily journal hub for writing, check-ins, habits, reflections, travel context, Finance-linked daily spending and tags.
 - `Weekly Review` - weekly summaries and review notes.
 - `Dates & Counters` - editable countdowns, count-up counters and key travel dates, with dashboard pinning.
 - `Settings` - account/sync status, backup/import/export, preferences, labels, About/version details and the protected reset flow.
 
-Daily entries stay inside their own sections. Settings is for app-level controls, not everyday logging.
+Daily mood, energy and habit completion now live inside Journal entries. Settings is for app-level controls, not everyday logging.
 
 ## Backup And Restore
 

@@ -483,6 +483,23 @@
     .hint,
     .meta { font-size: 0.9rem; }
 
+    .advanced-panel {
+      margin-top: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+
+    .advanced-panel summary {
+      cursor: pointer;
+      color: var(--blue);
+      font-weight: 700;
+      list-style-position: inside;
+    }
+
+    .advanced-panel[open] summary {
+      margin-bottom: 10px;
+    }
+
     .progress-bar {
       height: 10px;
       border: 1px solid var(--line);
@@ -549,6 +566,11 @@
     textarea {
       min-height: 84px;
       resize: vertical;
+    }
+
+    .journal-writing-area {
+      min-height: 220px;
+      line-height: 1.6;
     }
 
     label {
@@ -1227,10 +1249,10 @@
         <label class="field-2">Current amount<input name="currentAmount" type="number" min="0" step="0.01"></label>
         <label class="field-2">Target amount<input name="amount" type="number" min="0" step="0.01"></label>
         <label class="field-2">Starting amount<input name="startingAmount" type="number" min="0" step="0.01"></label>
-        <label class="field-3">Start<input name="startDate" type="date"></label>
-        <label class="field-3">End<input name="endDate" type="date"></label>
+        <label class="field-3">Budget start<input name="startDate" type="date"></label>
+        <label class="field-3">Budget end<input name="endDate" type="date"></label>
         <label class="field-3">Phase<select name="phase" data-phase-select></select></label>
-        <label class="field-3"><span>Status</span><select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>
+        <label class="field-3"><span>Use for daily budgeting</span><select name="active"><option value="true">Yes</option><option value="false">No</option></select></label>
         <label class="field-3"><span>Total</span><select name="includedInTotalMoney"><option value="true">Included</option><option value="false">Separate</option></select></label>
         <label class="field-3"><span>Archive</span><select name="archived"><option value="false">Active list</option><option value="true">Archived</option></select></label>
         <label class="field-12">Notes<textarea name="notes"></textarea></label>
@@ -1377,7 +1399,8 @@
           <div id="readinessScores" class="score-grid"></div>
         </div>
         <div class="panel span-6">
-          <h2>Today</h2>
+          <h2>Quick Journal Check-in</h2>
+          <p class="hint">Saves mood, sleep and simple habits into today's Journal entry.</p>
           <form id="checkinForm" class="form-grid">
             <label class="field-3">Date<input name="date" type="date"></label>
             <label class="field-2">Mood<input name="mood" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
@@ -1395,7 +1418,7 @@
             <label class="field-3"><span>Travel planning</span><select name="travelPlanning"><option value="false">No</option><option value="true">Yes</option></select></label>
             <label class="field-3"><span>Budget discipline</span><select name="budgetDiscipline"><option value="true">Yes</option><option value="false">No</option></select></label>
             <label class="field-3"><span>Early bedtime</span><select name="earlyBedtime"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <button class="field-3" type="submit">Save Check-in</button>
+            <button class="field-3" type="submit">Save to Journal</button>
           </form>
           <div id="dailyLogStatus" class="hint"></div>
         </div>
@@ -1541,16 +1564,16 @@
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="pools">
           <h2>Money Pots</h2>
-          <p class="hint">Pots divide your money into useful budgets for trips, phases or savings goals.</p>
+          <p class="hint">Pots divide your money into useful budgets. Add start and end dates, then choose which pot controls daily safe spend.</p>
           <form id="budgetPoolForm" class="form-grid">
             <label class="field-3">Name<input name="name" required placeholder="Europe fund"></label>
             <label class="field-3" hidden>Allocation<select name="allocationId" data-allocation-select></select></label>
             <label class="field-2">Pot amount<input name="amount" type="number" min="0" step="0.01" required></label>
             <label class="field-2">Starting amount<input name="startingAmount" type="number" min="0" step="0.01" placeholder="Optional"></label>
-            <label class="field-2">Start<input name="startDate" type="date"></label>
-            <label class="field-2">End<input name="endDate" type="date"></label>
+            <label class="field-2">Budget start<input name="startDate" type="date"></label>
+            <label class="field-2">Budget end<input name="endDate" type="date"></label>
             <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
-            <label class="field-2"><span>Status</span><select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>
+            <label class="field-2"><span>Use for daily budgeting</span><select name="active"><option value="true">Yes</option><option value="false">No</option></select></label>
             <label class="field-2"><span>Total</span><select name="includedInTotalMoney"><option value="true">Included</option><option value="false">Separate</option></select></label>
             <label class="field-12">Notes<input name="notes" placeholder="Purpose, constraints, reminders"></label>
             <button class="field-2 primary-btn" type="submit">Add Pot</button>
@@ -1579,20 +1602,25 @@
           <div id="financeCategoryList" class="list"></div>
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="pools">
-          <h2>Spending Windows</h2>
-          <p class="hint">Choose how long your active money needs to last.</p>
-          <form id="planningWindowForm" class="form-grid">
-            <label class="field-3">Title<input name="title" required placeholder="Final 10 days"></label>
-            <label class="field-2">Start<input name="startDate" type="date"></label>
-            <label class="field-2">End<input name="endDate" type="date"></label>
-            <label class="field-3">Linked pot<select name="budgetPoolId" data-budget-pool-select></select></label>
-            <label class="field-4">Extra linked pots<input name="budgetPoolNames" placeholder="Optional: comma-separated pot names"></label>
-            <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
-            <label class="field-2"><span>Status</span><select name="active"><option value="false">Inactive</option><option value="true">Active</option></select></label>
-            <button class="field-2 primary-btn" type="submit">Add Window</button>
-          </form>
-          <div id="spendingWindowNote" class="hint"></div>
-          <div id="planningWindowList" class="list"></div>
+          <h2>Budget Timeline</h2>
+          <p class="hint">Most budgeting is handled by pot start and end dates. Advanced periods are optional overrides for short-term plans.</p>
+          <details class="advanced-panel">
+            <summary>Advanced budget periods</summary>
+            <p class="hint">Use this only when a separate date range should override the dates on your current pot.</p>
+            <form id="planningWindowForm" class="form-grid">
+              <label class="field-3">Title<input name="title" required placeholder="Final 10 days"></label>
+              <label class="field-2">Start<input name="startDate" type="date"></label>
+              <label class="field-2">End<input name="endDate" type="date"></label>
+              <label class="field-3">Linked pot<select name="budgetPoolId" data-budget-pool-select></select></label>
+              <label class="field-4">Extra linked pots<input name="budgetPoolNames" placeholder="Optional: comma-separated pot names"></label>
+              <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
+              <label class="field-2"><span>Status</span><select name="active"><option value="false">Inactive</option><option value="true">Active override</option></select></label>
+              <label class="field-12">Notes<input name="notes" placeholder="Optional planning note"></label>
+              <button class="field-2 primary-btn" type="submit">Add Period</button>
+            </form>
+            <div id="spendingWindowNote" class="hint"></div>
+            <div id="planningWindowList" class="list"></div>
+          </details>
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="transactions">
           <h2>Transactions</h2>
@@ -1708,44 +1736,124 @@
 
     <section id="life" class="view">
       <div class="grid">
-        <div class="panel span-6"><h2>Daily Check-ins</h2><div id="checkinList" class="list"></div></div>
-        <div class="panel span-6"><h2>Trends And Statistics</h2><div id="trendStats"></div><div id="lifeChart" class="chart"></div></div>
+        <div class="panel span-12">
+          <h2>Life Trends</h2>
+          <p class="hint">Daily mood, energy and habits now live inside Journal entries. This page summarises those records.</p>
+          <div id="trendStats"></div>
+          <div id="lifeChart" class="chart"></div>
+        </div>
       </div>
     </section>
 
     <section id="habits" class="view">
       <div class="grid">
         <div class="panel span-12">
-          <h2>Today's Habits</h2>
-          <form id="habitQuickForm" class="form-grid"></form>
-        </div>
-        <div class="panel span-12">
           <h2>Habit Manager</h2>
-          <p class="hint">Add, archive and reorder habits without losing old daily history.</p>
+          <p class="hint">Choose which habits appear in the Daily Journal checklist. Completion happens inside Journal entries.</p>
           <form id="habitForm" class="form-grid">
             <label class="field-6">Habit name<input name="label" required placeholder="Morning walk"></label>
             <label class="field-2">Position<input name="order" type="number" min="1"></label>
+            <label class="field-3"><span>Show in Journal</span><select name="showInJournal"><option value="true">Yes</option><option value="false">No</option></select></label>
+            <label class="field-12">Notes<input name="notes" placeholder="Optional habit notes"></label>
             <button class="field-2 primary-btn" type="submit">Add Habit</button>
           </form>
           <div id="habitSettingsList" class="list"></div>
         </div>
-        <div class="panel span-12"><h2>Habit Tracker</h2><div id="habitTable" class="grid"></div></div>
+        <div class="panel span-12"><h2>Habit History</h2><div id="habitTable" class="grid"></div></div>
       </div>
     </section>
 
     <section id="journal" class="view">
       <div class="grid">
-        <div class="panel span-5">
-          <h2>Journal</h2>
+        <div class="panel span-12">
+          <h2>Daily Journal Hub</h2>
+          <div id="journalDashboard" class="score-grid"></div>
+          <div class="inline-actions">
+            <button id="writeTodayBtn" class="primary-btn" type="button">Write Today's Entry</button>
+            <button id="newJournalEntryBtn" class="secondary-btn" type="button">New Entry</button>
+          </div>
+        </div>
+        <div class="panel span-12">
+          <h2>Today's Entry</h2>
+          <p class="hint">One calm daily record for writing, mood, habits, reflections and travel context.</p>
           <form id="journalForm" class="form-grid">
-            <label class="field-4">Type<select name="type"><option>Daily journal</option><option>Weekly review</option><option>Monthly review</option><option>Travel thoughts</option><option>Worries and concerns</option><option>Wins and achievements</option><option>Lessons learned</option></select></label>
+            <input name="id" type="hidden">
             <label class="field-3">Date<input name="date" type="date"></label>
-            <label class="field-5">Title<input name="title" required placeholder="What happened?"></label>
-            <label class="field-12">Entry<textarea name="body" required></textarea></label>
-            <button class="field-3" type="submit">Save Entry</button>
+            <label class="field-9">Title<input name="title" placeholder="Optional title"></label>
+            <label class="field-2">Mood<input name="mood" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
+            <label class="field-2">Energy<input name="energy" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
+            <label class="field-2">Stress<input name="stress" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
+            <label class="field-2">Motivation<input name="motivation" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
+            <label class="field-2">Sleep hours<input name="sleep" type="number" min="0" max="16" step="0.25"></label>
+            <label class="field-2">Sleep quality<select name="sleepQuality"><option value="">Not set</option><option>Poor</option><option>Okay</option><option>Good</option><option>Great</option></select></label>
+            <label class="field-6">Physical health<input name="physicalHealth" placeholder="Optional"></label>
+            <label class="field-6">Mental wellbeing<input name="mentalWellbeing" placeholder="Optional"></label>
+            <div class="field-12">
+              <h3>Habits</h3>
+              <div id="journalHabitChecklist" class="form-grid"></div>
+            </div>
+            <label class="field-12">Main journal entry<textarea name="body" class="journal-writing-area" placeholder="Write freely. What happened today? What mattered?"></textarea></label>
+            <details class="field-12">
+              <summary>Reflection prompts</summary>
+              <div class="form-grid">
+                <label class="field-6">Best moment today<textarea name="bestMoment"></textarea></label>
+                <label class="field-6">Biggest challenge<textarea name="biggestChallenge"></textarea></label>
+                <label class="field-6">What I learned<textarea name="learned"></textarea></label>
+                <label class="field-6">Something I am grateful for<textarea name="gratitude"></textarea></label>
+                <label class="field-12">Tomorrow's focus<input name="tomorrowFocus"></label>
+              </div>
+            </details>
+            <details class="field-12">
+              <summary>Travel context</summary>
+              <div class="form-grid">
+                <label class="field-3">Country<input name="country"></label>
+                <label class="field-3">City<input name="city"></label>
+                <label class="field-4">Accommodation<input name="accommodation"></label>
+                <label class="field-2"><span>Travel day</span><select name="travelDay"><option value="false">No</option><option value="true">Yes</option></select></label>
+                <label class="field-12">Travel notes<textarea name="travelNotes"></textarea></label>
+              </div>
+            </details>
+            <details class="field-12">
+              <summary>Finance reflections</summary>
+              <div class="form-grid">
+                <div class="field-12">
+                  <h3>Daily Spending</h3>
+                  <p class="hint">Finance owns transactions. Journal can link to them or ask before creating one.</p>
+                  <div id="journalDailySpendingSummary" class="list"></div>
+                </div>
+                <div class="field-12 form-grid">
+                  <label class="field-4">Spending item<input id="journalSpendDescription" placeholder="Coffee, train, groceries"></label>
+                  <label class="field-2">Amount<input id="journalSpendAmount" type="number" min="0" step="0.01"></label>
+                  <label class="field-3">Category<input id="journalSpendCategory" placeholder="Food"></label>
+                  <label class="field-3">Pot<select id="journalSpendPot" data-budget-pool-select></select></label>
+                  <label class="field-12">Note<input id="journalSpendNote" placeholder="Optional Finance note"></label>
+                  <button id="journalAddSpendingBtn" class="secondary-btn field-3" type="button">Add to Finance</button>
+                  <span id="journalFinanceStatus" class="hint field-9"></span>
+                </div>
+                <label class="field-6">Spending note<textarea name="spendingNote"></textarea></label>
+                <label class="field-6">Financial thoughts<textarea name="financialThoughts"></textarea></label>
+              </div>
+            </details>
+            <label class="field-12">Tags<input name="tags" placeholder="Travel, Writing, Low Energy"></label>
+            <div class="field-12 modal-actions">
+              <button class="primary-btn" type="submit">Save Journal Entry</button>
+              <button id="archiveJournalBtn" class="ghost-btn" type="button">Archive</button>
+              <button id="deleteJournalBtn" class="danger-btn" type="button">Delete</button>
+              <span id="journalSaveStatus" class="hint"></span>
+            </div>
           </form>
         </div>
-        <div class="panel span-7"><h2>Journal Entries</h2><div id="journalList" class="list"></div></div>
+        <div class="panel span-12">
+          <h2>Journal Entries</h2>
+          <form id="journalFilterForm" class="form-grid">
+            <label class="field-4">Search<input name="search" placeholder="Search entries"></label>
+            <label class="field-3">Tag<input name="tag" placeholder="Any tag"></label>
+            <label class="field-2">From<input name="from" type="date"></label>
+            <label class="field-2">To<input name="to" type="date"></label>
+            <label class="field-1">Mood<input name="moodMin" type="number" min="1" max="10" placeholder="Min"></label>
+          </form>
+          <div id="journalList" class="list"></div>
+        </div>
       </div>
     </section>
 
@@ -1882,7 +1990,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.22.0";
+    const APP_VERSION = "0.25.0";
     const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
     const defaultSectionLabels = {
       command: "Command",
@@ -2248,6 +2356,8 @@
         due: task.due || "",
         done: Boolean(task.done)
       }));
+      merged.checkins = (data.checkins || next.checkins).map((entry) => ({ ...entry, id: entry.id || id(), date: entry.date || today() }));
+      merged.journals = normalizeJournalEntries(data.journals || next.journals, merged.checkins, merged.settings.habits);
       merged.milestones = (data.milestones || next.milestones).map((entry) => ({ ...entry, id: entry.id || id() }));
       normaliseOrderedList(merged.route);
       return merged;
@@ -2416,9 +2526,126 @@
         id: habit.id || id(),
         key: habit.key || `habit_${index + 1}`,
         label: habit.label || habit.name || "Habit",
+        notes: habit.notes || habit.note || "",
+        showInJournal: habit.showInJournal !== false,
         order: Number(habit.order) || index + 1,
         archived: Boolean(habit.archived)
       }))).map((habit, index) => ({ ...habit, order: index + 1 }));
+    }
+
+    function emptyJournalEntry(date = today()) {
+      const now = new Date().toISOString();
+      return {
+        id: id(),
+        type: "Daily journal",
+        date,
+        createdAt: now,
+        updatedAt: now,
+        title: "",
+        body: "",
+        mood: "",
+        energy: "",
+        stress: "",
+        motivation: "",
+        sleep: "",
+        sleepQuality: "",
+        physicalHealth: "",
+        mentalWellbeing: "",
+        habits: {},
+        reflections: { bestMoment: "", biggestChallenge: "", learned: "", gratitude: "", tomorrowFocus: "" },
+        travel: { country: "", city: "", accommodation: "", travelDay: false, notes: "" },
+        finance: { spendingNote: "", financialThoughts: "", transactionIds: [] },
+        tags: [],
+        archived: false
+      };
+    }
+
+    function normalizeJournalEntry(entry, habits = []) {
+      const normal = {
+        ...emptyJournalEntry(entry.date || today()),
+        ...entry,
+        id: entry.id || id(),
+        type: entry.type || "Daily journal",
+        date: entry.date || today(),
+        createdAt: entry.createdAt || entry.created || new Date().toISOString(),
+        updatedAt: entry.updatedAt || entry.editedAt || entry.createdAt || new Date().toISOString(),
+        title: entry.title || "",
+        body: entry.body || entry.entry || entry.notes || "",
+        mood: Number(entry.mood) || "",
+        energy: Number(entry.energy) || "",
+        stress: Number(entry.stress) || "",
+        motivation: Number(entry.motivation) || "",
+        sleep: Number(entry.sleep) || "",
+        sleepQuality: entry.sleepQuality || "",
+        physicalHealth: entry.physicalHealth || "",
+        mentalWellbeing: entry.mentalWellbeing || "",
+        habits: { ...(entry.habits || {}) },
+        reflections: {
+          bestMoment: entry.reflections?.bestMoment || entry.bestMoment || "",
+          biggestChallenge: entry.reflections?.biggestChallenge || entry.biggestChallenge || "",
+          learned: entry.reflections?.learned || entry.learned || "",
+          gratitude: entry.reflections?.gratitude || entry.gratitude || "",
+          tomorrowFocus: entry.reflections?.tomorrowFocus || entry.tomorrowFocus || ""
+        },
+        travel: {
+          country: entry.travel?.country || entry.country || "",
+          city: entry.travel?.city || entry.city || "",
+          accommodation: entry.travel?.accommodation || entry.accommodation || "",
+          travelDay: Boolean(entry.travel?.travelDay || entry.travelDay),
+          notes: entry.travel?.notes || entry.travelNotes || ""
+        },
+        finance: {
+          spendingNote: entry.finance?.spendingNote || entry.spendingNote || "",
+          financialThoughts: entry.finance?.financialThoughts || entry.financialThoughts || "",
+          transactionIds: Array.isArray(entry.finance?.transactionIds) ? entry.finance.transactionIds : Array.isArray(entry.transactionIds) ? entry.transactionIds : []
+        },
+        tags: normalizeTags(entry.tags || entry.tag || ""),
+        archived: Boolean(entry.archived)
+      };
+      habits.forEach((habit) => {
+        if (entry[habit.key] !== undefined && normal.habits[habit.key] === undefined) normal.habits[habit.key] = Boolean(entry[habit.key]);
+      });
+      return normal;
+    }
+
+    function normalizeJournalEntries(savedJournals, checkins, habits) {
+      const byDate = new Map();
+      (savedJournals || []).forEach((entry) => {
+        const normal = normalizeJournalEntry(entry, habits);
+        const existing = byDate.get(normal.date);
+        if (!existing) {
+          byDate.set(normal.date, normal);
+          return;
+        }
+        existing.body = existing.body || normal.body;
+        existing.title = existing.title || normal.title;
+        existing.mood = existing.mood || normal.mood;
+        existing.energy = existing.energy || normal.energy;
+        existing.stress = existing.stress || normal.stress;
+        existing.motivation = existing.motivation || normal.motivation;
+        existing.sleep = existing.sleep || normal.sleep;
+        existing.tags = Array.from(new Set([...(existing.tags || []), ...(normal.tags || [])]));
+        existing.habits = { ...normal.habits, ...existing.habits };
+        existing.updatedAt = [existing.updatedAt, normal.updatedAt].filter(Boolean).sort().pop() || existing.updatedAt;
+      });
+      (checkins || []).forEach((entry) => {
+        const date = entry.date || today();
+        const journal = byDate.get(date) || emptyJournalEntry(date);
+        journal.mood = journal.mood || Number(entry.mood) || "";
+        journal.energy = journal.energy || Number(entry.energy) || "";
+        journal.sleep = journal.sleep || Number(entry.sleep) || "";
+        journal.finance.spendingNote = journal.finance.spendingNote || (Number(entry.spending || 0) ? `Spending logged: ${money(entry.spending)}` : "");
+        habits.forEach((habit) => {
+          if (entry[habit.key] !== undefined && journal.habits[habit.key] === undefined) journal.habits[habit.key] = Boolean(entry[habit.key]);
+        });
+        byDate.set(date, journal);
+      });
+      return [...byDate.values()].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    }
+
+    function normalizeTags(value) {
+      if (Array.isArray(value)) return value.map((tag) => String(tag).trim()).filter(Boolean);
+      return String(value || "").split(",").map((tag) => tag.trim()).filter(Boolean);
     }
 
     function normalizeCategories(savedCategories) {
@@ -2616,6 +2843,7 @@
         budgetPoolId: budgetPools.some((pool) => pool.id === windowItem.budgetPoolId) ? windowItem.budgetPoolId : "",
         budgetPoolIds: Array.isArray(windowItem.budgetPoolIds) ? windowItem.budgetPoolIds.filter((poolId) => budgetPools.some((pool) => pool.id === poolId)) : [],
         phase: windowItem.phase || "",
+        notes: windowItem.notes || windowItem.note || "",
         active: Boolean(windowItem.active),
         archived: Boolean(windowItem.archived),
         order: Number(windowItem.order) || index + 1
@@ -2631,6 +2859,24 @@
 
     function activeHabits() {
       return orderedItems(state.settings.habits || []).filter((habit) => !habit.archived);
+    }
+
+    function journalHabits() {
+      return activeHabits().filter((habit) => habit.showInJournal !== false);
+    }
+
+    function journalEntryForDate(date = today()) {
+      return (state.journals || []).find((entry) => entry.date === date && !entry.archived) || null;
+    }
+
+    function ensureJournalEntry(date = today()) {
+      let entry = journalEntryForDate(date);
+      if (!entry) {
+        entry = emptyJournalEntry(date);
+        state.journals = state.journals || [];
+        state.journals.push(entry);
+      }
+      return entry;
     }
 
     function financeCategories(includeArchived = false) {
@@ -2741,6 +2987,70 @@
 
     function isSpendingEntry(entry) {
       return entry.type === "expense" && entry.kind !== "transfer";
+    }
+
+    function normalizeMoneyText(value) {
+      return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function transactionLabel(entry) {
+      return entry.description || entry.note || entry.category || "Spending";
+    }
+
+    function transactionsForJournalDate(date) {
+      return (state.money || [])
+        .filter((entry) => isSpendingEntry(entry) && entry.date === date)
+        .sort((a, b) => normalizeMoneyText(transactionLabel(a)).localeCompare(normalizeMoneyText(transactionLabel(b))));
+    }
+
+    function ensureJournalFinance(entry) {
+      entry.finance = entry.finance || {};
+      entry.finance.transactionIds = Array.isArray(entry.finance.transactionIds) ? entry.finance.transactionIds : [];
+      return entry.finance;
+    }
+
+    function linkJournalTransaction(entry, transactionId) {
+      if (!entry || !transactionId) return;
+      const finance = ensureJournalFinance(entry);
+      if (!finance.transactionIds.includes(transactionId)) finance.transactionIds.push(transactionId);
+      entry.updatedAt = new Date().toISOString();
+    }
+
+    function findLikelyDuplicateTransaction({ date, amount, description, category }) {
+      const targetAmount = Number(amount) || 0;
+      const targetDescription = normalizeMoneyText(description);
+      const targetCategory = normalizeMoneyText(category);
+      return transactionsForJournalDate(date).find((entry) => {
+        const amountMatches = Math.abs((Number(entry.amount) || 0) - targetAmount) < 0.01;
+        const entryText = normalizeMoneyText(transactionLabel(entry));
+        const descriptionMatches = targetDescription && (entryText === targetDescription || entryText.includes(targetDescription) || targetDescription.includes(entryText));
+        const categoryMatches = !targetCategory || normalizeMoneyText(entry.category) === targetCategory;
+        return amountMatches && (descriptionMatches || categoryMatches);
+      }) || null;
+    }
+
+    function createFinanceTransactionFromJournal({ date, description, amount, category, note, potId }) {
+      const pot = visibleBudgetPots().find((pool) => pool.id === potId) || (getActivePots().length === 1 ? getActivePots()[0] : null);
+      const allocation = (state.allocations || []).find((entry) => entry.id === pot?.allocationId);
+      const entry = {
+        id: id(),
+        type: "expense",
+        date: date || today(),
+        description: description || "",
+        category: category || "Uncategorised",
+        subcategory: "",
+        phase: pot?.phase || currentPhase() || "Unassigned",
+        walletId: allocation?.walletId || "",
+        allocationId: allocation?.id || "",
+        potId: pot?.id || "",
+        budgetPoolId: pot?.id || "",
+        amount: Number(amount) || 0,
+        note: note || "Added from Journal",
+        journalCreated: true
+      };
+      state.money = state.money || [];
+      state.money.push(entry);
+      return entry;
     }
 
     function poolBaseAmount(pool) {
@@ -3660,6 +3970,22 @@
       return pace.pots.map((pot) => pot.name).join(", ");
     }
 
+    function getBudgetPeriodDetail(pace = getBudgetPace()) {
+      const windowItem = getActiveSpendingWindow();
+      if (!pace.pots?.length) return "No active budget period.";
+      const days = pace.remainingDays === null ? "No end date set" : `${pace.remainingDays} days remaining`;
+      const datePart = (value) => formatDate(value);
+      const hasDatePart = (value) => value && value !== "No date" && value !== "Not set";
+      if (windowItem) {
+        const range = [datePart(windowItem.startDate), datePart(windowItem.endDate)].filter(hasDatePart).join(" to ");
+        return `${range || "Custom date range"} - ${days}`;
+      }
+      if (pace.pots.length > 1) return `${pace.pots.length} current pots combined - ${days}`;
+      const pot = pace.pots[0];
+      const range = [datePart(pot.startDate), datePart(pot.endDate)].filter(hasDatePart).join(" to ");
+      return `${range || "Pot date range not set"} - ${days}`;
+    }
+
     function recommendedPriorities() {
       const phase = currentPhase();
       const openTasks = state.tasks.filter((task) => !task.done).map((task) => task.title);
@@ -3821,7 +4147,7 @@
       renderTaskManager();
       const open = sortedTasks(state.tasks.filter((task) => !task.done)).slice(0, 8);
       renderList("priorityList", open, (task) => checkboxItem(task, "tasks"));
-      const last7 = recentCheckins(7);
+      const last7 = recentJournalEntries(7);
       const avgMood = average(last7.map((entry) => Number(entry.mood || 0)).filter(Boolean));
       const avgEnergy = average(last7.map((entry) => Number(entry.energy || 0)).filter(Boolean));
       const avgSleep = average(last7.map((entry) => Number(entry.sleep || 0)).filter(Boolean));
@@ -3829,7 +4155,7 @@
         ["Avg mood", avgMood ? `${avgMood.toFixed(1)}/10` : "No data"],
         ["Avg energy", avgEnergy ? `${avgEnergy.toFixed(1)}/10` : "No data"],
         ["Avg sleep", avgSleep ? `${avgSleep.toFixed(1)} hours` : "No data"],
-        ["Check-ins", String(last7.length)]
+        ["Journal records", String(last7.length)]
       ]);
       const published = state.content.filter((item) => item.status === "Published").length;
       document.getElementById("contentStats").innerHTML = statsHtml([
@@ -3872,7 +4198,7 @@
           ["Today", new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })],
           ["Current phase", currentPhase()],
           ["Days until departure", daysToDeparture === null ? "Not set" : String(daysToDeparture)],
-          ["Active planning window", windowItem ? `${windowItem.title} (${Math.max(0, dayDiff(windowItem.endDate))} days left)` : "None"],
+          ["Advanced budget period", windowItem ? `${windowItem.title} (${Math.max(0, dayDiff(windowItem.endDate))} days left)` : "None"],
           ["Budget status", budget.pool ? `${budget.pots.length > 1 ? budget.pots.length + " current budgets" : budget.pool.name}: ${money(budget.remaining)} left, ${budget.safeDaily === null ? "Not set" : money(budget.safeDaily)} safe daily spend` : "No current spending pot selected"],
           ["TEFL status", `${t.teflHours} hours done, ${tefl.remainingHours} remaining, ${tefl.status}`]
         ])}
@@ -4015,7 +4341,7 @@
     function renderHabitSettings() {
       renderList("habitSettingsList", orderedItems(state.settings.habits || []), (habit) => settingRow(
         habit,
-        `${habit.archived ? "Archived" : "Active"} - position ${habit.order}`,
+        `${habit.archived ? "Archived" : "Active"} - position ${habit.order} - ${habit.showInJournal === false ? "Hidden from Journal" : "Shown in Journal"}${habit.notes ? " - " + habit.notes : ""}`,
         () => editHabitSetting(habit),
         () => {
           habit.archived = !habit.archived;
@@ -4252,8 +4578,8 @@
       const emergencyTarget = getEmergencyFundTarget();
       const emergencyProgress = pct(emergency, emergencyTarget);
       const activePotLabel = pace.pots?.length > 1 ? `${pace.pots.length} active budgets` : pace.pool?.name || "No current budget";
-      const activePotDetail = pace.pots?.length ? "The pot currently setting your daily budget." : "Activate a pot or spending window.";
-      const periodDetail = pace.remainingDays === null ? "Add an end date to calculate safe spend." : `${pace.remainingDays} days remaining`;
+      const activePotDetail = pace.pots?.length ? "The pot currently setting your daily budget." : "Choose a pot to control daily safe spend.";
+      const periodDetail = getBudgetPeriodDetail(pace);
       root.innerHTML = [
         ["Total money", money(totalMoney), "All money currently available."],
         ["Travel allocation", money(total), target ? `Money reserved for travel. ${progress}% of ${money(target)} target.` : "Money currently allocated to travel."],
@@ -4287,19 +4613,20 @@
       const pace = budgetPace();
       if (!pace.pool) {
         const suggested = getSuggestedPots();
-        document.getElementById("budgetPace").innerHTML = `<div class="empty"><strong>No current spending pot selected.</strong><span>${escapeHtml(suggested.length ? `Suggested budget: ${suggested.map((pot) => pot.name).join(", ")}` : "Activate a pot or spending window to calculate safe spend.")}</span></div>`;
+        document.getElementById("budgetPace").innerHTML = `<div class="empty"><strong>No current spending pot selected.</strong><span>${escapeHtml(suggested.length ? `Suggested budget: ${suggested.map((pot) => pot.name).join(", ")}` : "Activate a pot with start and end dates to calculate safe spend.")}</span></div>`;
         return;
       }
       const windowItem = activePlanningWindow();
       document.getElementById("budgetPace").innerHTML = statsHtml([
         ["Budget period", getBudgetPaceSource()],
+        ["Date range", getBudgetPeriodDetail(pace)],
         ["Current spending pot", pace.pots.length > 1 ? pace.pots.map((pot) => pot.name).join(", ") : pace.pool.name],
         ["Amount remaining", money(pace.remaining)],
         ["Days remaining", pace.remainingDays === null ? "Not set" : String(pace.remainingDays)],
         ["Safe daily spend", pace.safeDaily === null ? "Not set" : money(pace.safeDaily)],
         ["Safe weekly spend", pace.safeWeekly === null ? "Not set" : money(pace.safeWeekly)],
         ["Recent daily average", money(pace.recentDaily)],
-        ["Active window", windowItem ? `${windowItem.title} (${Math.max(0, dayDiff(windowItem.endDate))} days left)` : "None"],
+        ["Advanced period", windowItem ? `${windowItem.title} takes priority` : "None"],
         ["Warning", pace.warning]
       ]);
     }
@@ -4397,17 +4724,18 @@
     function renderPlanningWindows() {
       const note = document.getElementById("spendingWindowNote");
       if (note) note.textContent = getActiveSpendingWindow()
-        ? ""
+        ? "This advanced budget period is overriding the dates on your current pot."
         : getActivePots().some((pot) => pot.startDate || pot.endDate)
-          ? `No spending window is active. Safe spend is using ${getBudgetPaceSource()}.`
-          : "No spending window is active. Activate a pot or create a window to calculate safe spend.";
+          ? `No advanced budget period is active. Safe spend is using ${getBudgetPaceSource()}.`
+          : "Set an active pot with start and end dates for normal daily budgeting.";
       renderList("planningWindowList", orderedItems(state.planningWindows || []), (windowItem) => {
         const potIds = [...(windowItem.budgetPoolIds || []), windowItem.budgetPoolId].filter(Boolean);
         const pots = visibleBudgetPots().filter((entry) => potIds.includes(entry.id));
         const phaseLabel = windowItem.phase && phaseNames(true).includes(windowItem.phase) ? windowItem.phase : "";
+        const noteText = windowItem.notes ? ` - ${windowItem.notes}` : "";
         return settingRow(
           { ...windowItem, name: windowItem.title },
-          `${windowItem.archived ? "Archived" : windowItem.active ? "Active" : "Inactive"} - ${formatDate(windowItem.startDate)} to ${formatDate(windowItem.endDate)}${pots.length ? " - " + pots.map((pot) => pot.name).join(", ") : ""}${phaseLabel ? " - " + phaseLabel : ""}`,
+          `${windowItem.archived ? "Archived" : windowItem.active ? "Active override" : "Inactive"} - ${formatDate(windowItem.startDate)} to ${formatDate(windowItem.endDate)}${pots.length ? " - " + pots.map((pot) => pot.name).join(", ") : ""}${phaseLabel ? " - " + phaseLabel : ""}${noteText}`,
           () => editPlanningWindow(windowItem),
           () => {
             windowItem.archived = !windowItem.archived;
@@ -4587,13 +4915,12 @@
     }
 
     function renderLife() {
-      renderList("checkinList", state.checkins.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")), (entry) => simpleItem(entry, `Mood ${entry.mood || "-"}, energy ${entry.energy || "-"}, sleep ${entry.sleep || "-"}h, spending ${money(entry.spending || 0)}`, "checkins", editCheckin));
-      const last14 = recentCheckins(14);
+      const last14 = recentJournalEntries(14);
       document.getElementById("trendStats").innerHTML = statsHtml([
-        ["Check-ins", String(last14.length)],
+        ["Journal records", String(last14.length)],
         ["Average mood", average(last14.map((entry) => Number(entry.mood || 0)).filter(Boolean)).toFixed(1)],
         ["Average energy", average(last14.map((entry) => Number(entry.energy || 0)).filter(Boolean)).toFixed(1)],
-        ["Daily spending avg", money(average(last14.map((entry) => Number(entry.spending || 0))))]
+        ["Habit completion", `${habitStats().rate}%`]
       ]);
       const chart = document.getElementById("lifeChart");
       chart.innerHTML = "";
@@ -4611,11 +4938,10 @@
     }
 
     function renderHabits() {
-      renderHabitQuickForm();
       renderHabitSettings();
       const root = document.getElementById("habitTable");
       root.innerHTML = "";
-      activeHabits().forEach(({ key, label }) => {
+      journalHabits().forEach(({ key, label }) => {
         const stat = habitStatFor(key);
         const box = document.createElement("div");
         box.className = "panel span-4";
@@ -4624,23 +4950,194 @@
       });
     }
 
-    function renderHabitQuickForm() {
-      const form = document.getElementById("habitQuickForm");
+    function renderJournal() {
+      renderJournalDashboard();
+      renderJournalForm();
+      renderJournalList();
+    }
+
+    function selectedJournalDate() {
+      return state.settings.selectedJournalDate || today();
+    }
+
+    function renderJournalDashboard() {
+      const root = document.getElementById("journalDashboard");
+      if (!root) return;
+      const todayEntry = journalEntryForDate(today());
+      const recent = recentJournalEntries(7);
+      const moodValues = recent.map((entry) => Number(entry.mood || 0)).filter(Boolean);
+      const energyValues = recent.map((entry) => Number(entry.energy || 0)).filter(Boolean);
+      const habit = habitStats();
+      const tags = tagCounts().slice(0, 5).map(([tag, count]) => `${tag} (${count})`).join(", ") || "No tags yet";
+      root.innerHTML = [
+        ["Today", todayEntry?.body || todayEntry?.title ? "Written" : "Not started"],
+        ["Journal streak", `${journalStreak()} days`],
+        ["Entries this week", String(recent.length)],
+        ["Avg mood", moodValues.length ? average(moodValues).toFixed(1) : "No data"],
+        ["Avg energy", energyValues.length ? average(energyValues).toFixed(1) : "No data"],
+        ["Habit completion", `${habit.rate}%`],
+        ["Top tags", tags]
+      ].map(([label, value]) => `<div class="score-card"><span class="muted">${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+    }
+
+    function renderJournalForm() {
+      const form = document.getElementById("journalForm");
       if (!form) return;
-      const entry = state.checkins.find((item) => item.date === today()) || {};
-      form.innerHTML = `<label class="field-3">Date<input name="date" type="date" value="${today()}"></label>`;
-      activeHabits().forEach(({ key, label }) => {
-        form.innerHTML += `<label class="field-3"><span>${label}</span><select name="${key}"><option value="false">No</option><option value="true">Yes</option></select></label>`;
-      });
-      form.innerHTML += `<button class="field-3" type="submit">Save Habits</button>`;
-      activeHabits().forEach(({ key }) => {
-        const select = form.querySelector(`[name="${key}"]`);
-        if (select) select.value = entry[key] ? "true" : "false";
+      const entry = journalEntryForDate(selectedJournalDate()) || emptyJournalEntry(selectedJournalDate());
+      form.elements.id.value = entry.id;
+      form.elements.date.value = entry.date || today();
+      form.elements.title.value = entry.title || "";
+      form.elements.mood.value = entry.mood || "";
+      form.elements.energy.value = entry.energy || "";
+      form.elements.stress.value = entry.stress || "";
+      form.elements.motivation.value = entry.motivation || "";
+      form.elements.sleep.value = entry.sleep || "";
+      form.elements.sleepQuality.value = entry.sleepQuality || "";
+      form.elements.physicalHealth.value = entry.physicalHealth || "";
+      form.elements.mentalWellbeing.value = entry.mentalWellbeing || "";
+      form.elements.body.value = entry.body || "";
+      form.elements.bestMoment.value = entry.reflections?.bestMoment || "";
+      form.elements.biggestChallenge.value = entry.reflections?.biggestChallenge || "";
+      form.elements.learned.value = entry.reflections?.learned || "";
+      form.elements.gratitude.value = entry.reflections?.gratitude || "";
+      form.elements.tomorrowFocus.value = entry.reflections?.tomorrowFocus || "";
+      form.elements.country.value = entry.travel?.country || "";
+      form.elements.city.value = entry.travel?.city || "";
+      form.elements.accommodation.value = entry.travel?.accommodation || "";
+      form.elements.travelDay.value = entry.travel?.travelDay ? "true" : "false";
+      form.elements.travelNotes.value = entry.travel?.notes || "";
+      form.elements.spendingNote.value = entry.finance?.spendingNote || "";
+      form.elements.financialThoughts.value = entry.finance?.financialThoughts || "";
+      form.elements.tags.value = (entry.tags || []).join(", ");
+      renderJournalHabitChecklist(entry);
+      renderJournalFinanceSection(entry);
+    }
+
+    function renderJournalHabitChecklist(entry) {
+      const root = document.getElementById("journalHabitChecklist");
+      if (!root) return;
+      const habits = journalHabits();
+      if (!habits.length) {
+        root.innerHTML = `<div class="empty field-12">Add habits in Habit Manager to show them here.</div>`;
+        return;
+      }
+      root.innerHTML = habits.map((habit) => `
+        <label class="field-3">
+          <span>${escapeHtml(habit.label)}</span>
+          <select name="habit_${escapeHtml(habit.key)}">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </label>
+      `).join("");
+      habits.forEach((habit) => {
+        const select = root.querySelector(`[name="habit_${habit.key}"]`);
+        if (select) select.value = entry.habits?.[habit.key] ? "true" : "false";
       });
     }
 
-    function renderJournal() {
-      renderList("journalList", state.journals.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")), (entry) => simpleItem(entry, `${entry.type} - ${entry.date || "No date"} - ${entry.body}`, "journals", editJournal));
+    function renderJournalFinanceSection(entry) {
+      const root = document.getElementById("journalDailySpendingSummary");
+      if (!root) return;
+      const date = entry.date || selectedJournalDate();
+      const dayTransactions = transactionsForJournalDate(date);
+      const finance = ensureJournalFinance(entry);
+      const linkedIds = finance.transactionIds || [];
+      const linkedRows = linkedIds.map((transactionId) => ({
+        transactionId,
+        transaction: (state.money || []).find((moneyEntry) => moneyEntry.id === transactionId)
+      }));
+      const total = dayTransactions.reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0);
+      const linkedSet = new Set(linkedIds);
+      root.innerHTML = "";
+      const summary = document.createElement("div");
+      summary.className = "item compact";
+      summary.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div>`;
+      summary.querySelector(".item-title").textContent = `Today's spending: ${money(total)} total`;
+      summary.querySelector(".item-body").textContent = dayTransactions.length ? `${dayTransactions.length} Finance transaction${dayTransactions.length === 1 ? "" : "s"} on ${formatDate(date)}` : `No Finance transactions on ${formatDate(date)}.`;
+      root.appendChild(summary);
+
+      dayTransactions.forEach((transaction) => {
+        const node = document.createElement("div");
+        node.className = "item compact";
+        node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn"></button><button type="button" class="ghost-btn edit-linked-transaction">Edit in Finance</button></div>`;
+        node.querySelector(".item-title").textContent = `${transactionLabel(transaction)} - ${money(transaction.amount)}`;
+        node.querySelector(".item-body").textContent = [transaction.category || "Uncategorised", transaction.note || "", linkedSet.has(transaction.id) ? "Linked to this journal entry" : "Finance transaction"].filter(Boolean).join(" - ");
+        const linkButton = node.querySelector(".item-actions .ghost-btn");
+        linkButton.textContent = linkedSet.has(transaction.id) ? "Linked" : "Link";
+        linkButton.disabled = linkedSet.has(transaction.id);
+        linkButton.addEventListener("click", () => {
+          const savedEntry = ensureJournalEntry(date);
+          linkJournalTransaction(savedEntry, transaction.id);
+          render();
+        });
+        node.querySelector(".edit-linked-transaction").addEventListener("click", () => editMoney(transaction));
+        root.appendChild(node);
+      });
+
+      linkedRows.filter(({ transaction }) => transaction && transaction.date !== date).forEach(({ transaction }) => {
+        const node = document.createElement("div");
+        node.className = "item compact";
+        node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn edit-linked-transaction">Edit in Finance</button></div>`;
+        node.querySelector(".item-title").textContent = `${transactionLabel(transaction)} - ${money(transaction.amount)}`;
+        node.querySelector(".item-body").textContent = `Linked Finance transaction now dated ${formatDate(transaction.date)}.`;
+        node.querySelector(".edit-linked-transaction").addEventListener("click", () => editMoney(transaction));
+        root.appendChild(node);
+      });
+
+      linkedRows.filter(({ transaction }) => !transaction).forEach(({ transactionId }) => {
+        const node = document.createElement("div");
+        node.className = "item compact warning-row";
+        node.innerHTML = `<div><div class="item-title">Linked transaction removed</div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn">Remove link</button></div>`;
+        node.querySelector(".item-body").textContent = `Missing Finance transaction ID: ${transactionId}`;
+        node.querySelector("button").addEventListener("click", () => {
+          finance.transactionIds = finance.transactionIds.filter((idValue) => idValue !== transactionId);
+          render();
+        });
+        root.appendChild(node);
+      });
+    }
+
+    function renderJournalList() {
+      const form = document.getElementById("journalFilterForm");
+      const data = form ? Object.fromEntries(new FormData(form).entries()) : {};
+      const search = String(data.search || "").trim().toLowerCase();
+      const tag = String(data.tag || "").trim().toLowerCase();
+      const moodMin = Number(data.moodMin || 0);
+      const entries = (state.journals || [])
+        .filter((entry) => !entry.archived)
+        .filter((entry) => !data.from || entry.date >= data.from)
+        .filter((entry) => !data.to || entry.date <= data.to)
+        .filter((entry) => !moodMin || Number(entry.mood || 0) >= moodMin)
+        .filter((entry) => !tag || (entry.tags || []).some((item) => item.toLowerCase().includes(tag)))
+        .filter((entry) => !search || `${entry.title || ""} ${entry.body || ""} ${(entry.tags || []).join(" ")}`.toLowerCase().includes(search))
+        .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      renderList("journalList", entries, journalListItem);
+    }
+
+    function journalListItem(entry) {
+      const node = document.createElement("div");
+      node.className = "item compact";
+      const habit = journalHabitCompletion(entry);
+      node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn open-journal">Open</button><button type="button" class="ghost-btn archive-journal">Archive</button><button type="button" class="danger-btn delete-journal">Delete</button></div>`;
+      node.querySelector(".item-title").textContent = entry.title || formatDate(entry.date);
+      node.querySelector(".item-body").textContent = [
+        formatDate(entry.date),
+        entry.mood ? `Mood ${entry.mood}` : "",
+        entry.energy ? `Energy ${entry.energy}` : "",
+        habit.total ? `${habit.done}/${habit.total} habits` : "",
+        (entry.tags || []).join(", "),
+        entry.body ? entry.body.slice(0, 100) : ""
+      ].filter(Boolean).join(" - ");
+      node.querySelector(".open-journal").addEventListener("click", () => openJournalEntry(entry));
+      node.querySelector(".archive-journal").addEventListener("click", () => { entry.archived = true; render(); });
+      node.querySelector(".delete-journal").addEventListener("click", () => removeJournalEntry(entry.id));
+      return node;
+    }
+
+    function openJournalEntry(entry) {
+      state.settings.selectedJournalDate = entry.date || today();
+      render();
     }
 
     function renderReview() {
@@ -4731,7 +5228,7 @@
           archivedDateItemList: ["No archived dates", "Archived dates will appear here."],
           travelDateList: ["No active travel dates", "Add key dates to power countdowns and timelines."],
           archivedTravelDateList: ["No archived dates", "Archived travel dates will appear here."],
-          planningWindowList: ["No spending windows yet", "Safe spend can use current pot dates, or you can add a window here."]
+          planningWindowList: ["No advanced budget periods yet", "Most budgets only need pot start and end dates."]
         };
         const [title, body] = messages[idName] || ["Nothing here yet", "New entries will appear here after you add them."];
         root.innerHTML = `<div class="empty"><strong>${title}</strong><span>${body}</span></div>`;
@@ -4882,6 +5379,13 @@
       render();
     }
 
+    function removeJournalEntry(itemId) {
+      if (!confirm("Delete this journal entry?")) return;
+      state.journals = (state.journals || []).filter((item) => item.id !== itemId);
+      if (!journalEntryForDate(selectedJournalDate())) state.settings.selectedJournalDate = today();
+      render();
+    }
+
     function removeDateCounter(itemId) {
       if (!confirm("Delete this date item?")) return;
       const item = (state.settings.dateItems || []).find((entry) => entry.id === itemId);
@@ -4934,7 +5438,13 @@
       if (label === null) return;
       const position = promptValue("Position", habit.order || "");
       if (position === null) return;
+      const notes = promptValue("Notes", habit.notes || "");
+      if (notes === null) return;
+      const show = promptValue("Show in Journal? yes/no", habit.showInJournal === false ? "no" : "yes");
+      if (show === null) return;
       habit.label = label || habit.label || "Habit";
+      habit.notes = notes || "";
+      habit.showInJournal = !/^(no|n|false|hidden)$/i.test(show);
       moveOrderedItem(state.settings.habits, habit, position);
       normaliseOrderedList(state.settings.habits);
       render();
@@ -4942,7 +5452,7 @@
 
     function removePhase(phaseId) {
       const phase = (state.settings.phases || []).find((entry) => entry.id === phaseId);
-      if (!confirm("Delete this phase? Linked route stops, pots and spending windows will become unassigned.")) return;
+      if (!confirm("Delete this phase? Linked route stops, pots and advanced budget periods will become unassigned.")) return;
       const phaseName = phase?.name || "";
       state.settings.phases = (state.settings.phases || []).filter((phase) => phase.id !== phaseId);
       if (phaseName) {
@@ -5019,29 +5529,10 @@
     }
 
     function removePlanningWindow(windowId) {
-      if (!confirm("Delete this planning window?")) return;
+      if (!confirm("Delete this advanced budget period?")) return;
       state.planningWindows = (state.planningWindows || []).filter((windowItem) => windowItem.id !== windowId);
       normaliseOrderedList(state.planningWindows);
       render();
-    }
-
-    function syncDailySpendingEntry(entry) {
-      state.money = state.money.filter((item) => !(item.date === entry.date && item.note === "From daily check-in"));
-      if (Number(entry.spending || 0) > 0) {
-        const activePots = getActivePots();
-        const pool = activePots.length === 1 ? activePots[0] : null;
-        state.money.push({
-          id: id(),
-          type: "expense",
-          date: entry.date,
-          category: "Other",
-          subcategory: "Misc",
-          phase: pool?.phase || currentPhase() || "Unassigned",
-          budgetPoolId: pool?.id || "",
-          amount: Number(entry.spending || 0),
-          note: "From daily check-in"
-        });
-      }
     }
 
     function promptValue(label, current) {
@@ -5228,6 +5719,8 @@
       if (phase === null) return;
       const active = promptValue("Active? yes/no", windowItem.active ? "yes" : "no");
       if (active === null) return;
+      const notes = promptValue("Notes", windowItem.notes || "");
+      if (notes === null) return;
       windowItem.title = title || windowItem.title || "Planning window";
       windowItem.startDate = startDate || "";
       windowItem.endDate = endDate || "";
@@ -5237,6 +5730,7 @@
       windowItem.budgetPoolId = windowItem.budgetPoolIds[0] || "";
       windowItem.phase = phase || "";
       windowItem.active = /^(yes|y|true|active)$/i.test(active);
+      windowItem.notes = notes || "";
       if (windowItem.active) (state.planningWindows || []).forEach((entry) => { if (entry.id !== windowItem.id) entry.active = false; });
       render();
     }
@@ -5367,30 +5861,15 @@
       if (energy === null) return;
       const sleep = promptValue("Sleep hours", item.sleep || "");
       if (sleep === null) return;
-      const spending = promptValue("Spending", item.spending || 0);
-      if (spending === null) return;
       item.date = date || item.date || today();
       item.mood = Number(mood) || "";
       item.energy = Number(energy) || "";
       item.sleep = Number(sleep) || "";
-      item.spending = Number(spending) || 0;
-      syncDailySpendingEntry(item);
       render();
     }
 
     function editJournal(item) {
-      const type = promptValue("Type", item.type || "Daily journal");
-      if (type === null) return;
-      const date = promptValue("Date YYYY-MM-DD", item.date || today());
-      if (date === null) return;
-      const title = promptValue("Title", item.title || "");
-      if (title === null) return;
-      const body = promptValue("Entry", item.body || "");
-      if (body === null) return;
-      item.type = type || item.type || "Daily journal";
-      item.date = date || item.date || today();
-      item.title = title || item.title || "Untitled";
-      item.body = body;
+      openJournalEntry(item);
       render();
     }
     function editWeeklyReview(item) {
@@ -5407,6 +5886,73 @@
       item.attention = attention;
       item.priorities = priorities;
       render();
+    }
+
+    function setJournalFinanceStatus(message) {
+      const status = document.getElementById("journalFinanceStatus");
+      if (status) status.textContent = message;
+    }
+
+    function handleJournalAddSpending() {
+      const date = document.querySelector("#journalForm [name='date']")?.value || selectedJournalDate();
+      const descriptionInput = document.getElementById("journalSpendDescription");
+      const amountInput = document.getElementById("journalSpendAmount");
+      const categoryInput = document.getElementById("journalSpendCategory");
+      const noteInput = document.getElementById("journalSpendNote");
+      const potInput = document.getElementById("journalSpendPot");
+      const status = document.getElementById("journalFinanceStatus");
+      const description = descriptionInput?.value.trim() || "";
+      const amount = Number(amountInput?.value || 0);
+      const category = categoryInput?.value.trim() || "";
+      const note = noteInput?.value.trim() || "";
+      const potId = potInput?.value || "";
+      if (!description || !(amount > 0)) {
+        if (status) status.textContent = "Add a description and amount first.";
+        return;
+      }
+      const journal = ensureJournalEntry(date);
+      const duplicate = findLikelyDuplicateTransaction({ date, amount, description, category });
+      if (duplicate) {
+        const action = prompt(`Possible existing transaction found:\n${transactionLabel(duplicate)} ${money(duplicate.amount)}\n\nType LINK to link it, ADD to add anyway, EDIT to edit before adding, or IGNORE to do nothing.`, "LINK");
+        if (action === null || /^ignore$/i.test(action.trim())) {
+          if (status) status.textContent = "No Finance transaction added.";
+          return;
+        }
+        if (/^link$/i.test(action.trim())) {
+          linkJournalTransaction(journal, duplicate.id);
+          render();
+          setJournalFinanceStatus("Linked to existing Finance transaction.");
+          return;
+        }
+        if (/^edit$/i.test(action.trim())) {
+          const editedDescription = promptValue("Description", description);
+          if (editedDescription === null) return;
+          const editedAmount = promptValue("Amount", amount);
+          if (editedAmount === null) return;
+          const editedCategory = promptValue("Category", category);
+          if (editedCategory === null) return;
+          const transaction = createFinanceTransactionFromJournal({ date, description: editedDescription, amount: Number(editedAmount) || amount, category: editedCategory, note, potId });
+          linkJournalTransaction(journal, transaction.id);
+          render();
+          setJournalFinanceStatus("Added edited transaction to Finance.");
+          return;
+        }
+        if (!/^add$/i.test(action.trim())) {
+          if (status) status.textContent = "No Finance transaction added.";
+          return;
+        }
+      } else if (!confirm(`Add this to Finance?\n${description} ${money(amount)} on ${formatDate(date)}`)) {
+        if (status) status.textContent = "No Finance transaction added.";
+        return;
+      }
+      const transaction = createFinanceTransactionFromJournal({ date, description, amount, category, note, potId });
+      linkJournalTransaction(journal, transaction.id);
+      if (descriptionInput) descriptionInput.value = "";
+      if (amountInput) amountInput.value = "";
+      if (categoryInput) categoryInput.value = "";
+      if (noteInput) noteInput.value = "";
+      render();
+      setJournalFinanceStatus("Added to Finance and linked to Journal.");
     }
 
     function editTitleLike(item, key) {
@@ -5773,7 +6319,6 @@
         mood: Number(data.mood) || "",
         energy: Number(data.energy) || "",
         sleep: Number(data.sleep) || "",
-        spending: Number(data.spending) || 0,
         exercise: bool(data.exercise),
         walk: bool(data.walk),
         leftHouse: bool(data.leftHouse),
@@ -5788,10 +6333,18 @@
       };
       state.checkins = state.checkins.filter((item) => item.date !== entry.date);
       state.checkins.push(entry);
-      syncDailySpendingEntry(entry);
+      const journal = ensureJournalEntry(date);
+      journal.mood = journal.mood || entry.mood;
+      journal.energy = journal.energy || entry.energy;
+      journal.sleep = journal.sleep || entry.sleep;
+      journal.habits = journal.habits || {};
+      ["exercise", "walk", "leftHouse", "social", "tefl", "writing", "content", "reading", "travelPlanning", "budgetDiscipline", "earlyBedtime"].forEach((key) => {
+        if (journal.habits[key] === undefined) journal.habits[key] = Boolean(entry[key]);
+      });
+      journal.updatedAt = new Date().toISOString();
     }, () => {
       const status = document.getElementById("dailyLogStatus");
-      if (status) status.textContent = "Daily log saved";
+      if (status) status.textContent = "Journal check-in saved";
     });
     bindForm("routeForm", (data) => {
       const stop = { id: id(), ...data, order: state.route.length + 1 };
@@ -5862,6 +6415,90 @@
       document.getElementById("categoryEditModal").hidden = true;
       render();
     });
+    document.getElementById("journalForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      const date = data.date || today();
+      let entry = data.id ? (state.journals || []).find((item) => item.id === data.id) : journalEntryForDate(date);
+      if (!entry) {
+        entry = emptyJournalEntry(date);
+        state.journals = state.journals || [];
+        state.journals.push(entry);
+      }
+      const now = new Date().toISOString();
+      entry.date = date;
+      entry.type = "Daily journal";
+      entry.title = data.title || "";
+      entry.body = data.body || "";
+      entry.mood = Number(data.mood) || "";
+      entry.energy = Number(data.energy) || "";
+      entry.stress = Number(data.stress) || "";
+      entry.motivation = Number(data.motivation) || "";
+      entry.sleep = Number(data.sleep) || "";
+      entry.sleepQuality = data.sleepQuality || "";
+      entry.physicalHealth = data.physicalHealth || "";
+      entry.mentalWellbeing = data.mentalWellbeing || "";
+      entry.reflections = {
+        bestMoment: data.bestMoment || "",
+        biggestChallenge: data.biggestChallenge || "",
+        learned: data.learned || "",
+        gratitude: data.gratitude || "",
+        tomorrowFocus: data.tomorrowFocus || ""
+      };
+      entry.travel = {
+        country: data.country || "",
+        city: data.city || "",
+        accommodation: data.accommodation || "",
+        travelDay: data.travelDay === "true",
+        notes: data.travelNotes || ""
+      };
+      const existingTransactionIds = Array.isArray(entry.finance?.transactionIds) ? entry.finance.transactionIds : [];
+      entry.finance = {
+        spendingNote: data.spendingNote || "",
+        financialThoughts: data.financialThoughts || "",
+        transactionIds: existingTransactionIds
+      };
+      entry.tags = normalizeTags(data.tags);
+      entry.habits = entry.habits || {};
+      journalHabits().forEach((habit) => {
+        entry.habits[habit.key] = data[`habit_${habit.key}`] === "true";
+      });
+      entry.createdAt = entry.createdAt || now;
+      entry.updatedAt = now;
+      entry.archived = false;
+      state.settings.selectedJournalDate = entry.date;
+      dirtyForms.delete("journalForm");
+      const status = document.getElementById("journalSaveStatus");
+      if (status) status.textContent = "Journal saved";
+      render();
+    });
+    document.getElementById("writeTodayBtn").addEventListener("click", () => {
+      state.settings.selectedJournalDate = today();
+      ensureJournalEntry(today());
+      render();
+    });
+    document.getElementById("newJournalEntryBtn").addEventListener("click", () => {
+      const entry = ensureJournalEntry(today());
+      state.settings.selectedJournalDate = entry.date;
+      render();
+    });
+    document.getElementById("archiveJournalBtn").addEventListener("click", () => {
+      const entry = journalEntryForDate(selectedJournalDate());
+      if (!entry) return;
+      entry.archived = true;
+      state.settings.selectedJournalDate = today();
+      render();
+    });
+    document.getElementById("deleteJournalBtn").addEventListener("click", () => {
+      const entry = journalEntryForDate(selectedJournalDate());
+      if (entry) removeJournalEntry(entry.id);
+    });
+    document.getElementById("journalFilterForm").addEventListener("input", () => renderJournalList());
+    document.querySelector("#journalForm [name='date']").addEventListener("change", (event) => {
+      state.settings.selectedJournalDate = event.target.value || today();
+      render();
+    });
+    document.getElementById("journalAddSpendingBtn").addEventListener("click", handleJournalAddSpending);
     bindForm("documentForm", (data) => state.documents.push({ id: id(), ...data, done: data.status === "Done" }));
     bindForm("packingForm", (data) => state.packing.push({ id: id(), ...data }));
     bindForm("moneyForm", (data) => {
@@ -5965,6 +6602,7 @@
         budgetPoolId: linkedPotIds[0] || "",
         budgetPoolIds: linkedPotIds,
         phase: data.phase || "",
+        notes: data.notes || "",
         active: bool(data.active),
         archived: false,
         order: state.planningWindows.length + 1
@@ -5979,7 +6617,6 @@
     bindForm("contentForm", (data) => state.content.push({ id: id(), ...data }));
     bindForm("writingIdeaForm", (data) => state.writingIdeas.push({ id: id(), ...data }));
     bindForm("writingSessionForm", (data) => state.writingSessions.push({ id: id(), date: data.date || today(), minutes: Number(data.minutes) || 0, notes: data.notes || "" }));
-    bindForm("journalForm", (data) => state.journals.push({ id: id(), date: data.date || today(), ...data }));
     bindForm("weeklyReviewForm", (data) => state.weeklyReviews.push({ id: id(), ...data }));
     bindForm("travelDateForm", (data) => {
       state.settings.travelDates = state.settings.travelDates || [];
@@ -6021,23 +6658,9 @@
         key = `${baseKey}_${suffix}`;
         suffix += 1;
       }
-      const habit = { id: id(), key, label: data.label || "Habit", order: state.settings.habits.length + 1, archived: false };
+      const habit = { id: id(), key, label: data.label || "Habit", notes: data.notes || "", showInJournal: data.showInJournal !== "false", order: state.settings.habits.length + 1, archived: false };
       state.settings.habits.push(habit);
       moveOrderedItem(state.settings.habits, habit, data.order);
-    });
-    bindForm("habitQuickForm", (data) => {
-      const date = data.date || today();
-      let entry = state.checkins.find((item) => item.date === date);
-      if (!entry) {
-        entry = { id: id(), date, spending: 0 };
-        state.checkins.push(entry);
-      }
-      activeHabits().forEach(({ key }) => {
-        entry[key] = bool(data[key]);
-      });
-    }, () => {
-      const status = document.getElementById("dailyLogStatus");
-      if (status) status.textContent = "Daily log saved";
     });
 
     [
@@ -6168,6 +6791,10 @@
       return state.checkins.filter((entry) => daysAgo(entry.date) < days);
     }
 
+    function recentJournalEntries(days) {
+      return (state.journals || []).filter((entry) => !entry.archived && daysAgo(entry.date) < days);
+    }
+
     function daysAgo(dateString) {
       if (!dateString) return 99999;
       const start = new Date(dateString + "T00:00:00");
@@ -6180,10 +6807,10 @@
     }
 
     function habitStats() {
-      const recent = recentCheckins(7);
-      const habits = activeHabits();
+      const recent = recentJournalEntries(7);
+      const habits = journalHabits();
       const total = recent.length * habits.length;
-      const done = recent.reduce((sum, entry) => sum + habits.filter(({ key }) => Boolean(entry[key])).length, 0);
+      const done = recent.reduce((sum, entry) => sum + habits.filter(({ key }) => Boolean(entry.habits?.[key])).length, 0);
       return { total, done, rate: pct(done, total) };
     }
 
@@ -6192,9 +6819,27 @@
     }
 
     function habitStatFor(key) {
-      const recent = recentCheckins(30);
-      const done = recent.filter((entry) => Boolean(entry[key])).length;
-      return { total: recent.length, done, rate: pct(done, recent.length), streak: streakFor((entry) => Boolean(entry[key]), state.checkins) };
+      const recent = recentJournalEntries(30);
+      const done = recent.filter((entry) => Boolean(entry.habits?.[key])).length;
+      return { total: recent.length, done, rate: pct(done, recent.length), streak: streakFor((entry) => Boolean(entry.habits?.[key]), state.journals || []) };
+    }
+
+    function journalHabitCompletion(entry) {
+      const habits = journalHabits();
+      const done = habits.filter(({ key }) => Boolean(entry.habits?.[key])).length;
+      return { total: habits.length, done, rate: pct(done, habits.length) };
+    }
+
+    function journalStreak() {
+      return streakFor((entry) => Boolean(entry.body || entry.title || entry.mood || entry.energy || Object.values(entry.habits || {}).some(Boolean)), state.journals || []);
+    }
+
+    function tagCounts() {
+      const counts = {};
+      (state.journals || []).filter((entry) => !entry.archived).forEach((entry) => {
+        (entry.tags || []).forEach((tag) => { counts[tag] = (counts[tag] || 0) + 1; });
+      });
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]);
     }
 
     function streakFor(predicate, entries) {
@@ -6213,14 +6858,14 @@
 
     function currentWeekStats() {
       const weekMoney = state.money.filter((entry) => daysAgo(entry.date) <= 7);
-      const weekCheckins = recentCheckins(7);
+      const weekCheckins = recentJournalEntries(7);
       return {
         teflHours: state.studyLog.filter((entry) => daysAgo(entry.date) <= 7).reduce((sum, entry) => sum + Number(entry.hours || 0), 0),
         spent: weekMoney.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0),
         contentCreated: state.content.filter((entry) => daysAgo(entry.date) <= 7 && entry.status === "Published").length,
         writingSessions: state.writingSessions.filter((entry) => daysAgo(entry.date) <= 7).length,
-        exerciseSessions: weekCheckins.filter((entry) => entry.exercise).length,
-        socialActivities: weekCheckins.filter((entry) => entry.social).length
+        exerciseSessions: weekCheckins.filter((entry) => entry.habits?.exercise).length,
+        socialActivities: weekCheckins.filter((entry) => entry.habits?.social).length
       };
     }
 
