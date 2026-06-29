@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.29.0`.
+Current app version: `0.30.0`.
 
 ## Structure and planning model
 
@@ -34,7 +34,7 @@ Budget keeps the surface model simple: root pot money, user-defined parent pots,
 
 Journal and Finance are connected without duplicating spending records. Finance remains the source of truth for transactions, balances, pots, Safe Spend and analytics. Journal entries show same-day Finance transactions, can link to transaction IDs, and ask before creating a new Finance transaction from a journal spending item.
 
-Finance reconciliation model: the finance system starts with one editable root pot for total money. User-created parent and child pots are generic, name-based behavior has been removed, and pot relationships use stable IDs rather than display names. Creating a top-level pot can add money to the root pot; creating a child pot subdivides an existing parent without increasing total money.
+Finance reconciliation model: the finance system starts with one editable root pot for total money. User-created parent and child pots are generic, name-based behavior has been removed, and pot relationships use stable IDs rather than display names. Creating a top-level pot or child pot allocates existing unallocated money from its parent without increasing the root total. The legacy `walletId` fields are retained internally only so older transactions, imports and Supabase-synced saves remain compatible.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
