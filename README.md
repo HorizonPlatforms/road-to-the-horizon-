@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.28.0`.
+Current app version: `0.29.0`.
 
 ## Structure and planning model
 
@@ -30,11 +30,11 @@ The app is organised so normal editing happens close to the section that uses th
 - Habits contains the habit manager and history summaries.
 - Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
 
-Budget keeps the surface model simple: total money, travel fund, emergency fund, current budget, budget period and transactions. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Travel and emergency funds are reserved money groups, and add/remove/transfer/correction actions are saved as transaction records so balances remain auditable. Older finance values are preserved and migrated into compatible records for existing users.
+Budget keeps the surface model simple: root pot money, user-defined parent pots, child pots, current budget, budget period and transactions. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Parent and child pot names are user-defined labels, and add/remove/transfer/correction actions are saved as transaction records so balances remain auditable. Older finance values are preserved and normalized into compatible records for existing users.
 
 Journal and Finance are connected without duplicating spending records. Finance remains the source of truth for transactions, balances, pots, Safe Spend and analytics. Journal entries show same-day Finance transactions, can link to transaction IDs, and ask before creating a new Finance transaction from a journal spending item.
 
-Finance reconciliation model: wallets represent top-level money, editable fund groups reserve money for custom purposes, and child pots are budgets inside those funds. Creating a new top-level fund can add new real wallet money; creating a child budget subdivides an existing fund without increasing total money. The overview warns only when parent funds exceed total money or child budgets exceed their parent fund.
+Finance reconciliation model: the finance system starts with one editable root pot for total money. User-created parent and child pots are generic, name-based behavior has been removed, and pot relationships use stable IDs rather than display names. Creating a top-level pot can add money to the root pot; creating a child pot subdivides an existing parent without increasing total money.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
 
