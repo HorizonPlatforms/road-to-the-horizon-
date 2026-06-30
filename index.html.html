@@ -1702,6 +1702,25 @@
           <div id="weatherStatus" class="hint" aria-live="polite"></div>
           <div id="weatherSummary" class="weather-card"></div>
           <div id="weatherSuggestions" class="suggestion-list"></div>
+          <details class="advanced-details">
+            <summary>Nearby place preferences</summary>
+            <form id="nearbyPreferencesForm" class="form-grid">
+              <label class="field-4">Interests<input name="interests" placeholder="parks, cafes, museums"></label>
+              <label class="field-2">Radius<select name="radius"><option value="800">800 m</option><option value="1500">1.5 km</option><option value="3000">3 km</option><option value="5000">5 km</option></select></label>
+              <label class="field-2">Cost<select name="cost"><option value="any">Any</option><option value="free">Free/low cost</option><option value="paid">Paid ok</option></select></label>
+              <label class="field-2">Energy<select name="energy"><option value="any">Any</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
+              <label class="field-2">Time<select name="time"><option value="any">Any</option><option value="quick">Quick</option><option value="half-day">Half day</option></select></label>
+              <button class="field-3 primary-btn" type="submit">Save Preferences</button>
+              <button id="findNearbyPlacesBtn" class="field-3 secondary-btn" type="button">Find Nearby Places</button>
+            </form>
+          </details>
+          <div id="nearbyStatus" class="hint" aria-live="polite"></div>
+          <div id="nearbyPlacesList" class="list"></div>
+          <details class="advanced-details">
+            <summary>Saved and dismissed places</summary>
+            <div id="savedPlacesList" class="list"></div>
+            <div id="dismissedPlacesList" class="list"></div>
+          </details>
         </div>
         <div class="panel span-12">
           <h2>Editable Route Planner</h2>
@@ -2340,6 +2359,10 @@
       weather_cache: { updatedAt: "", expiresAt: "", location: null, current: null, daily: [] },
       location_settings: { mode: "manual", name: "", latitude: null, longitude: null, timezone: "" },
       suggestions_cache: { updatedAt: "", items: [] },
+      nearby_places_cache: { updatedAt: "", expiresAt: "", locationKey: "", places: [] },
+      nearby_place_preferences: { interests: "parks, cafes, museums", radius: 1500, cost: "any", energy: "any", time: "any" },
+      saved_places: [],
+      dismissed_places: [],
       daily_briefing_cache: { generatedAt: "", signature: "", daypart: "", items: [] },
       notes: { tefl: "", writing: "", destination: "", admin: "", general: "" }
     };
@@ -2518,6 +2541,12 @@
       merged.location_settings = { ...next.location_settings, ...(data.location_settings || {}) };
       merged.suggestions_cache = { ...next.suggestions_cache, ...(data.suggestions_cache || {}) };
       merged.suggestions_cache.items = Array.isArray(data.suggestions_cache?.items) ? data.suggestions_cache.items : [];
+      merged.nearby_places_cache = { ...next.nearby_places_cache, ...(data.nearby_places_cache || {}) };
+      merged.nearby_places_cache.places = Array.isArray(data.nearby_places_cache?.places) ? data.nearby_places_cache.places : [];
+      merged.nearby_place_preferences = { ...next.nearby_place_preferences, ...(data.nearby_place_preferences || {}) };
+      merged.nearby_place_preferences.radius = Number(merged.nearby_place_preferences.radius) || next.nearby_place_preferences.radius;
+      merged.saved_places = Array.isArray(data.saved_places) ? data.saved_places : [];
+      merged.dismissed_places = Array.isArray(data.dismissed_places) ? data.dismissed_places : [];
       merged.daily_briefing_cache = { ...next.daily_briefing_cache, ...(data.daily_briefing_cache || {}) };
       merged.daily_briefing_cache.items = Array.isArray(data.daily_briefing_cache?.items) ? data.daily_briefing_cache.items : [];
       const hasExistingUserData = Boolean(
@@ -4850,6 +4879,19 @@
       return [{ level: "Information", title: `TEFL: ${t.teflHours} hours complete`, detail: `${pace.remainingHours} remaining`, view: "tefl" }];
     }
 
+    function getBriefingNearbyItems() {
+      const places = rankNearbyPlaces(state.nearby_places_cache?.places || []);
+      const place = places[0];
+      if (!place) return [];
+      const distance = place.distanceKm === null || place.distanceKm === undefined ? "" : `${place.distanceKm.toFixed(1)} km`;
+      return [{
+        level: "Information",
+        title: `Nearby idea: ${place.name}`,
+        detail: [place.category || place.type, distance, `${place.energy || "low"} energy`].filter(Boolean).join(" · "),
+        view: "travel"
+      }];
+    }
+
     function getBriefingSuggestedFocus(items, weather) {
       const travelToday = items.find((item) => /Travel day today/i.test(item.title));
       if (travelToday) return "Focus: Confirm transport, accommodation and documents.";
@@ -4875,7 +4917,8 @@
         pots: (state.budgetPools || []).map((pot) => [pot.id, pot.amount, pot.active, pot.startDate, pot.endDate]),
         journalToday: journalEntryForDate(today())?.updatedAt || journalEntryForDate(today())?.id || "",
         tefl: [totals().teflHours, state.settings.teflTargetHours],
-        weather: state.weather_cache?.updatedAt || ""
+        weather: state.weather_cache?.updatedAt || "",
+        nearby: [state.nearby_places_cache?.updatedAt || "", (state.saved_places || []).length, (state.dismissed_places || []).length, JSON.stringify(state.nearby_place_preferences || {})]
       });
     }
 
@@ -4887,7 +4930,8 @@
       const financeItems = getBriefingFinanceItems();
       const journalItems = daypart.key === "evening" ? getBriefingJournalItems() : [];
       const teflItems = getBriefingTeflItems();
-      const items = [...dateItems, ...financeItems, ...travelItems, ...teflItems, ...journalItems].slice(0, 6);
+      const nearbyItems = getBriefingNearbyItems();
+      const items = [...dateItems, ...financeItems, ...travelItems, ...nearbyItems, ...teflItems, ...journalItems].slice(0, 6);
       const focus = getBriefingSuggestedFocus(items, weather);
       return {
         generatedAt: new Date().toISOString(),
@@ -5005,6 +5049,172 @@
       return suggestions.slice(0, 3);
     }
 
+    function setNearbyStatus(message) {
+      const status = document.getElementById("nearbyStatus");
+      if (status) status.textContent = message || "";
+    }
+
+    function nearbyLocationKey(location = state.location_settings) {
+      const lat = Number(location?.latitude);
+      const lon = Number(location?.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return "";
+      return `${lat.toFixed(4)},${lon.toFixed(4)}`;
+    }
+
+    function nearbyCacheValid() {
+      return Boolean(state.nearby_places_cache?.places?.length && state.nearby_places_cache?.expiresAt && new Date(state.nearby_places_cache.expiresAt) > new Date() && state.nearby_places_cache.locationKey === nearbyLocationKey());
+    }
+
+    function interestTokens() {
+      return String(state.nearby_place_preferences?.interests || "")
+        .split(",")
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    function overpassInterestFilters(tokens = interestTokens()) {
+      const wanted = new Set(tokens.length ? tokens : ["parks", "cafes", "museums"]);
+      const filters = [];
+      if ([...wanted].some((item) => /park|garden|nature|walk|outdoor/.test(item))) filters.push('["leisure"~"park|garden|nature_reserve"]');
+      if ([...wanted].some((item) => /cafe|coffee|food/.test(item))) filters.push('["amenity"~"cafe|restaurant|fast_food|food_court"]');
+      if ([...wanted].some((item) => /museum|gallery|culture|art/.test(item))) filters.push('["tourism"~"museum|gallery|artwork|attraction"]');
+      if ([...wanted].some((item) => /library|study|quiet|indoor/.test(item))) filters.push('["amenity"~"library|community_centre"]');
+      if ([...wanted].some((item) => /view|landmark|history/.test(item))) filters.push('["tourism"~"viewpoint|attraction"]["historic"]');
+      return filters.length ? filters : ['["tourism"~"attraction|museum|gallery"]', '["leisure"~"park|garden"]', '["amenity"~"cafe|library"]'];
+    }
+
+    async function fetchNearbyPlaces() {
+      const location = state.location_settings || {};
+      const lat = Number(location.latitude);
+      const lon = Number(location.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error("Set a location with coordinates first.");
+      const prefs = state.nearby_place_preferences || {};
+      const radius = Math.max(300, Math.min(10000, Number(prefs.radius) || 1500));
+      const filters = overpassInterestFilters();
+      const blocks = filters.map((filter) => `
+        node${filter}(around:${radius},${lat},${lon});
+        way${filter}(around:${radius},${lat},${lon});
+        relation${filter}(around:${radius},${lat},${lon});
+      `).join("\n");
+      const query = `[out:json][timeout:15];(${blocks});out center tags 40;`;
+      const data = await fetchJsonWithTimeout(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, 15000);
+      const places = (data.elements || [])
+        .map((element) => normaliseNearbyPlace(element, lat, lon))
+        .filter((place) => place.name)
+        .filter((place, index, list) => list.findIndex((item) => item.id === place.id || normalizeMoneyText(item.name) === normalizeMoneyText(place.name)) === index);
+      const ranked = rankNearbyPlaces(places).slice(0, 20);
+      const now = new Date();
+      state.nearby_places_cache = {
+        updatedAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString(),
+        locationKey: nearbyLocationKey(location),
+        places: ranked
+      };
+      state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+      return ranked;
+    }
+
+    function normaliseNearbyPlace(element, baseLat, baseLon) {
+      const tags = element.tags || {};
+      const lat = Number(element.lat ?? element.center?.lat);
+      const lon = Number(element.lon ?? element.center?.lon);
+      const type = tags.tourism || tags.amenity || tags.leisure || tags.historic || "place";
+      const distance = Number.isFinite(lat) && Number.isFinite(lon) ? distanceKm(baseLat, baseLon, lat, lon) : null;
+      return {
+        id: `osm-${element.type}-${element.id}`,
+        osmType: element.type,
+        osmId: element.id,
+        name: tags.name || tags["name:en"] || "",
+        type,
+        category: placeCategory(type),
+        distanceKm: distance,
+        cost: inferPlaceCost(tags, type),
+        energy: inferPlaceEnergy(tags, type, distance),
+        time: inferPlaceTime(tags, type),
+        indoor: isIndoorPlace(tags, type),
+        tags
+      };
+    }
+
+    function distanceKm(lat1, lon1, lat2, lon2) {
+      const toRad = (value) => value * Math.PI / 180;
+      const r = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return r * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function placeCategory(type) {
+      if (/park|garden|nature/.test(type)) return "Outdoor";
+      if (/cafe|restaurant|food/.test(type)) return "Food";
+      if (/museum|gallery|artwork|attraction|historic/.test(type)) return "Culture";
+      if (/library|community/.test(type)) return "Quiet";
+      return "Nearby";
+    }
+
+    function inferPlaceCost(tags, type) {
+      if (tags.fee === "yes" || /restaurant|museum|gallery/.test(type)) return "paid";
+      return "free";
+    }
+
+    function inferPlaceEnergy(tags, type, distance) {
+      if (/park|garden|nature/.test(type) || Number(distance) > 2) return "medium";
+      if (/viewpoint/.test(type)) return "high";
+      return "low";
+    }
+
+    function inferPlaceTime(tags, type) {
+      if (/museum|gallery|nature/.test(type)) return "half-day";
+      return "quick";
+    }
+
+    function isIndoorPlace(tags, type) {
+      return /cafe|restaurant|museum|gallery|library|community/.test(type) || tags.indoor === "yes";
+    }
+
+    function rankNearbyPlaces(places) {
+      const prefs = state.nearby_place_preferences || {};
+      const weather = weatherCodeLabel(state.weather_cache?.current?.weather_code);
+      const rainy = /rain|drizzle|thunderstorm|snow/i.test(weather);
+      const dismissed = new Set((state.dismissed_places || []).map((place) => place.id));
+      return places
+        .filter((place) => !dismissed.has(place.id))
+        .filter((place) => prefs.cost === "any" || place.cost === prefs.cost || (prefs.cost === "paid" && place.cost))
+        .filter((place) => prefs.energy === "any" || place.energy === prefs.energy)
+        .filter((place) => prefs.time === "any" || place.time === prefs.time)
+        .map((place) => {
+          let score = 50;
+          if (place.distanceKm !== null) score += Math.max(0, 20 - place.distanceKm * 5);
+          if (rainy && place.indoor) score += 18;
+          if (!rainy && !place.indoor) score += 10;
+          if ((state.saved_places || []).some((saved) => saved.id === place.id)) score += 8;
+          return { ...place, score: Math.round(score) };
+        })
+        .sort((a, b) => b.score - a.score || (a.distanceKm ?? 99) - (b.distanceKm ?? 99));
+    }
+
+    async function refreshNearbyPlaces(force = false) {
+      try {
+        setNearbyStatus(force ? "Finding nearby places..." : "Checking nearby places...");
+        if (!force && nearbyCacheValid()) {
+          setNearbyStatus("Showing cached nearby places.");
+          renderNearbyPlaces();
+          return state.nearby_places_cache.places;
+        }
+        const places = await fetchNearbyPlaces();
+        setNearbyStatus(places.length ? `Found ${places.length} nearby places.` : "No nearby places matched these filters.");
+        renderNearbyPlaces();
+        save();
+        return places;
+      } catch (error) {
+        console.error("Nearby place search failed", error);
+        setNearbyStatus("Nearby places unavailable. Showing cached results if available.");
+        renderNearbyPlaces();
+        return state.nearby_places_cache?.places || [];
+      }
+    }
+
     async function updateManualLocationWeather(locationName) {
       try {
         setWeatherStatus("Loading weather...");
@@ -5104,6 +5314,13 @@
       state.settings.activeView = view;
       document.querySelectorAll(".tab").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
       document.querySelectorAll(".view").forEach((section) => section.classList.toggle("active", section.id === view));
+    }
+
+    function activateView(view) {
+      if (!document.getElementById(view)) return;
+      state.settings.activeView = view;
+      applyActiveView();
+      save();
     }
 
     function renderCountdown() {
@@ -5606,9 +5823,11 @@
       const location = readableLocationLabel(cache.location || state.location_settings);
       const manualForm = document.getElementById("manualLocationForm");
       if (manualForm?.elements.location && location && !manualForm.elements.location.value) manualForm.elements.location.value = location;
+      renderNearbyPreferences();
       if (!cache.current) {
         summary.innerHTML = `<div class="empty"><strong>No weather loaded</strong><span>${location ? "Refresh weather to update this location." : "Set a location manually or use current location when you choose."}</span></div>`;
         suggestions.innerHTML = `<div class="empty"><strong>Suggestions will appear here</strong><span>Weather-based ideas stay in Travel and are summarised briefly on the Dashboard.</span></div>`;
+        renderNearbyPlaces();
         return;
       }
       const current = cache.current;
@@ -5624,6 +5843,97 @@
         <div class="briefing-meta">${dailyRows}</div>
       `;
       suggestions.innerHTML = buildWeatherSuggestions(cache).map((item) => `<div class="item compact"><div><div class="item-title">${escapeHtml(item)}</div></div></div>`).join("");
+      renderNearbyPlaces();
+    }
+
+    function renderNearbyPreferences() {
+      const form = document.getElementById("nearbyPreferencesForm");
+      if (!form) return;
+      const prefs = state.nearby_place_preferences || {};
+      if (!document.activeElement || !form.contains(document.activeElement)) {
+        form.elements.interests.value = prefs.interests || "";
+        form.elements.radius.value = String(prefs.radius || 1500);
+        form.elements.cost.value = prefs.cost || "any";
+        form.elements.energy.value = prefs.energy || "any";
+        form.elements.time.value = prefs.time || "any";
+      }
+    }
+
+    function renderNearbyPlaces() {
+      const list = document.getElementById("nearbyPlacesList");
+      const savedRoot = document.getElementById("savedPlacesList");
+      const dismissedRoot = document.getElementById("dismissedPlacesList");
+      if (!list || !savedRoot || !dismissedRoot) return;
+      const places = rankNearbyPlaces(state.nearby_places_cache?.places || []);
+      const saved = state.saved_places || [];
+      const dismissed = state.dismissed_places || [];
+      if (!places.length) {
+        list.innerHTML = `<div class="empty"><strong>No nearby suggestions yet</strong><span>Set a location, choose preferences, then find nearby places.</span></div>`;
+      } else {
+        list.innerHTML = "";
+        places.slice(0, 8).forEach((place) => list.appendChild(nearbyPlaceItem(place, false)));
+      }
+      savedRoot.innerHTML = saved.length ? "" : `<div class="empty"><strong>No saved places</strong><span>Saved places will appear here.</span></div>`;
+      saved.forEach((place) => savedRoot.appendChild(nearbyPlaceItem(place, true)));
+      dismissedRoot.innerHTML = dismissed.length ? "" : `<div class="empty"><strong>No dismissed places</strong><span>Dismissed places can be restored here.</span></div>`;
+      dismissed.forEach((place) => dismissedRoot.appendChild(nearbyPlaceItem(place, true, true)));
+    }
+
+    function nearbyPlaceItem(place, compact = false, dismissed = false) {
+      const node = document.createElement("div");
+      node.className = "item compact";
+      const distance = place.distanceKm === null || place.distanceKm === undefined ? "" : `${place.distanceKm.toFixed(1)} km`;
+      const detail = [
+        place.category || place.type || "Place",
+        distance,
+        place.cost === "paid" ? "May cost money" : "Free/low cost",
+        `${place.energy || "low"} energy`,
+        place.time || "quick"
+      ].filter(Boolean).join(" · ");
+      node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"></div>`;
+      node.querySelector(".item-title").textContent = place.name || "Nearby place";
+      node.querySelector(".item-body").textContent = detail;
+      const actions = node.querySelector(".item-actions");
+      if (dismissed) {
+        const restore = document.createElement("button");
+        restore.type = "button";
+        restore.className = "ghost-btn";
+        restore.textContent = "Restore";
+        restore.addEventListener("click", () => {
+          state.dismissed_places = (state.dismissed_places || []).filter((item) => item.id !== place.id);
+          state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+          render();
+        });
+        actions.appendChild(restore);
+        return node;
+      }
+      const isSaved = (state.saved_places || []).some((item) => item.id === place.id);
+      const saveButton = document.createElement("button");
+      saveButton.type = "button";
+      saveButton.className = "ghost-btn";
+      saveButton.textContent = isSaved ? "Saved" : "Save";
+      saveButton.disabled = isSaved;
+      saveButton.addEventListener("click", () => {
+        state.saved_places = state.saved_places || [];
+        if (!state.saved_places.some((item) => item.id === place.id)) state.saved_places.push({ ...place, savedAt: new Date().toISOString() });
+        state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+        render();
+      });
+      const dismissButton = document.createElement("button");
+      dismissButton.type = "button";
+      dismissButton.className = "ghost-btn";
+      dismissButton.textContent = compact ? "Remove" : "Dismiss";
+      dismissButton.addEventListener("click", () => {
+        if (compact) state.saved_places = (state.saved_places || []).filter((item) => item.id !== place.id);
+        else {
+          state.dismissed_places = state.dismissed_places || [];
+          if (!state.dismissed_places.some((item) => item.id === place.id)) state.dismissed_places.push({ ...place, dismissedAt: new Date().toISOString() });
+        }
+        state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+        render();
+      });
+      actions.append(saveButton, dismissButton);
+      return node;
     }
 
     function renderTimeline() {
@@ -7915,6 +8225,22 @@
       }
     });
     document.getElementById("useCurrentLocationBtn").addEventListener("click", () => updateCurrentLocationWeather());
+    document.getElementById("nearbyPreferencesForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      state.nearby_place_preferences = {
+        interests: data.interests || "",
+        radius: Number(data.radius) || 1500,
+        cost: data.cost || "any",
+        energy: data.energy || "any",
+        time: data.time || "any"
+      };
+      state.nearby_places_cache = { ...state.nearby_places_cache, expiresAt: "" };
+      state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+      setNearbyStatus("Preferences saved.");
+      render();
+    });
+    document.getElementById("findNearbyPlacesBtn").addEventListener("click", () => refreshNearbyPlaces(true));
     bindForm("dateItemForm", (data) => {
       state.settings.dateItems = state.settings.dateItems || [];
       state.settings.dateItems.push({
@@ -7990,12 +8316,7 @@
 
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach((button) => button.classList.remove("active"));
-        document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
-        tab.classList.add("active");
-        document.getElementById(tab.dataset.view).classList.add("active");
-        state.settings.activeView = tab.dataset.view;
-        save();
+        activateView(tab.dataset.view);
       });
     });
 
