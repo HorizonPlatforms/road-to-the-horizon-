@@ -1044,6 +1044,80 @@
       padding-top: 0;
     }
 
+    .assistant-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.8fr);
+      gap: 18px;
+      align-items: start;
+      padding: 18px;
+      border: 1px solid color-mix(in srgb, var(--blue) 28%, var(--line));
+      border-radius: 10px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--blue) 8%, var(--panel)), var(--panel));
+    }
+
+    .assistant-hero h3 {
+      font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+      line-height: 1.05;
+      margin: 0 0 8px;
+    }
+
+    .assistant-location {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+    }
+
+    .assistant-focus {
+      padding: 14px;
+      border-radius: 8px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+
+    .assistant-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .assistant-section {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      min-width: 0;
+    }
+
+    .assistant-section h4 {
+      margin: 0;
+      font-size: 0.96rem;
+    }
+
+    .assistant-section p {
+      margin: 0;
+    }
+
+    .assistant-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .place-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--panel);
+      display: grid;
+      gap: 8px;
+    }
+
+    .place-card .item-actions {
+      justify-content: flex-start;
+    }
+
     .pie-chart {
       width: min(180px, 58vw);
       aspect-ratio: 1;
@@ -1165,6 +1239,8 @@
       .date-counter-row,
       .finance-kpis,
       .finance-chart-grid,
+      .assistant-hero,
+      .assistant-grid,
       .root-pot-card,
       .pot-card,
       .setup-actions,
@@ -4758,6 +4834,7 @@
 
     function getBriefingDaypart(date = new Date()) {
       const hour = date.getHours();
+      if (hour >= 0 && hour < 5) return { key: "night", greeting: "Good evening" };
       if (hour >= 5 && hour < 12) return { key: "morning", greeting: "Good morning" };
       if (hour >= 12 && hour < 18) return { key: "afternoon", greeting: "Good afternoon" };
       return { key: "evening", greeting: "Good evening" };
@@ -4790,7 +4867,7 @@
           suggestion: location ? "Weather can be refreshed from Travel." : "Add a manual location to unlock weather suggestions."
         };
       }
-      const summary = `${weatherCodeLabel(cache.current.weather_code)} · ${Math.round(Number(cache.current.temperature_2m) || 0)}°C`;
+      const summary = `${weatherCodeLabel(cache.current.weather_code)} - ${Math.round(Number(cache.current.temperature_2m) || 0)} C`;
       const wind = Number(cache.current.wind_speed_10m || 0);
       const rain = Number(cache.current.precipitation || 0);
       let suggestion = "Weather looks usable for flexible plans.";
@@ -4806,7 +4883,7 @@
       if (name && !/^current location$/i.test(name)) return name;
       const lat = Number(location.latitude);
       const lon = Number(location.longitude);
-      if (Number.isFinite(lat) && Number.isFinite(lon)) return `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+      if (Number.isFinite(lat) && Number.isFinite(lon)) return "Near saved location";
       return name;
     }
 
@@ -4887,9 +4964,132 @@
       return [{
         level: "Information",
         title: `Nearby idea: ${place.name}`,
-        detail: [place.category || place.type, distance, `${place.energy || "low"} energy`].filter(Boolean).join(" · "),
+        detail: [place.category || place.type, distance, `${place.energy || "low"} energy`].filter(Boolean).join(" - "),
         view: "travel"
       }];
+    }
+
+    function getIntelligentPriorities() {
+      const priorities = [];
+      const addPriority = (title, detail, view, score = 50) => {
+        if (!title) return;
+        if (priorities.some((item) => item.title === title)) return;
+        priorities.push({ title, detail, view, score });
+      };
+      const overdueTasks = sortedTasks((state.tasks || []).filter((task) => !task.done && task.due && dayDiff(task.due) < 0));
+      overdueTasks.slice(0, 2).forEach((task) => addPriority(`Finish overdue task: ${task.title}`, `Due ${formatDate(task.due)}`, "command", 95));
+      upcomingDeadlines(7).slice(0, 2).forEach((item) => addPriority(`Prepare for ${item.title}`, item.days === 0 ? "Due today" : item.days === 1 ? "Due tomorrow" : `${item.days} days away`, item.view || "dates", 88 - item.days));
+      const budget = getBudgetPace();
+      if (!budget.pots?.length) addPriority("Choose a current spending pot", "This unlocks daily budget guidance.", "budget", 82);
+      else if (budget.warning !== "Within current pace") addPriority("Review today's spending", budget.warning, "budget", 80);
+      const todayEntry = journalEntryForDate(today());
+      if (!todayEntry || !(todayEntry.body || todayEntry.title)) addPriority("Write a short journal note", "Capture what mattered today.", "journal", getBriefingDaypart().key === "evening" ? 78 : 58);
+      const tefl = teflPace();
+      if (tefl.status === "Behind") addPriority("Complete a TEFL study block", `${tefl.remainingHours} hours remaining.`, "tefl", 76);
+      else if (Number(tefl.remainingHours || 0) > 0) addPriority("Keep TEFL moving", `${tefl.remainingHours} hours remaining.`, "tefl", 48);
+      const nearby = rankNearbyPlaces(state.nearby_places_cache?.places || [])[0];
+      if (nearby) addPriority(`Consider ${nearby.name}`, placeRecommendationReason(nearby), "travel", 50);
+      recommendedPriorities().forEach((item, index) => addPriority(item, "Suggested from your open tasks.", "command", 45 - index));
+      return priorities.sort((a, b) => b.score - a.score).slice(0, 6);
+    }
+
+    function getFinanceInsight() {
+      try {
+        const pace = getBudgetPace();
+        const todaySpent = (state.money || []).filter((entry) => isSpendingEntry(entry) && entry.date === today()).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+        if (!pace.pots?.length) return { title: "Budget needs a current pot", body: "Choose a spending pot so the assistant can judge daily pace.", view: "budget" };
+        if (pace.safeDaily !== null && todaySpent <= pace.safeDaily) {
+          const left = Math.max(0, pace.safeDaily - todaySpent);
+          return { title: "Spending is within today's pace", body: `${money(todaySpent)} spent today. Around ${money(left)} remains against today's safe spend.`, view: "budget" };
+        }
+        if (pace.safeDaily !== null && todaySpent > pace.safeDaily) return { title: "Spending is above today's pace", body: `${money(todaySpent)} spent today against ${money(pace.safeDaily)} safe daily spend.`, view: "budget" };
+        return { title: `${getBudgetPaceSource()} has ${money(pace.remaining)} available`, body: pace.warning || "Budget data is available.", view: "budget" };
+      } catch (error) {
+        console.error("Finance assistant insight failed", error);
+        return { title: "Finance summary unavailable", body: "Open Budget to review the current numbers.", view: "budget" };
+      }
+    }
+
+    function getWeatherAdvice() {
+      const cache = state.weather_cache || {};
+      const current = cache.current;
+      if (!current) return { title: "Weather not loaded yet", body: state.location_settings?.name ? "Refresh weather in Travel for more useful suggestions." : "Set a location in Travel to unlock weather-aware planning." };
+      const label = weatherCodeLabel(current.weather_code);
+      const temp = Number(current.temperature_2m || 0);
+      const wind = Number(current.wind_speed_10m || 0);
+      const rain = Number(current.precipitation || 0);
+      const tomorrow = cache.daily?.[1];
+      if (/rain|drizzle|thunderstorm/i.test(label) || rain > 0) return { title: "Indoor plans may suit today", body: "Rain is showing in the forecast, so admin, TEFL, writing or a cafe session may fit well." };
+      if (wind >= 30) return { title: "Choose sheltered plans", body: "Wind looks noticeable today. Keep outdoor plans flexible." };
+      if (temp >= 20 && temp <= 26 && /clear|partly cloudy/i.test(label)) return { title: "Good conditions for a walk", body: "The weather looks comfortable enough for outdoor exploration or photography." };
+      if (temp <= 5) return { title: "Keep outside plans short", body: "It looks cold, so a warm indoor option may feel better later." };
+      if (tomorrow?.precipitation_probability_max >= 60) return { title: "Tomorrow may be wetter", body: "If you need an outdoor errand, today may be the better moment." };
+      return { title: `${label} today`, body: "Weather looks workable. Choose the activity that best matches your energy." };
+    }
+
+    function getDailyOpportunities() {
+      const opportunities = [];
+      const weather = getWeatherAdvice();
+      opportunities.push(weather.title);
+      const nearby = rankNearbyPlaces(state.nearby_places_cache?.places || [])[0];
+      if (nearby) opportunities.push(`${nearby.name} is a nearby option: ${placeRecommendationReason(nearby)}`);
+      const journal = journalEntryForDate(today());
+      if (!journal || !(journal.body || journal.title)) opportunities.push("A two-minute journal entry would keep today visible.");
+      const openTask = sortedTasks((state.tasks || []).filter((task) => !task.done))[0];
+      if (openTask) opportunities.push(`One useful task: ${openTask.title}.`);
+      return opportunities.slice(0, 4);
+    }
+
+    function getGoalProgressSummaries() {
+      const summaries = [];
+      const departureDays = departureDaysRemaining();
+      if (departureDays !== null) summaries.push(`Only ${departureDays} days until departure.`);
+      const t = totals();
+      summaries.push(`${t.teflHours} TEFL hours completed.`);
+      const budget = getBudgetPace();
+      if (budget.pots?.length) summaries.push(`${money(budget.remaining)} remains in the current budget.`);
+      const doneTasks = (state.tasks || []).filter((task) => task.done).length;
+      const totalTasks = (state.tasks || []).length;
+      if (totalTasks) summaries.push(`${doneTasks} of ${totalTasks} tasks complete.`);
+      return summaries.slice(0, 4);
+    }
+
+    function getAssistantSuggestions() {
+      const suggestions = [];
+      const daypart = getBriefingDaypart().key;
+      const entry = journalEntryForDate(today());
+      const energy = Number(entry?.energy || 0);
+      if (!entry || !(entry.body || entry.title)) suggestions.push(daypart === "evening" || daypart === "night" ? "Close the day with a short journal note." : "Leave a quick note for your future self.");
+      if (energy && energy <= 4) suggestions.push("Keep the plan light: one important task and one easy win.");
+      if (daypart === "morning") suggestions.push("Pick the one task that would make the rest of the day easier.");
+      if (daypart === "afternoon") suggestions.push("Use the next clear block for focused work or a nearby reset.");
+      if (daypart === "night") suggestions.push("Set up tomorrow's first move, then stop adding new tasks.");
+      return suggestions.slice(0, 3);
+    }
+
+    function placeRecommendationReason(place) {
+      const weather = weatherCodeLabel(state.weather_cache?.current?.weather_code);
+      const rainy = /rain|drizzle|thunderstorm|snow/i.test(weather);
+      if (rainy && place.indoor) return "indoor and weather-friendly";
+      if (!rainy && !place.indoor && place.category === "Outdoor") return "good fit for the current weather";
+      if (place.energy === "low") return "low effort and close by";
+      if (place.cost === "free") return "budget-friendly";
+      return "matches your nearby preferences";
+    }
+
+    function walkingTimeText(place) {
+      if (place.distanceKm === null || place.distanceKm === undefined) return "Walking time unknown";
+      const minutes = Math.max(1, Math.round((Number(place.distanceKm) / 4.8) * 60));
+      return `${minutes} minute walk`;
+    }
+
+    function placeCostText(place) {
+      return place.cost === "paid" ? "Paid" : "Free or low cost";
+    }
+
+    function openingStatusText(place) {
+      if (place.openingHours) return `Opening hours: ${place.openingHours}`;
+      return "Opening hours unknown";
     }
 
     function getBriefingSuggestedFocus(items, weather) {
@@ -4898,7 +5098,7 @@
       const urgent = items.find((item) => item.level === "Overdue" || item.level === "Important");
       if (urgent) return `Focus: Review ${urgent.title.toLowerCase()}.`;
       const finance = items.find((item) => item.view === "budget" && item.level !== "Information");
-      if (finance) return "Focus: Review today’s spending before making further plans.";
+      if (finance) return "Focus: Review today's spending before making further plans.";
       if (/rain|drizzle|thunderstorm/i.test(weather.detail || "")) return "Focus: Use indoor time for travel admin or TEFL.";
       const journal = items.find((item) => /energy looks low/i.test(item.title));
       if (journal) return "Focus: Choose one important task and a lower-effort activity.";
@@ -5124,6 +5324,8 @@
         id: `osm-${element.type}-${element.id}`,
         osmType: element.type,
         osmId: element.id,
+        lat,
+        lon,
         name: tags.name || tags["name:en"] || "",
         type,
         category: placeCategory(type),
@@ -5132,6 +5334,8 @@
         energy: inferPlaceEnergy(tags, type, distance),
         time: inferPlaceTime(tags, type),
         indoor: isIndoorPlace(tags, type),
+        openingHours: tags.opening_hours || "",
+        rating: "",
         tags
       };
     }
@@ -5445,46 +5649,73 @@
     function renderDailyBriefing() {
       const root = document.getElementById("dailyBriefing");
       const briefing = refreshDailyBriefing(false);
-      const priorities = recommendedPriorities();
+      const priorities = getIntelligentPriorities();
+      const financeInsight = getFinanceInsight();
+      const weatherAdvice = getWeatherAdvice();
+      const opportunities = getDailyOpportunities();
+      const goals = getGoalProgressSummaries();
+      const assistantSuggestions = getAssistantSuggestions();
+      const nearby = rankNearbyPlaces(state.nearby_places_cache?.places || [])[0];
       const updated = briefing.generatedAt ? new Date(briefing.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "unknown";
-      const items = briefing.items?.length ? briefing.items : [{
-        level: "Information",
-        title: "Your briefing will become more useful as you add dates, budgets, location and journal entries.",
-        detail: "Start with one important date or a current budget pot.",
-        view: "dates"
-      }];
       root.innerHTML = `
         <article class="daily-briefing-card" aria-live="polite">
-          <div class="briefing-topline">
-            <div>
+          <div class="assistant-hero">
+            <div class="assistant-location">
               <h3>${escapeHtml(briefing.greeting || "Hello")}</h3>
-              <div class="hint">${escapeHtml(briefing.date || "")}</div>
+              <strong>${escapeHtml(briefing.weather?.label || "Location not set")}</strong>
+              <span>${escapeHtml(briefing.weather?.detail || "Weather unavailable")}</span>
+              <span class="hint">${escapeHtml(briefing.date || "")} - Updated ${escapeHtml(updated)}</span>
             </div>
-            <div class="briefing-meta">
-              <span class="pill">${escapeHtml(briefing.weather?.label || "Location not set")}</span>
-              <span class="pill">${escapeHtml(briefing.weather?.detail || "Weather unavailable")}</span>
-              <span class="hint">Updated ${escapeHtml(updated)}</span>
+            <div class="assistant-focus">
+              <strong>Best use of today</strong>
+              <p>${escapeHtml(briefing.focus || "Choose one useful task.")}</p>
+              <p class="hint">${escapeHtml(weatherAdvice.body || briefing.weather?.suggestion || "")}</p>
             </div>
           </div>
-          <ul class="briefing-list">
-            ${items.map((item) => `
-              <li class="briefing-item">
-                <span class="muted">${escapeHtml(item.level || "Information")}</span>
-                <strong>${escapeHtml(item.title || "")}</strong>
-                ${item.detail ? `<span class="hint">${escapeHtml(item.detail)}</span>` : ""}
-              </li>
-            `).join("")}
-          </ul>
-          <div>
-            <strong>Today’s focus</strong>
-            <p class="hint">${escapeHtml(briefing.focus || "Choose one useful task.")}</p>
-            ${briefing.weather?.suggestion ? `<p class="hint">${escapeHtml(briefing.weather.suggestion)}</p>` : ""}
+          <section class="assistant-section">
+            <h4>Intelligent priorities</h4>
+            <ul class="briefing-list">
+              ${priorities.length ? priorities.map((item) => `
+                <li class="briefing-item">
+                  <strong>${escapeHtml(item.title)}</strong>
+                  ${item.detail ? `<span class="hint">${escapeHtml(item.detail)}</span>` : ""}
+                </li>
+              `).join("") : `<li class="hint">Add tasks, dates, budgets and journal entries to build more personalised priorities.</li>`}
+            </ul>
+          </section>
+          <div class="assistant-grid">
+            <section class="assistant-section">
+              <h4>Finance insight</h4>
+              <strong>${escapeHtml(financeInsight.title)}</strong>
+              <p class="hint">${escapeHtml(financeInsight.body)}</p>
+            </section>
+            <section class="assistant-section">
+              <h4>Weather intelligence</h4>
+              <strong>${escapeHtml(weatherAdvice.title)}</strong>
+              <p class="hint">${escapeHtml(weatherAdvice.body)}</p>
+            </section>
+            <section class="assistant-section">
+              <h4>Goal progress</h4>
+              ${goals.length ? goals.map((item) => `<p class="hint">${escapeHtml(item)}</p>`).join("") : `<p class="hint">Goals and progress will appear as you add data.</p>`}
+            </section>
+            <section class="assistant-section">
+              <h4>Daily opportunities</h4>
+              ${opportunities.map((item) => `<p class="hint">${escapeHtml(item)}</p>`).join("")}
+            </section>
+            <section class="assistant-section">
+              <h4>Nearby recommendation</h4>
+              ${nearby ? `
+                <strong>${escapeHtml(nearby.name)}</strong>
+                <p class="hint">${escapeHtml([nearby.distanceKm !== null && nearby.distanceKm !== undefined ? `${nearby.distanceKm.toFixed(1)} km` : "", walkingTimeText(nearby), placeCostText(nearby)].filter(Boolean).join(" - "))}</p>
+                <p class="hint">${escapeHtml(placeRecommendationReason(nearby))}</p>
+              ` : `<p class="hint">Choose your interests and we'll recommend places nearby.</p>`}
+            </section>
+            <section class="assistant-section">
+              <h4>Personal assistant</h4>
+              ${assistantSuggestions.map((item) => `<p class="hint">${escapeHtml(item)}</p>`).join("") || `<p class="hint">You're set. Keep the day simple and useful.</p>`}
+            </section>
           </div>
-          <div>
-            <strong>Top priorities</strong>
-            <div class="briefing-meta">${priorities.map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join("") || '<span class="hint">No open priorities yet.</span>'}</div>
-          </div>
-          <div class="briefing-actions">
+          <div class="assistant-actions">
             <button id="refreshBriefingBtn" class="secondary-btn" type="button" aria-label="Refresh Daily Briefing">Refresh briefing</button>
             <button class="ghost-btn" type="button" data-briefing-view="travel">View suggestions</button>
             <button class="ghost-btn" type="button" data-briefing-view="dates">Open dates</button>
@@ -5501,8 +5732,7 @@
       });
       root.querySelectorAll("[data-briefing-view]").forEach((button) => {
         button.addEventListener("click", () => {
-          state.settings.activeView = button.dataset.briefingView;
-          render();
+          activateView(button.dataset.briefingView);
         });
       });
     }
@@ -5833,11 +6063,11 @@
       const current = cache.current;
       const label = weatherCodeLabel(current.weather_code);
       const updated = cache.updatedAt ? new Date(cache.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "unknown";
-      const dailyRows = (cache.daily || []).slice(0, 3).map((day) => `<span class="pill">${escapeHtml(formatDate(day.date))}: ${escapeHtml(weatherCodeLabel(day.weather_code))}, ${Math.round(Number(day.temperature_2m_min) || 0)}-${Math.round(Number(day.temperature_2m_max) || 0)}°C</span>`).join("");
+      const dailyRows = (cache.daily || []).slice(0, 3).map((day) => `<span class="pill">${escapeHtml(formatDate(day.date))}: ${escapeHtml(weatherCodeLabel(day.weather_code))}, ${Math.round(Number(day.temperature_2m_min) || 0)}-${Math.round(Number(day.temperature_2m_max) || 0)} C</span>`).join("");
       summary.innerHTML = `
         <div class="finance-kpis">
           <div class="finance-kpi"><span class="muted">Location</span><strong>${escapeHtml(location || "Not set")}</strong><span class="hint">Manual/device location for weather only.</span></div>
-          <div class="finance-kpi"><span class="muted">Current weather</span><strong>${escapeHtml(label)} · ${Math.round(Number(current.temperature_2m) || 0)}°C</strong><span class="hint">Wind ${Math.round(Number(current.wind_speed_10m) || 0)} km/h</span></div>
+          <div class="finance-kpi"><span class="muted">Current weather</span><strong>${escapeHtml(label)} - ${Math.round(Number(current.temperature_2m) || 0)} C</strong><span class="hint">Wind ${Math.round(Number(current.wind_speed_10m) || 0)} km/h</span></div>
           <div class="finance-kpi"><span class="muted">Cache</span><strong>${weatherCacheValid() ? "Fresh" : "Stale"}</strong><span class="hint">Updated ${escapeHtml(updated)}</span></div>
         </div>
         <div class="briefing-meta">${dailyRows}</div>
@@ -5881,19 +6111,44 @@
 
     function nearbyPlaceItem(place, compact = false, dismissed = false) {
       const node = document.createElement("div");
-      node.className = "item compact";
+      node.className = "place-card";
       const distance = place.distanceKm === null || place.distanceKm === undefined ? "" : `${place.distanceKm.toFixed(1)} km`;
-      const detail = [
+      const summary = [
         place.category || place.type || "Place",
         distance,
-        place.cost === "paid" ? "May cost money" : "Free/low cost",
+        walkingTimeText(place),
+        placeCostText(place),
         `${place.energy || "low"} energy`,
         place.time || "quick"
-      ].filter(Boolean).join(" · ");
-      node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"></div>`;
+      ].filter(Boolean).join(" - ");
+      const rating = place.rating ? `Rating: ${place.rating}` : "Rating unavailable";
+      node.innerHTML = `
+        <div>
+          <div class="item-title"></div>
+          <div class="item-body"></div>
+          <div class="hint"></div>
+          <div class="hint"></div>
+          <div class="hint"></div>
+        </div>
+        <div class="item-actions"></div>
+      `;
       node.querySelector(".item-title").textContent = place.name || "Nearby place";
-      node.querySelector(".item-body").textContent = detail;
+      node.querySelector(".item-body").textContent = summary;
+      const hints = node.querySelectorAll(".hint");
+      hints[0].textContent = `Why this fits: ${placeRecommendationReason(place)}.`;
+      hints[1].textContent = openingStatusText(place);
+      hints[2].textContent = rating;
       const actions = node.querySelector(".item-actions");
+      const navigationUrl = nearbyPlaceNavigationUrl(place);
+      if (navigationUrl) {
+        const navigateLink = document.createElement("a");
+        navigateLink.className = "ghost-btn";
+        navigateLink.href = navigationUrl;
+        navigateLink.target = "_blank";
+        navigateLink.rel = "noopener";
+        navigateLink.textContent = "Navigate";
+        actions.appendChild(navigateLink);
+      }
       if (dismissed) {
         const restore = document.createElement("button");
         restore.type = "button";
@@ -5934,6 +6189,14 @@
       });
       actions.append(saveButton, dismissButton);
       return node;
+    }
+
+    function nearbyPlaceNavigationUrl(place) {
+      if (place.osmType && place.osmId) return `https://www.openstreetmap.org/${encodeURIComponent(place.osmType)}/${encodeURIComponent(place.osmId)}`;
+      const lat = Number(place.lat);
+      const lon = Number(place.lon);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}`;
+      return "";
     }
 
     function renderTimeline() {
