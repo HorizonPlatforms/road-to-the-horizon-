@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -1275,6 +1275,27 @@
     </div>
   </section>
 
+  <section id="potActionModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <div class="section-heading-row">
+        <h2 id="potActionTitle">Move Money</h2>
+        <button id="cancelPotActionBtn" class="ghost-btn" type="button">Cancel</button>
+      </div>
+      <form id="potMovementForm" class="form-grid">
+        <input name="action" type="hidden" value="transfer">
+        <label class="field-4" data-action-from>From pot<select name="fromRef" data-money-pot-select></select></label>
+        <label class="field-4" data-action-to>To pot<select name="toRef" data-money-pot-select></select></label>
+        <label class="field-3">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
+        <label class="field-3" data-action-date>Date<input name="date" type="date"></label>
+        <label class="field-12">Note<input name="note" placeholder="Optional note"></label>
+        <div id="potActionStatus" class="field-12 hint" aria-live="polite"></div>
+        <div class="field-12 modal-actions">
+          <button class="primary-btn" type="submit">Apply</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
   <section id="addPotModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
     <div class="modal-card">
       <h2>Add Pot</h2>
@@ -1477,7 +1498,7 @@
         <div id="travelFundMeta" class="hint">Funds live in Budget</div>
       </div>
       <div class="metric-card">
-        <div class="muted">Unallocated money</div>
+        <div class="muted">Available in root</div>
         <div id="emergencyFund" class="metric">&pound;0</div>
         <div class="progress-bar"><div id="emergencyFill" class="progress-fill"></div></div>
         <div id="emergencyMeta" class="hint">Available outside child pots</div>
@@ -1685,16 +1706,6 @@
           </div>
           <div id="rootPotCard" class="root-pot-card"></div>
           <div id="budgetPoolList" class="pot-tree"></div>
-          <h3>Move Money</h3>
-          <p class="hint">Add or remove money when your real balance changes; transfer money when you only move it between pots.</p>
-          <form id="potMovementForm" class="form-grid">
-            <label class="field-3">Action<select name="action"><option value="add">Add money</option><option value="remove">Remove money</option><option value="transfer">Transfer between pots</option><option value="set">Set pot balance</option></select></label>
-            <label class="field-3">Pot<select name="potId" data-budget-pool-select></select></label>
-            <label class="field-3">To pot<select name="toPotId" data-budget-pool-select></select></label>
-            <label class="field-2">Amount<input name="amount" type="number" min="0" step="0.01" required></label>
-            <label class="field-12">Note<input name="note" placeholder="Optional note"></label>
-            <button class="field-2 primary-btn" type="submit">Apply</button>
-          </form>
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="categories">
           <h2>Finance Categories</h2>
@@ -1738,7 +1749,7 @@
             <label class="field-3">Description<input name="description" placeholder="Train ticket, invoice, groceries"></label>
             <label class="field-2" hidden>Root source<select name="walletId" data-wallet-select></select></label>
             <label class="field-2" hidden>Parent record<select name="allocationId" data-allocation-select></select></label>
-            <label class="field-2">Pot<select name="budgetPoolId" data-budget-pool-select></select></label>
+            <label class="field-2">Pot<select name="budgetPoolId" data-money-pot-select></select></label>
             <label class="field-2">Category<select name="category" data-finance-category-select></select></label>
             <label class="field-2">Subcategory<select name="subcategory" data-finance-subcategory-select></select></label>
             <label class="field-2">Phase<select name="phase" data-phase-select></select></label>
@@ -2861,6 +2872,42 @@
 
     function normaliseFinanceState(mergedState) {
       mergedState.budgetPools = mergedState.budgetPools || [];
+      mergedState.allocations = mergedState.allocations || [];
+      mergedState.allocations.forEach((allocation) => {
+        if (!allocation || allocation.archived) return;
+        let migratedPot = mergedState.budgetPools.find((pool) => pool.migratedFromAllocationId === allocation.id || (pool.allocationId === allocation.id && pool.potRole === "top"));
+        if (!migratedPot) {
+          migratedPot = {
+            id: id(),
+            name: allocation.name || "Money pot",
+            type: "",
+            potRole: "top",
+            parentId: "",
+            amount: Number(allocation.amount || 0),
+            startingAmount: Number(allocation.amount || 0),
+            allocationId: "",
+            migratedFromAllocationId: allocation.id,
+            includedInTotalMoney: true,
+            startDate: "",
+            endDate: "",
+            phase: "",
+            notes: allocation.notes || "",
+            active: allocation.active !== false,
+            archived: false,
+            order: (mergedState.budgetPools || []).length + 1
+          };
+          mergedState.budgetPools.push(migratedPot);
+        }
+        (mergedState.budgetPools || []).forEach((pool) => {
+          if (pool.id !== migratedPot.id && (pool.parentId === `allocation:${allocation.id}` || pool.allocationId === allocation.id)) {
+            pool.parentId = `pot:${migratedPot.id}`;
+            pool.allocationId = "";
+            pool.potRole = "child";
+          }
+        });
+        allocation.archived = true;
+        allocation.active = false;
+      });
       (mergedState.budgetPools || []).forEach((pool) => {
         pool.type = normalizePotType(pool, mergedState);
         pool.potRole = inferPotRole(pool, pool.type);
@@ -2871,11 +2918,76 @@
         }
       });
       normaliseOrderedList(mergedState.budgetPools);
+      mergedState.wallets = mergedState.wallets || [];
+      let root = mergedState.wallets.find((entry) => entry.rootRole) || orderedItems(mergedState.wallets).find((entry) => !entry.archived) || mergedState.wallets[0];
+      if (!root) {
+        root = { id: id(), name: "Total Amount", rootRole: true, balance: 0, notes: "", active: true, archived: false, order: 1 };
+        mergedState.wallets.push(root);
+      }
+      const allocated = (mergedState.budgetPools || [])
+        .filter((pool) => !pool.archived && pool.includedInTotalMoney !== false && pool.potRole === "top")
+        .reduce((sum, pool) => sum + Number(pool.amount || 0), 0);
+      if (Number(root.balance || 0) < allocated) {
+        root.balance = allocated;
+        mergedState.financeWarnings = mergedState.financeWarnings || [];
+        mergedState.financeWarnings.push(`Root total was raised to match existing child pots during finance migration.`);
+      }
       return mergedState;
     }
 
     function reconcileFinanceState(mergedState = state) {
-      return normaliseFinanceState(mergedState);
+      normaliseFinanceState(mergedState);
+      if (mergedState !== state) return mergedState;
+      const warnings = [];
+      state.wallets = state.wallets || [];
+      state.wallets.forEach((wallet, index) => {
+        wallet.rootRole = index === state.wallets.findIndex((entry) => entry.rootRole || !entry.archived);
+        if (wallet.rootRole) {
+          wallet.archived = false;
+          wallet.active = true;
+          if (!(Number(wallet.balance) >= 0)) {
+            wallet.balance = 0;
+            warnings.push("Root total had an invalid value and was reset to zero.");
+          }
+        }
+      });
+      const seenParents = new Set();
+      visibleBudgetPots().forEach((pool) => {
+        if (!(Number(pool.amount) >= 0)) {
+          pool.amount = 0;
+          pool.startingAmount = 0;
+          warnings.push(`${pool.name || "A pot"} had a negative amount and was reset to zero.`);
+        }
+        if (wouldCreateCircularParent(pool.id, structuralParentRefForPool(pool))) {
+          pool.parentId = "";
+          pool.potRole = "top";
+          warnings.push(`${pool.name || "A pot"} had a circular parent and was moved to the root.`);
+        }
+        const parentRef = structuralParentRefForPool(pool);
+        if (parentRef && parentRef.startsWith("pot:") && !(state.budgetPools || []).some((entry) => entry.id === parentRef.slice(4) && !entry.archived)) {
+          pool.parentId = "";
+          pool.potRole = "top";
+          warnings.push(`${pool.name || "A pot"} had a missing parent and was moved to the root.`);
+        }
+        if (seenParents.has(pool.id)) warnings.push(`${pool.name || "A pot"} appears more than once in the hierarchy.`);
+        seenParents.add(pool.id);
+      });
+      visibleBudgetPots().forEach((pool) => {
+        const childTotal = allocatedToChildren(`pot:${pool.id}`);
+        if (childTotal > getPotBalance(pool.id) + 0.01) {
+          pool.amount = childTotal;
+          pool.startingAmount = childTotal;
+          warnings.push(`${pool.name || "A pot"} was raised to match its child pots.`);
+        }
+      });
+      const rootAllocated = allocatedToChildren(rootParentRef());
+      const root = rootPot();
+      if (rootAllocated > Number(root.balance || 0) + 0.01) {
+        root.balance = rootAllocated;
+        warnings.push("Root total was raised to match child pots.");
+      }
+      state.financeWarnings = warnings;
+      return state;
     }
 
     function normalizePlanningWindows(savedWindows, budgetPools = []) {
@@ -3067,8 +3179,14 @@
       if (!pool) return "";
       if (pool.parentId) return pool.parentId;
       if (pool.allocationId) return `allocation:${pool.allocationId}`;
-      if (isTopLevelFundPot(pool)) return `pot:${pool.id}`;
       return "";
+    }
+
+    function structuralParentRefForPool(pool) {
+      if (!pool) return rootParentRef();
+      if (pool.parentId) return pool.parentId;
+      if (pool.allocationId) return `allocation:${pool.allocationId}`;
+      return rootParentRef();
     }
 
     function rootParentRef() {
@@ -3083,6 +3201,7 @@
     }
 
     function directChildPots(parentRef) {
+      if (!parentRef) return [];
       return visibleBudgetPots().filter((pool) => parentRefForPool(pool) === parentRef);
     }
 
@@ -3109,8 +3228,107 @@
       return 0;
     }
 
-    function unallocatedForParentRef(parentRef) {
-      return totalForParentRef(parentRef) - allocatedToChildren(parentRef);
+    function availableInNode(ref) {
+      return Math.max(0, totalForParentRef(ref) - allocatedToChildren(ref));
+    }
+
+    function potRef(poolId) {
+      return poolId ? `pot:${poolId}` : rootParentRef();
+    }
+
+    function normaliseMoneyRef(ref) {
+      if (!ref || ref === "root" || ref === "__root__") return rootParentRef();
+      if (ref.startsWith("pot:") || ref.startsWith("allocation:")) return ref;
+      return `pot:${ref}`;
+    }
+
+    function labelForMoneyRef(ref) {
+      const normal = normaliseMoneyRef(ref);
+      if (!normal) return rootPot().name || "Total Amount";
+      if (normal.startsWith("pot:")) {
+        return (state.budgetPools || []).find((pool) => pool.id === normal.slice(4))?.name || "Pot";
+      }
+      if (normal.startsWith("allocation:")) {
+        return (state.allocations || []).find((allocation) => allocation.id === normal.slice("allocation:".length))?.name || "Pot";
+      }
+      return "Pot";
+    }
+
+    function selectValueForMoneyRef(ref) {
+      const normal = normaliseMoneyRef(ref);
+      if (!normal) return "root";
+      if (normal.startsWith("pot:")) return normal.slice(4);
+      if (normal.startsWith("allocation:")) return normal;
+      return normal;
+    }
+
+    function moneyNodeExists(ref) {
+      const normal = normaliseMoneyRef(ref);
+      if (!normal) return true;
+      if (normal.startsWith("pot:")) return (state.budgetPools || []).some((pool) => pool.id === normal.slice(4) && !pool.archived);
+      if (normal.startsWith("allocation:")) return (state.allocations || []).some((allocation) => allocation.id === normal.slice("allocation:".length) && !allocation.archived);
+      return false;
+    }
+
+    function structuralParentRef(ref) {
+      const normal = normaliseMoneyRef(ref);
+      if (!normal) return null;
+      if (normal.startsWith("pot:")) {
+        const pool = (state.budgetPools || []).find((entry) => entry.id === normal.slice(4));
+        return structuralParentRefForPool(pool);
+      }
+      if (normal.startsWith("allocation:")) return rootParentRef();
+      return rootParentRef();
+    }
+
+    function ancestorRefs(ref) {
+      const chain = [];
+      let current = normaliseMoneyRef(ref);
+      const seen = new Set();
+      while (current !== null && !seen.has(current)) {
+        chain.push(current);
+        seen.add(current);
+        current = structuralParentRef(current);
+      }
+      return chain;
+    }
+
+    function isAncestorRef(ancestor, ref) {
+      return ancestorRefs(ref).includes(normaliseMoneyRef(ancestor));
+    }
+
+    function setNodeTotal(ref, amount) {
+      const value = Math.max(0, Number(amount) || 0);
+      const normal = normaliseMoneyRef(ref);
+      if (!normal) {
+        const root = rootPot();
+        root.balance = value;
+        return true;
+      }
+      if (normal.startsWith("pot:")) {
+        const pool = (state.budgetPools || []).find((entry) => entry.id === normal.slice(4));
+        if (!pool) return false;
+        pool.amount = value;
+        pool.startingAmount = value;
+        return true;
+      }
+      if (normal.startsWith("allocation:")) {
+        const allocation = (state.allocations || []).find((entry) => entry.id === normal.slice("allocation:".length));
+        if (!allocation) return false;
+        allocation.amount = value;
+        return true;
+      }
+      return false;
+    }
+
+    function adjustNodeTotal(ref, difference) {
+      return setNodeTotal(ref, totalForParentRef(ref) + (Number(difference) || 0));
+    }
+
+    function nearestCommonAncestorRef(fromRef, toRef) {
+      const fromChain = ancestorRefs(fromRef);
+      const toChain = ancestorRefs(toRef);
+      return fromChain.find((ref) => toChain.includes(ref)) ?? rootParentRef();
     }
 
     function wouldCreateCircularParent(poolId, parentRef) {
@@ -3188,7 +3406,7 @@
       const reserved = getReservedFundsTotal();
       const includedPots = getIncludedPotsTotal();
       const activePots = getActivePots();
-      const warnings = [];
+      const warnings = [...(state.financeWarnings || [])];
       if (reserved > total + 0.01) warnings.push(`Parent pots total ${money(reserved)}, but root pot money is ${money(total)}. Review parent pot balances.`);
       if (!activeAllocations().length && includedPots > total + 0.01) warnings.push(`Top-level pots total ${money(includedPots)}, but root pot money is ${money(total)}. Review pot balances.`);
       parentPotRecords().forEach((parent) => {
@@ -3290,25 +3508,17 @@
 
     function createFinanceTransactionFromJournal({ date, description, amount, category, note, potId }) {
       const pot = visibleBudgetPots().find((pool) => pool.id === potId) || (getActivePots().length === 1 ? getActivePots()[0] : null);
-      const allocation = (state.allocations || []).find((entry) => entry.id === pot?.allocationId);
-      const entry = {
-        id: id(),
-        type: "expense",
+      const ok = logSpendingFromRef(pot ? potRef(pot.id) : rootParentRef(), Number(amount) || 0, {
         date: date || today(),
         description: description || "",
         category: category || "Uncategorised",
-        subcategory: "",
-        phase: pot?.phase || currentPhase() || "Unassigned",
-        walletId: allocation?.walletId || "",
-        allocationId: allocation?.id || "",
-        potId: pot?.id || "",
-        budgetPoolId: pot?.id || "",
-        amount: Number(amount) || 0,
         note: note || "Added from Journal",
-        journalCreated: true
-      };
-      state.money = state.money || [];
-      state.money.push(entry);
+        phase: pot?.phase || currentPhase() || "",
+        kind: "journal"
+      });
+      if (!ok) return null;
+      const entry = state.money[state.money.length - 1];
+      entry.journalCreated = true;
       return entry;
     }
 
@@ -3320,62 +3530,165 @@
       const entries = poolTransactions(pool);
       const income = entries.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
       const expenses = entries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      const remaining = poolBaseAmount(pool) + income - expenses;
+      const remaining = Number(pool?.amount || 0);
       return { income, expenses, remaining };
     }
 
-    function createPotTransaction(poolId, type, amount, note = "", kind = "adjustment") {
-      const pool = (state.budgetPools || []).find((entry) => entry.id === poolId);
-      if (!pool || !(Number(amount) > 0)) return null;
-      const allocation = (state.allocations || []).find((entry) => entry.id === pool.allocationId);
+    function createMoneyRecord({ ref = rootParentRef(), type = "expense", amount = 0, note = "", kind = "", date = today(), category = "", subcategory = "", description = "", phase = "" }) {
+      const normal = normaliseMoneyRef(ref);
+      const pool = normal.startsWith?.("pot:") ? (state.budgetPools || []).find((entry) => entry.id === normal.slice(4)) : null;
+      const allocation = normal.startsWith?.("allocation:") ? (state.allocations || []).find((entry) => entry.id === normal.slice("allocation:".length)) : null;
       const entry = {
         id: id(),
         type: type === "income" ? "income" : "expense",
-        date: today(),
-        category: kind === "transfer" ? "Transfer" : "Adjustment",
-        subcategory: "",
-        phase: pool.phase || currentPhase() || "Unassigned",
-        walletId: allocation?.walletId || "",
-        allocationId: allocation?.id || "",
-        potId: pool.id,
-        budgetPoolId: pool.id,
+        date: date || today(),
+        category: category || (kind === "transfer" ? "Transfer" : "Adjustment"),
+        subcategory: subcategory || "",
+        phase: phase || pool?.phase || currentPhase() || "",
+        walletId: rootPot().id,
+        allocationId: allocation?.id || pool?.allocationId || "",
+        potId: pool?.id || "",
+        budgetPoolId: pool?.id || "",
         amount: Number(amount) || 0,
-        description: kind === "transfer" ? "Pot transfer" : "Pot adjustment",
+        description: description || (kind === "transfer" ? "Pot transfer" : "Pot adjustment"),
         note,
-        kind
+        kind,
+        balanceApplied: true
       };
       state.money = state.money || [];
       state.money.push(entry);
       return entry;
     }
 
+    function sourceRefForMoneyEntry(entry) {
+      return entry.potId || entry.budgetPoolId ? potRef(entry.potId || entry.budgetPoolId) : rootParentRef();
+    }
+
+    function applyMoneyEntryToBalances(entry, direction = 1) {
+      if (!entry || !(Number(entry.amount) > 0)) return false;
+      const amount = Number(entry.amount) * direction;
+      const source = sourceRefForMoneyEntry(entry);
+      if (entry.kind === "transfer") {
+        const target = normaliseMoneyRef(entry.toRef || (entry.toPotId ? potRef(entry.toPotId) : rootParentRef()));
+        const from = direction > 0 ? source : target;
+        const to = direction > 0 ? target : source;
+        const value = Math.abs(Number(entry.amount) || 0);
+        if (value > availableInNode(from) + 0.01) return false;
+        const common = nearestCommonAncestorRef(from, to);
+        ancestorRefs(from).forEach((ref) => {
+          if (ref !== common) adjustNodeTotal(ref, -value);
+        });
+        ancestorRefs(to).forEach((ref) => {
+          if (ref !== common) adjustNodeTotal(ref, value);
+        });
+        return true;
+      }
+      if (entry.type === "income") {
+        adjustNodeTotal(rootParentRef(), amount);
+        return true;
+      }
+      if (amount < 0) {
+        ancestorRefs(source).forEach((ref) => adjustNodeTotal(ref, Math.abs(amount)));
+        return true;
+      }
+      if (Math.abs(amount) > availableInNode(source) + 0.01) return false;
+      ancestorRefs(source).forEach((ref) => adjustNodeTotal(ref, -Math.abs(amount)));
+      return true;
+    }
+
+    function reverseMoneyEntry(entry) {
+      if (!entry?.balanceApplied) return true;
+      return applyMoneyEntryToBalances(entry, -1);
+    }
+
+    function createPotTransaction(poolId, type, amount, note = "", kind = "adjustment") {
+      return createMoneyRecord({ ref: potRef(poolId), type, amount, note, kind });
+    }
+
     function adjustPotBalance(poolId, difference, note = "Manual correction") {
       const amount = Math.abs(Number(difference) || 0);
       if (amount < 0.01) return null;
-      const pool = (state.budgetPools || []).find((entry) => entry.id === poolId);
-      const totalNote = pool && !isPotIncludedInTotalMoney(pool) ? "total money unchanged because pot is separate" : "total money adjusted";
-      return createPotTransaction(poolId, difference >= 0 ? "income" : "expense", amount, `${note} (${totalNote})`, "adjustment");
+      const ref = potRef(poolId);
+      if (difference < 0 && amount > availableInNode(ref) + 0.01) return null;
+      adjustNodeTotal(ref, difference);
+      ancestorRefs(ref).slice(1).forEach((ancestor) => adjustNodeTotal(ancestor, difference));
+      return createMoneyRecord({ ref, type: difference >= 0 ? "income" : "expense", amount, note, kind: "adjustment" });
+    }
+
+    function transferBetweenRefs(fromRef, toRef, amount, note = "") {
+      const value = Number(amount) || 0;
+      const source = normaliseMoneyRef(fromRef);
+      const target = normaliseMoneyRef(toRef);
+      if (source === target || value <= 0 || !moneyNodeExists(source) || !moneyNodeExists(target)) return false;
+      if (value > availableInNode(source) + 0.01) return false;
+      const common = nearestCommonAncestorRef(source, target);
+      ancestorRefs(source).forEach((ref) => {
+        if (ref !== common) adjustNodeTotal(ref, -value);
+      });
+      ancestorRefs(target).forEach((ref) => {
+        if (ref !== common) adjustNodeTotal(ref, value);
+      });
+      const transferId = id();
+      const record = createMoneyRecord({
+        ref: source,
+        type: "expense",
+        amount: value,
+        note: note || `Transfer to ${labelForMoneyRef(target)}`,
+        description: `Transfer to ${labelForMoneyRef(target)}`,
+        category: "Transfer",
+        kind: "transfer"
+      });
+      if (record) {
+        record.transferId = transferId;
+        record.toRef = target || "root";
+        record.toPotId = target.startsWith?.("pot:") ? target.slice(4) : "";
+      }
+      return Boolean(record);
     }
 
     function transferBetweenPots(fromPoolId, toPoolId, amount, note = "") {
+      return transferBetweenRefs(potRef(fromPoolId), potRef(toPoolId), amount, note);
+    }
+
+    function addMoneyToRoot(amount, note = "", date = today()) {
       const value = Number(amount) || 0;
-      if (!fromPoolId || !toPoolId || fromPoolId === toPoolId || value <= 0) return false;
-      const fromPool = (state.budgetPools || []).find((pool) => pool.id === fromPoolId);
-      const toPool = (state.budgetPools || []).find((pool) => pool.id === toPoolId);
-      if (!fromPool || !toPool) return false;
-      if (value > getPotBalance(fromPool.id) + 0.01) return false;
-      const targetAllowance = unallocatedForParentRef(parentRefForPool(toPool)) + getPotBalance(toPool.id);
-      if (value + getPotBalance(toPool.id) > targetAllowance + 0.01) return false;
-      const transferId = id();
-      const out = createPotTransaction(fromPool.id, "expense", value, note || `Transfer to ${toPool.name}`, "transfer");
-      const incoming = createPotTransaction(toPool.id, "income", value, note || `Transfer from ${fromPool.name}`, "transfer");
-      if (out) out.transferId = transferId;
-      if (incoming) incoming.transferId = transferId;
-      return Boolean(out && incoming);
+      if (value <= 0) return false;
+      adjustNodeTotal(rootParentRef(), value);
+      createMoneyRecord({ ref: rootParentRef(), type: "income", amount: value, note, date, kind: "root-add", description: "Added money" });
+      return true;
+    }
+
+    function removeMoneyFromRoot(amount, note = "", date = today()) {
+      const value = Number(amount) || 0;
+      if (value <= 0 || value > availableInNode(rootParentRef()) + 0.01) return false;
+      adjustNodeTotal(rootParentRef(), -value);
+      createMoneyRecord({ ref: rootParentRef(), type: "expense", amount: value, note, date, kind: "root-remove", description: "Removed money" });
+      return true;
+    }
+
+    function logSpendingFromRef(ref, amount, data = {}) {
+      const source = normaliseMoneyRef(ref);
+      const value = Number(amount) || 0;
+      if (value <= 0 || !moneyNodeExists(source) || value > availableInNode(source) + 0.01) return false;
+      ancestorRefs(source).forEach((ancestor) => adjustNodeTotal(ancestor, -value));
+      createMoneyRecord({
+        ref: source,
+        type: "expense",
+        amount: value,
+        date: data.date || today(),
+        category: data.category || "",
+        subcategory: data.subcategory || "",
+        description: data.description || "",
+        note: data.note || "",
+        phase: data.phase || "",
+        kind: data.kind || ""
+      });
+      return true;
     }
 
     function getPotBalance(poolId) {
-      return getPoolRemaining(poolId);
+      const pool = (state.budgetPools || []).find((entry) => entry.id === poolId);
+      return Number(pool?.amount || 0);
     }
 
     function getTotalWealth() {
@@ -3383,23 +3696,16 @@
     }
 
     function getTotalMoney() {
-      const walletTotal = getTotalWealth();
-      const topLevelPotBase = getIncludedPotsTotal();
-      const legacyPotBase = getIncludedPots().reduce((sum, pool) => sum + poolBaseAmount(pool), 0);
-      const base = walletTotal || topLevelPotBase || legacyPotBase;
-      const totalEntries = (state.money || []).filter(transactionAffectsTotal);
-      const income = totalEntries.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      const expenses = totalEntries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-      return base + income - expenses;
+      return getTotalWealth();
     }
 
-    function getUnallocatedRootMoney() {
-      return Math.max(0, getTotalMoney() - getReservedFundsTotal());
+    function getAvailableRootMoney() {
+      return availableInNode(rootParentRef());
     }
 
     function getPoolRemaining(poolId) {
       const pool = (state.budgetPools || []).find((entry) => entry.id === poolId);
-      return pool ? poolTotals(pool).remaining : 0;
+      return pool ? getPotBalance(pool.id) : 0;
     }
 
     function getDaysRemainingForPool(poolId) {
@@ -4063,7 +4369,7 @@
         Boolean(budget.pots?.length),
         budget.remaining === null || budget.remaining >= 0,
         getAllMoneyPots().some((item) => Number(item.amount || 0) > 0),
-        getUnallocatedRootMoney() >= 0,
+        getAvailableRootMoney() >= 0,
         state.money.length > 0
       ];
       const contentTotal = state.content.length || 1;
@@ -4302,12 +4608,12 @@
       const travelPct = pct(totalPoolRemaining, totalPoolAmount);
       document.getElementById("travelFundFill").style.width = `${travelPct}%`;
       setText("travelFundMeta", totalPoolAmount ? `${travelPct}% of ${money(totalPoolAmount)} reserved across parent pots.` : "Create a parent pot to track this.");
-      const unallocatedMoney = getUnallocatedRootMoney();
-      setText("emergencyFund", money(unallocatedMoney));
-      const totalForUnallocated = getTotalMoney();
-      const unallocatedPct = pct(unallocatedMoney, totalForUnallocated);
-      document.getElementById("emergencyFill").style.width = `${unallocatedPct}%`;
-      setText("emergencyMeta", totalForUnallocated ? `${unallocatedPct}% of root pot not allocated to parent pots.` : "Set your root pot balance.");
+      const availableRootMoney = getAvailableRootMoney();
+      setText("emergencyFund", money(availableRootMoney));
+      const totalForAvailableRoot = getTotalMoney();
+      const availableRootPct = pct(availableRootMoney, totalForAvailableRoot);
+      document.getElementById("emergencyFill").style.width = `${availableRootPct}%`;
+      setText("emergencyMeta", totalForAvailableRoot ? `${availableRootPct}% available directly in the root pot.` : "Set your root pot balance.");
       setText("teflPct", `${t.teflPercent}%`);
       document.getElementById("teflFill").style.width = `${t.teflPercent}%`;
       setText("teflMeta", `${t.teflHours} of ${state.settings.teflTargetHours} hours, ${Math.max(0, state.settings.teflTargetHours - t.teflHours)} remaining.`);
@@ -4345,7 +4651,7 @@
       const totalMoney = getTotalMoney();
       document.getElementById("milestoneStats").innerHTML = statsHtml([
         ["Reserved funds", totalMoney ? `${pct(reservedFunds, totalMoney)}% of total money` : "No funds"],
-        ["Unallocated money", money(getUnallocatedRootMoney())],
+        ["Available in root", money(getAvailableRootMoney())],
         ["Expenses logged", money(totals().expenses)],
         ["Income logged", money(totals().income)]
       ]);
@@ -4476,7 +4782,7 @@
       const wallets = activeWallets();
       document.querySelectorAll("select[data-wallet-select]").forEach((select) => {
         const current = select.value;
-        select.innerHTML = `<option value="">Unassigned</option>${wallets.map((wallet) => `<option value="${escapeHtml(wallet.id)}">${escapeHtml(wallet.name)}</option>`).join("")}`;
+        select.innerHTML = wallets.map((wallet) => `<option value="${escapeHtml(wallet.id)}">${escapeHtml(wallet.name)}</option>`).join("");
         if (current && wallets.some((wallet) => wallet.id === current)) select.value = current;
       });
     }
@@ -4485,7 +4791,7 @@
       const allocations = activeAllocations();
       document.querySelectorAll("select[data-allocation-select]").forEach((select) => {
         const current = select.value;
-        select.innerHTML = `<option value="">Unassigned</option>${allocations.map((allocation) => `<option value="${escapeHtml(allocation.id)}">${escapeHtml(allocation.name)}</option>`).join("")}`;
+        select.innerHTML = allocations.map((allocation) => `<option value="${escapeHtml(allocation.id)}">${escapeHtml(allocation.name)}</option>`).join("");
         if (current && allocations.some((allocation) => allocation.id === current)) select.value = current;
       });
     }
@@ -4494,8 +4800,15 @@
       const pools = visibleBudgetPots();
       document.querySelectorAll("select[data-budget-pool-select]").forEach((select) => {
         const current = select.value;
-        select.innerHTML = `<option value="">Unassigned</option>${pools.map((pool) => `<option value="${escapeHtml(pool.id)}">${escapeHtml(pool.name)}</option>`).join("")}`;
+        select.innerHTML = `<option value="">No pot</option>${pools.map((pool) => `<option value="${escapeHtml(pool.id)}">${escapeHtml(pool.name)}</option>`).join("")}`;
         if (current && pools.some((pool) => pool.id === current)) select.value = current;
+      });
+      document.querySelectorAll("select[data-money-pot-select]").forEach((select) => {
+        const current = select.value;
+        const rootValue = "root";
+        select.innerHTML = `<option value="${rootValue}">${escapeHtml(rootPot().name || "Total Amount")}</option>${pools.map((pool) => `<option value="${escapeHtml(pool.id)}">${escapeHtml(pool.name)}</option>`).join("")}`;
+        if (current === rootValue || current === "__root__" || current === "") select.value = rootValue;
+        else if (pools.some((pool) => pool.id === current)) select.value = current;
       });
     }
 
@@ -4787,7 +5100,7 @@
         return [parent.name, money(total), target ? `${pct(total, target)}% of ${money(target)} starting amount.` : "Money available inside this parent pot."];
       });
       const fundTotal = parents.reduce((sum, parent) => sum + getFundTotal(parent.ref), 0);
-      const breakdown = `Breakdown: ${parents.map((parent) => `${parent.name} ${money(getFundTotal(parent.ref))}`).join(", ") || "no parent pots"}${totalMoney - fundTotal > 0 ? `, unallocated ${money(totalMoney - fundTotal)}` : ""}.`;
+      const breakdown = `Breakdown: ${parents.map((parent) => `${parent.name} ${money(getFundTotal(parent.ref))}`).join(", ") || "no child pots"}${totalMoney - fundTotal > 0 ? `, available in root ${money(totalMoney - fundTotal)}` : ""}.`;
       root.innerHTML = [
         ["Total money", money(totalMoney), "All money currently available."],
         ...fundCards,
@@ -4846,10 +5159,13 @@
       const root = rootPot();
       const total = getTotalMoney();
       const allocated = allocatedToChildren(rootParentRef());
-      const unallocated = total - allocated;
-      card.innerHTML = `<div><span class="muted">Root pot</span><strong id="rootPotName"></strong><span class="hint">Fixed root of the complete pot hierarchy.</span></div><div><span class="muted">Total amount</span><strong>${money(total)}</strong></div><div><span class="muted">Allocated</span><strong>${money(allocated)}</strong></div><div><span class="muted">Unallocated</span><strong>${money(unallocated)}</strong></div><button id="editRootPotBtn" class="secondary-btn" type="button">Edit</button>`;
+      const available = availableInNode(rootParentRef());
+      card.innerHTML = `<div><span class="muted">Root pot</span><strong id="rootPotName"></strong><span class="hint">The complete amount of money in the system.</span></div><div><span class="muted">Total amount</span><strong>${money(total)}</strong></div><div><span class="muted">In child pots</span><strong>${money(allocated)}</strong></div><div><span class="muted">Available in this pot</span><strong>${money(available)}</strong></div><div class="item-actions"><button id="rootAddMoneyBtn" class="secondary-btn" type="button">Add money</button><button id="rootRemoveMoneyBtn" class="secondary-btn" type="button">Remove money</button><button id="rootTransferMoneyBtn" class="secondary-btn" type="button">Transfer money</button><button id="editRootPotBtn" class="ghost-btn" type="button">Edit</button></div>`;
       card.querySelector("#rootPotName").textContent = root.name || "Total Amount";
       card.querySelector("#editRootPotBtn").addEventListener("click", openRootPotEditor);
+      card.querySelector("#rootAddMoneyBtn").addEventListener("click", () => openPotActionModal("add", rootParentRef()));
+      card.querySelector("#rootRemoveMoneyBtn").addEventListener("click", () => openPotActionModal("remove", rootParentRef()));
+      card.querySelector("#rootTransferMoneyBtn").addEventListener("click", () => openPotActionModal("transfer", rootParentRef()));
     }
 
     function renderBudgetPools() {
@@ -4871,19 +5187,21 @@
         const total = getPotBalance(pool.id);
         const parentRef = `pot:${pool.id}`;
         const allocated = allocatedToChildren(parentRef);
-        const unallocated = total - allocated;
+        const available = availableInNode(parentRef);
         const statusLabel = pool.archived ? "Archived" : pool.active ? "Daily budget" : "Available";
         const node = document.createElement("div");
         node.className = "pot-node";
         node.style.setProperty("--depth", depth);
-        node.innerHTML = `<div class="pot-card"><div><strong class="pot-name"></strong><div class="hint pot-note"></div><div class="pot-stats"><span class="pot-total"></span><span class="pot-unallocated"></span><span class="pot-allocated"></span><span class="pot-status"></span></div></div><div class="item-actions"><button type="button" class="ghost-btn add-child-pool">Add Child</button><button type="button" class="ghost-btn edit-pool">Edit</button><button type="button" class="ghost-btn active-pool"></button><button type="button" class="danger-btn delete-pool">Delete</button></div></div><div class="pot-children"></div>`;
+        node.innerHTML = `<div class="pot-card"><div><strong class="pot-name"></strong><div class="hint pot-note"></div><div class="pot-stats"><span class="pot-total"></span><span class="pot-available"></span><span class="pot-allocated"></span><span class="pot-status"></span></div></div><div class="item-actions"><button type="button" class="ghost-btn add-child-pool">Add Child</button><button type="button" class="ghost-btn transfer-pool">Transfer</button><button type="button" class="ghost-btn spend-pool">Log transaction</button><button type="button" class="ghost-btn edit-pool">Edit</button><button type="button" class="ghost-btn active-pool"></button><button type="button" class="danger-btn delete-pool">Delete</button></div></div><div class="pot-children"></div>`;
         node.querySelector(".pot-name").textContent = pool.name || "Untitled pot";
         node.querySelector(".pot-note").textContent = [pool.notes || "", pool.startDate || pool.endDate ? `${formatDate(pool.startDate)} to ${formatDate(pool.endDate)}` : ""].filter(Boolean).join(" - ");
         node.querySelector(".pot-total").textContent = `Total ${money(total)}`;
-        node.querySelector(".pot-unallocated").textContent = `Unallocated ${money(unallocated)}`;
-        node.querySelector(".pot-allocated").textContent = `Allocated ${money(allocated)}`;
+        node.querySelector(".pot-available").textContent = `Available in this pot ${money(available)}`;
+        node.querySelector(".pot-allocated").textContent = `In child pots ${money(allocated)}`;
         node.querySelector(".pot-status").textContent = statusLabel;
         node.querySelector(".add-child-pool").addEventListener("click", () => openAddPotModal(parentRef));
+        node.querySelector(".transfer-pool").addEventListener("click", () => openPotActionModal("transfer", parentRef));
+        node.querySelector(".spend-pool").addEventListener("click", () => openBudgetTransaction(pool.id));
         node.querySelector(".edit-pool").addEventListener("click", () => editBudgetPool(pool));
         const activeButton = node.querySelector(".active-pool");
         activeButton.textContent = pool.active === false ? "Use for Budget" : "Pause Budget";
@@ -4900,13 +5218,14 @@
       parents.forEach((parent) => {
         const total = parentRecordTotal(parent);
         const allocated = allocatedToChildren(parent.ref);
-        const unallocated = total - allocated;
+        const available = availableInNode(parent.ref);
         const section = document.createElement("div");
         section.className = "pot-node";
         section.style.setProperty("--depth", 0);
-        section.innerHTML = `<div class="pot-card"><div><strong class="pot-name"></strong><div class="hint">Parent pot</div><div class="pot-stats"><span>Total ${money(total)}</span><span>Unallocated ${money(unallocated)}</span><span>Allocated ${money(allocated)}</span></div></div><div class="item-actions"><button type="button" class="ghost-btn add-child-parent">Add Child</button><button type="button" class="ghost-btn edit-parent-pot">Edit</button><button type="button" class="danger-btn delete-parent-pot">Delete</button></div></div><div class="pot-children"></div>`;
+        section.innerHTML = `<div class="pot-card"><div><strong class="pot-name"></strong><div class="hint">Pot</div><div class="pot-stats"><span>Total ${money(total)}</span><span>Available in this pot ${money(available)}</span><span>In child pots ${money(allocated)}</span></div></div><div class="item-actions"><button type="button" class="ghost-btn add-child-parent">Add Child</button><button type="button" class="ghost-btn transfer-parent-pot">Transfer</button><button type="button" class="ghost-btn edit-parent-pot">Edit</button><button type="button" class="danger-btn delete-parent-pot">Delete</button></div></div><div class="pot-children"></div>`;
         section.querySelector(".pot-name").textContent = parent.name;
         section.querySelector(".add-child-parent").addEventListener("click", () => openAddPotModal(parent.ref));
+        section.querySelector(".transfer-parent-pot").addEventListener("click", () => openPotActionModal("transfer", parent.ref));
         section.querySelector(".edit-parent-pot").addEventListener("click", () => parent.pot ? editBudgetPool(parent.pot) : editAllocation(parent.allocation));
         section.querySelector(".delete-parent-pot").addEventListener("click", () => parent.pot ? removeBudgetPool(parent.pot.id) : removeAllocation(parent.allocation.id));
         const childRoot = section.querySelector(".pot-children");
@@ -5596,6 +5915,13 @@
 
     function removeItem(collection, itemId) {
       if (!confirm("Delete this item?")) return;
+      if (collection === "money") {
+        const entry = (state.money || []).find((item) => item.id === itemId);
+        if (entry && !reverseMoneyEntry(entry)) {
+          alert("This transaction could not be reversed safely because it would break the pot hierarchy.");
+          return;
+        }
+      }
       state[collection] = state[collection].filter((item) => item.id !== itemId);
       if (collection === "route") normaliseOrderedList(state.route);
       render();
@@ -5726,7 +6052,7 @@
         alert("Move or delete this parent pot's child pots before deleting it.");
         return;
       }
-      if (!confirm("Delete this parent pot? Its unallocated money will return to the root pot. Existing transactions will stay, but their parent-pot link will be cleared.")) return;
+      if (!confirm("Delete this parent pot? Its value will become available in the root pot. Existing transactions will stay, but their parent-pot link will be cleared.")) return;
       state.allocations = (state.allocations || []).filter((allocation) => allocation.id !== allocationId);
       (state.budgetPools || []).forEach((pool) => {
         if (pool.allocationId === allocationId && isTopLevelFundPot(pool)) {
@@ -5824,6 +6150,11 @@
     }
 
     function editMoney(item) {
+      if (item.kind === "transfer") {
+        alert("Transfer records are kept as audit history. Delete and recreate the transfer if the amount was wrong.");
+        return;
+      }
+      const original = { ...item };
       const type = promptValue("Type: expense or income", item.type || "expense");
       if (type === null) return;
       const date = promptValue("Date YYYY-MM-DD", item.date || today());
@@ -5843,6 +6174,10 @@
       const note = promptValue("Note", item.note || "");
       if (note === null) return;
       const normalType = type.toLowerCase().startsWith("in") ? "income" : "expense";
+      if (item.balanceApplied && !reverseMoneyEntry(item)) {
+        alert("This transaction could not be edited safely because the original balance change could not be reversed.");
+        return;
+      }
       item.type = normalType;
       item.date = date || item.date || today();
       item.description = description || "";
@@ -5854,9 +6189,16 @@
       item.potId = pot?.id || "";
       item.budgetPoolId = item.potId;
       item.allocationId = allocation?.id || "";
-      item.walletId = allocation?.walletId || "";
+      item.walletId = rootPot().id;
       item.amount = Number(amount) || 0;
       item.note = note;
+      item.balanceApplied = true;
+      if (!applyMoneyEntryToBalances(item, 1)) {
+        Object.assign(item, original);
+        if (original.balanceApplied) applyMoneyEntryToBalances(item, 1);
+        alert("This edit would make a pot negative. Transfer money into the pot first.");
+        return;
+      }
       render();
     }
 
@@ -5871,13 +6213,13 @@
       if (notes === null) return;
       const nextAmount = Number(amount);
       const currentTotal = getAllocationBalance(allocation);
-      const allowance = unallocatedForParentRef(rootParentRef()) + currentTotal;
+      const allowance = availableInNode(rootParentRef()) + currentTotal;
       if (!(nextAmount >= 0)) {
         alert("Amount must be a valid non-negative number.");
         return;
       }
       if (nextAmount > allowance + 0.01) {
-        alert(`Only ${money(Math.max(0, allowance))} is available inside the root pot.`);
+        alert(`Only ${money(Math.max(0, allowance))} is available in the root pot.`);
         return;
       }
       allocation.name = name || allocation.name || "Parent pot";
@@ -5909,8 +6251,43 @@
       form.elements.includedInTotalMoney.value = "true";
       form.querySelector("details")?.removeAttribute("open");
       const status = document.getElementById("addPotStatus");
-      if (status) status.textContent = parentRef ? `Available inside parent: ${money(unallocatedForParentRef(parentRef))}` : `Unallocated in root: ${money(unallocatedForParentRef(rootParentRef()))}`;
+      if (status) status.textContent = parentRef ? `Available in parent: ${money(availableInNode(parentRef))}` : `Available in root: ${money(availableInNode(rootParentRef()))}`;
       document.getElementById("addPotModal").hidden = false;
+    }
+
+    function openPotActionModal(action = "transfer", fromRef = rootParentRef()) {
+      const modal = document.getElementById("potActionModal");
+      const form = document.getElementById("potMovementForm");
+      const status = document.getElementById("potActionStatus");
+      form.reset();
+      renderBudgetPoolSelects();
+      form.elements.action.value = action;
+      form.elements.fromRef.value = selectValueForMoneyRef(fromRef);
+      form.elements.toRef.value = "root";
+      form.elements.date.value = today();
+      const isAdd = action === "add";
+      const isRemove = action === "remove";
+      document.getElementById("potActionTitle").textContent = isAdd ? "Add Money" : isRemove ? "Remove Money" : "Transfer Money";
+      form.querySelector("[data-action-from]").hidden = isAdd || isRemove;
+      form.querySelector("[data-action-to]").hidden = isAdd || isRemove;
+      form.querySelector("[data-action-date]").hidden = action === "transfer";
+      status.textContent = isRemove
+        ? `Maximum removable from root: ${money(availableInNode(rootParentRef()))}.`
+        : action === "transfer"
+          ? `Available from selected pot: ${money(availableInNode(normaliseMoneyRef(form.elements.fromRef.value)))}.`
+          : "Money added here increases the root total.";
+      modal.hidden = false;
+    }
+
+    function openBudgetTransaction(poolId = "") {
+      state.settings.budgetView = "transactions";
+      renderBudgetTabs();
+      renderBudgetPoolSelects();
+      const form = document.getElementById("moneyForm");
+      form.elements.type.value = "expense";
+      form.elements.budgetPoolId.value = poolId || "root";
+      form.elements.date.value = today();
+      form.elements.amount.focus();
     }
 
     function editBudgetPool(pool) {
@@ -6574,8 +6951,15 @@
     });
     document.querySelector("#budgetPoolForm [name='parentId']").addEventListener("change", (event) => {
       const status = document.getElementById("addPotStatus");
-      if (status) status.textContent = event.target.value ? `Available inside parent: ${money(unallocatedForParentRef(event.target.value))}` : `Unallocated in root: ${money(unallocatedForParentRef(rootParentRef()))}`;
+      if (status) status.textContent = event.target.value ? `Available in parent: ${money(availableInNode(event.target.value))}` : `Available in root: ${money(availableInNode(rootParentRef()))}`;
       document.querySelector("#budgetPoolForm [name='potRole']").value = event.target.value ? "child" : "top";
+    });
+    document.getElementById("cancelPotActionBtn").addEventListener("click", () => {
+      document.getElementById("potActionModal").hidden = true;
+    });
+    document.querySelector("#potMovementForm [name='fromRef']").addEventListener("change", (event) => {
+      const status = document.getElementById("potActionStatus");
+      if (status) status.textContent = `Available from selected pot: ${money(availableInNode(normaliseMoneyRef(event.target.value)))}.`;
     });
     document.getElementById("cancelRootPotEditBtn").addEventListener("click", () => {
       document.getElementById("rootPotEditModal").hidden = true;
@@ -6605,12 +6989,27 @@
         return;
       }
       const currentParentRef = parentRefForPool(pool);
-      const parentAllowance = unallocatedForParentRef(nextParentRef) + (currentParentRef === nextParentRef ? getPotBalance(pool.id) : 0);
+      const childTotal = allocatedToChildren(`pot:${pool.id}`);
+      if (nextAmount < childTotal - 0.01) {
+        alert(`This pot contains ${money(childTotal)} in child pots. Reduce or move the child pots before lowering the total.`);
+        return;
+      }
+      const parentAllowance = availableInNode(nextParentRef) + (currentParentRef === nextParentRef ? getPotBalance(pool.id) : 0);
       if (nextAmount > parentAllowance + 0.01) {
-        alert(`Only ${money(Math.max(0, parentAllowance))} is available inside the selected parent pot.`);
+        alert(`Only ${money(Math.max(0, parentAllowance))} is available in the selected parent pot.`);
         return;
       }
       pool.name = nextName;
+      if (currentParentRef !== nextParentRef) {
+        const previousTotal = getPotBalance(pool.id);
+        const common = nearestCommonAncestorRef(currentParentRef, nextParentRef);
+        ancestorRefs(currentParentRef).forEach((ref) => {
+          if (ref !== common) adjustNodeTotal(ref, -previousTotal);
+        });
+        ancestorRefs(nextParentRef).forEach((ref) => {
+          if (ref !== common) adjustNodeTotal(ref, nextAmount);
+        });
+      }
       pool.amount = nextAmount;
       pool.startingAmount = nextAmount;
       pool.startDate = data.startDate || "";
@@ -6737,21 +7136,21 @@
     bindForm("documentForm", (data) => state.documents.push({ id: id(), ...data, done: data.status === "Done" }));
     bindForm("packingForm", (data) => state.packing.push({ id: id(), ...data }));
     bindForm("moneyForm", (data) => {
-      const pot = visibleBudgetPots().find((pool) => pool.id === data.budgetPoolId);
-      const allocation = (state.allocations || []).find((entry) => entry.id === pot?.allocationId);
-      state.money.push({
-        id: id(),
-        ...data,
-        date: data.date || today(),
-        description: data.description || "",
-        walletId: data.walletId || allocation?.walletId || "",
-        allocationId: data.allocationId || allocation?.id || "",
-        potId: data.budgetPoolId || "",
-        category: data.category || "",
-        subcategory: data.subcategory || "",
-        budgetPoolId: data.budgetPoolId || "",
-        amount: Number(data.amount) || 0
-      });
+      const amount = Number(data.amount) || 0;
+      const ref = normaliseMoneyRef(data.budgetPoolId);
+      if (amount <= 0) {
+        alert("Enter an amount greater than zero.");
+        return false;
+      }
+      if (data.type === "income") {
+        addMoneyToRoot(amount, data.note || data.description || "Income", data.date || today());
+        return true;
+      }
+      if (!logSpendingFromRef(ref, amount, data)) {
+        alert(`This transaction would make ${labelForMoneyRef(ref)} negative. Transfer money into this pot first.`);
+        return false;
+      }
+      return true;
     });
     bindForm("walletForm", (data) => {
       const wallet = rootPot();
@@ -6786,8 +7185,8 @@
       };
       if (!name) return fail("Pot name is required.");
       if (!(amount >= 0)) return fail("Amount must be a valid non-negative number.");
-      const available = unallocatedForParentRef(parentRef);
-      if (amount > available + 0.01) return fail(`Only ${money(Math.max(0, available))} is unallocated inside the selected parent pot.`);
+      const available = availableInNode(parentRef);
+      if (amount > available + 0.01) return fail(`Only ${money(Math.max(0, available))} is available in the selected parent pot.`);
       const parentAllocationId = allocationIdFromParentReference(parentRef);
       const pool = {
         id: id(),
@@ -6815,27 +7214,34 @@
     });
     bindForm("potMovementForm", (data) => {
       const amount = Number(data.amount) || 0;
+      const status = document.getElementById("potActionStatus");
+      const fail = (message) => {
+        if (status) status.textContent = message;
+        return false;
+      };
       if (amount <= 0) {
-        alert("Enter an amount greater than zero.");
-        return;
+        return fail("Enter an amount greater than zero.");
       }
       if (data.action === "transfer") {
-        if (!transferBetweenPots(data.potId, data.toPotId, amount, data.note || "")) {
-          alert("Choose two different pots for the transfer.");
-        }
-        return;
-      }
-      if (!data.potId) {
-        alert("Choose a pot first.");
-        return;
+        const fromRef = normaliseMoneyRef(data.fromRef);
+        const toRef = normaliseMoneyRef(data.toRef);
+        if (fromRef === toRef) return fail("Choose two different pots.");
+        if (amount > availableInNode(fromRef) + 0.01) return fail(`Only ${money(availableInNode(fromRef))} is available in ${labelForMoneyRef(fromRef)}.`);
+        if (!transferBetweenRefs(fromRef, toRef, amount, data.note || "")) return fail("Transfer could not be completed. Check both pots and try again.");
+        document.getElementById("potActionModal").hidden = true;
+        return true;
       }
       if (data.action === "add") {
-        createPotTransaction(data.potId, "income", amount, data.note || "Added money", "adjustment");
+        addMoneyToRoot(amount, data.note || "Added money", data.date || today());
       } else if (data.action === "remove") {
-        createPotTransaction(data.potId, "expense", amount, data.note || "Removed money", "adjustment");
-      } else if (data.action === "set") {
-        adjustPotBalance(data.potId, amount - getPotBalance(data.potId), data.note || "Manual balance correction");
+        const available = availableInNode(rootParentRef());
+        if (amount > available + 0.01) {
+          return fail(`Cannot remove ${money(amount)}. Current total: ${money(getTotalMoney())}. In child pots: ${money(allocatedToChildren(rootParentRef()))}. Maximum removable: ${money(available)}. Transfer money back to the root before removing it.`);
+        }
+        removeMoneyFromRoot(amount, data.note || "Removed money", data.date || today());
       }
+      document.getElementById("potActionModal").hidden = true;
+      return true;
     });
     bindForm("financeCategoryForm", (data) => {
       const category = {
@@ -7148,8 +7554,6 @@
       setUpdateStatus("Refreshing...");
       pendingServiceWorker.postMessage({ type: "SKIP_WAITING" });
     });
-  </script>
+</script>
 </body>
 </html>
-
-
