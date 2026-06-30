@@ -1333,7 +1333,7 @@
         <h2>Reset App Data</h2>
         <div class="warning-box">
           <strong>This will delete the dashboard data stored in this browser.</strong>
-          <p class="hint">This includes tasks, itinerary stops, journal entries, counters, budget items, check-ins, settings and locally cached app data.</p>
+          <p class="hint">This includes tasks, itinerary stops, journal entries, counters, budget items, settings and locally cached app data.</p>
         </div>
         <p id="resetCloudWarning" class="hint"></p>
         <p class="hint">A JSON backup will be created before anything is deleted. If the backup cannot be created, the reset will be cancelled.</p>
@@ -1437,11 +1437,9 @@
           <div class="mini-brand">LO</div>
           <h1>Travel Life OS</h1>
         </div>
-        <p id="dashboardSubtitle" class="subtitle">Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.</p>
+        <p id="dashboardSubtitle" class="subtitle">Your local command centre for travel, money, TEFL, content, writing, journal entries and long-term planning.</p>
         <div class="header-status">
-          <span id="saveStatus" class="sync-status">Local save ready</span>
-          <span class="sync-status auth-status-text" aria-live="polite">Not signed in. Local storage is active.</span>
-          <span class="sync-status cloud-status-text" aria-live="polite">Cloud sync will start after sign in.</span>
+          <span id="saveStatus" class="sync-status">Signed out · Local save ready</span>
         </div>
       </div>
       <div class="date-box">
@@ -1509,11 +1507,6 @@
         <div class="progress-bar"><div id="teflFill" class="progress-fill"></div></div>
         <div id="teflMeta" class="hint">0 of 120 hours</div>
       </div>
-      <div class="metric-card">
-        <div class="muted">Habit score</div>
-        <div id="habitScore" class="metric">0%</div>
-        <div id="habitMeta" class="hint">Last 7 days</div>
-      </div>
     </section>
 
     <nav class="tabs" aria-label="Life OS sections">
@@ -1524,7 +1517,6 @@
       <button class="tab" type="button" data-view="content">Content</button>
       <button class="tab" type="button" data-view="writing">Writing</button>
       <button class="tab" type="button" data-view="life">Life</button>
-      <button class="tab" type="button" data-view="habits">Habits</button>
       <button class="tab" type="button" data-view="journal">Journal</button>
       <button class="tab" type="button" data-view="review">Weekly Review</button>
       <button class="tab" type="button" data-view="dates">Dates & Counters</button>
@@ -1544,30 +1536,6 @@
         <div class="panel span-12">
           <h2>Smart Readiness Scores</h2>
           <div id="readinessScores" class="score-grid"></div>
-        </div>
-        <div class="panel span-6">
-          <h2>Quick Journal Check-in</h2>
-          <p class="hint">Saves mood, sleep and simple habits into today's Journal entry.</p>
-          <form id="checkinForm" class="form-grid">
-            <label class="field-3">Date<input name="date" type="date"></label>
-            <label class="field-2">Mood<input name="mood" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
-            <label class="field-2">Energy<input name="energy" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
-            <label class="field-2">Sleep<input name="sleep" type="number" min="0" max="16" step="0.25" placeholder="Hours"></label>
-            <label class="field-3">Spending<input name="spending" type="number" min="0" step="0.01" placeholder="0.00"></label>
-            <label class="field-3"><span>Exercise</span><select name="exercise"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>Walk</span><select name="walk"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>Left house</span><select name="leftHouse"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>Social</span><select name="social"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>TEFL</span><select name="tefl"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>Writing</span><select name="writing"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>Content</span><select name="content"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>Reading</span><select name="reading"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>Travel planning</span><select name="travelPlanning"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <label class="field-3"><span>Budget discipline</span><select name="budgetDiscipline"><option value="true">Yes</option><option value="false">No</option></select></label>
-            <label class="field-3"><span>Early bedtime</span><select name="earlyBedtime"><option value="false">No</option><option value="true">Yes</option></select></label>
-            <button class="field-3" type="submit">Save to Journal</button>
-          </form>
-          <div id="dailyLogStatus" class="hint"></div>
         </div>
         <div class="panel span-6">
           <h2>Next Priorities</h2>
@@ -1855,78 +1823,68 @@
       <div class="grid">
         <div class="panel span-12">
           <h2>Life Trends</h2>
-          <p class="hint">Daily mood, energy and habits now live inside Journal entries. This page summarises those records.</p>
+          <p class="hint">Journal entries provide mood, energy, sleep and travel context trends over time.</p>
           <div id="trendStats"></div>
           <div id="lifeChart" class="chart"></div>
         </div>
       </div>
     </section>
 
-    <section id="habits" class="view">
-      <div class="grid">
-        <div class="panel span-12">
-          <h2>Habit Manager</h2>
-          <p class="hint">Choose which habits appear in the Daily Journal checklist. Completion happens inside Journal entries.</p>
-          <form id="habitForm" class="form-grid">
-            <label class="field-6">Habit name<input name="label" required placeholder="Morning walk"></label>
-            <label class="field-2">Position<input name="order" type="number" min="1"></label>
-            <label class="field-3"><span>Show in Journal</span><select name="showInJournal"><option value="true">Yes</option><option value="false">No</option></select></label>
-            <label class="field-12">Notes<input name="notes" placeholder="Optional habit notes"></label>
-            <button class="field-2 primary-btn" type="submit">Add Habit</button>
-          </form>
-          <div id="habitSettingsList" class="list"></div>
-        </div>
-        <div class="panel span-12"><h2>Habit History</h2><div id="habitTable" class="grid"></div></div>
-      </div>
-    </section>
-
     <section id="journal" class="view">
       <div class="grid">
         <div class="panel span-12">
-          <h2>Daily Journal Hub</h2>
+          <h2>Journal</h2>
           <div id="journalDashboard" class="score-grid"></div>
           <div class="inline-actions">
             <button id="writeTodayBtn" class="primary-btn" type="button">Write Today's Entry</button>
             <button id="newJournalEntryBtn" class="secondary-btn" type="button">New Entry</button>
           </div>
         </div>
-        <div class="panel span-12">
-          <h2>Today's Entry</h2>
-          <p class="hint">One calm daily record for writing, mood, habits, reflections and travel context.</p>
+        <div id="journalEditorPanel" class="panel span-12" hidden>
+          <h2 id="journalEditorTitle">Journal Entry</h2>
           <form id="journalForm" class="form-grid">
             <input name="id" type="hidden">
             <label class="field-3">Date<input name="date" type="date"></label>
             <label class="field-9">Title<input name="title" placeholder="Optional title"></label>
-            <label class="field-2">Mood<input name="mood" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
-            <label class="field-2">Energy<input name="energy" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
-            <label class="field-2">Stress<input name="stress" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
-            <label class="field-2">Motivation<input name="motivation" type="number" min="1" max="10" step="1" placeholder="1-10"></label>
-            <label class="field-2">Sleep hours<input name="sleep" type="number" min="0" max="16" step="0.25"></label>
-            <label class="field-2">Sleep quality<select name="sleepQuality"><option value="">Not set</option><option>Poor</option><option>Okay</option><option>Good</option><option>Great</option></select></label>
-            <label class="field-6">Physical health<input name="physicalHealth" placeholder="Optional"></label>
-            <label class="field-6">Mental wellbeing<input name="mentalWellbeing" placeholder="Optional"></label>
-            <div class="field-12">
-              <h3>Habits</h3>
-              <div id="journalHabitChecklist" class="form-grid"></div>
-            </div>
             <label class="field-12">Main journal entry<textarea name="body" class="journal-writing-area" placeholder="Write freely. What happened today? What mattered?"></textarea></label>
+            <label class="field-12">Tags<input name="tags" placeholder="Travel, Writing, Low Energy"></label>
+            <details class="field-12">
+              <summary>Optional check-in</summary>
+              <div class="form-grid">
+                <label class="field-2">Mood<input name="mood" type="number" min="1" max="10" step="1" placeholder="1-10"><span class="hint">1 = very low, 10 = very positive</span></label>
+                <label class="field-2">Energy<input name="energy" type="number" min="1" max="10" step="1" placeholder="1-10"><span class="hint">1 = depleted, 10 = very energised</span></label>
+                <label class="field-2">Stress<input name="stress" type="number" min="1" max="10" step="1" placeholder="1-10"><span class="hint">1 = calm, 10 = very stressed</span></label>
+                <label class="field-2">Motivation<input name="motivation" type="number" min="1" max="10" step="1" placeholder="1-10"><span class="hint">1 = low, 10 = high</span></label>
+                <label class="field-2">Sleep hours<input name="sleep" type="number" min="0" max="16" step="0.25"></label>
+                <label class="field-2">Sleep quality<select name="sleepQuality"><option value="">Not set</option><option>Poor</option><option>Okay</option><option>Good</option><option>Great</option></select></label>
+                <label class="field-6">Physical wellbeing<input name="physicalHealth" placeholder="Optional"></label>
+                <label class="field-6">Mental wellbeing<input name="mentalWellbeing" placeholder="Optional"></label>
+              </div>
+            </details>
             <details class="field-12">
               <summary>Reflection prompts</summary>
               <div class="form-grid">
-                <label class="field-6">Best moment today<textarea name="bestMoment"></textarea></label>
-                <label class="field-6">Biggest challenge<textarea name="biggestChallenge"></textarea></label>
-                <label class="field-6">What I learned<textarea name="learned"></textarea></label>
-                <label class="field-6">Something I am grateful for<textarea name="gratitude"></textarea></label>
+                <label class="field-6">What mattered today?<textarea name="bestMoment"></textarea></label>
+                <label class="field-6">What went well?<textarea name="gratitude"></textarea></label>
+                <label class="field-6">What was difficult?<textarea name="biggestChallenge"></textarea></label>
+                <label class="field-6">What did I learn?<textarea name="learned"></textarea></label>
+                <label class="field-6">What should I remember?<textarea name="remember"></textarea></label>
+                <label class="field-6">What am I looking forward to?<textarea name="lookingForward"></textarea></label>
                 <label class="field-12">Tomorrow's focus<input name="tomorrowFocus"></label>
               </div>
             </details>
             <details class="field-12">
               <summary>Travel context</summary>
               <div class="form-grid">
+                <label class="field-3">Location<input name="location"></label>
                 <label class="field-3">Country<input name="country"></label>
                 <label class="field-3">City<input name="city"></label>
+                <label class="field-3">Travel phase<select name="travelPhase" data-phase-select></select></label>
+                <label class="field-4">Linked route stop<select name="routeStopId" data-route-stop-select></select></label>
                 <label class="field-4">Accommodation<input name="accommodation"></label>
                 <label class="field-2"><span>Travel day</span><select name="travelDay"><option value="false">No</option><option value="true">Yes</option></select></label>
+                <label class="field-6">Important event<input name="importantEvent"></label>
+                <label class="field-6">People mentioned<input name="peopleMentioned"></label>
                 <label class="field-12">Travel notes<textarea name="travelNotes"></textarea></label>
               </div>
             </details>
@@ -1951,14 +1909,23 @@
                 <label class="field-6">Financial thoughts<textarea name="financialThoughts"></textarea></label>
               </div>
             </details>
-            <label class="field-12">Tags<input name="tags" placeholder="Travel, Writing, Low Energy"></label>
             <div class="field-12 modal-actions">
               <button class="primary-btn" type="submit">Save Journal Entry</button>
+              <button id="cancelJournalEditBtn" class="ghost-btn" type="button">Cancel</button>
               <button id="archiveJournalBtn" class="ghost-btn" type="button">Archive</button>
               <button id="deleteJournalBtn" class="danger-btn" type="button">Delete</button>
               <span id="journalSaveStatus" class="hint"></span>
             </div>
           </form>
+        </div>
+        <div class="panel span-12">
+          <h2>Patterns and Insights</h2>
+          <p class="hint">Local observations from saved journal entries. These are not diagnoses or conclusions.</p>
+          <div id="journalInsights" class="list"></div>
+          <details>
+            <summary>Dismissed insights</summary>
+            <div id="dismissedInsights" class="list"></div>
+          </details>
         </div>
         <div class="panel span-12">
           <h2>Journal Entries</h2>
@@ -1967,6 +1934,9 @@
             <label class="field-3">Tag<input name="tag" placeholder="Any tag"></label>
             <label class="field-2">From<input name="from" type="date"></label>
             <label class="field-2">To<input name="to" type="date"></label>
+            <label class="field-3">Location<input name="location" placeholder="Any location"></label>
+            <label class="field-3">Travel phase<select name="phase" data-phase-select></select></label>
+            <label class="field-2">Archived<select name="archived"><option value="false">Active</option><option value="true">Archived</option><option value="all">All</option></select></label>
             <label class="field-1">Mood<input name="moodMin" type="number" min="1" max="10" placeholder="Min"></label>
           </form>
           <div id="journalList" class="list"></div>
@@ -2108,7 +2078,7 @@
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
     const APP_VERSION = "0.30.0";
-    const defaultSubtitle = "Your local command centre for departure prep, money, TEFL, content, writing, habits, daily check-ins and long-term travel.";
+    const defaultSubtitle = "Your local command centre for travel, money, TEFL, content, writing, journal entries and long-term planning.";
     const defaultSectionLabels = {
       command: "Command",
       travel: "Travel",
@@ -2117,7 +2087,6 @@
       content: "Content",
       writing: "Writing",
       life: "Life",
-      habits: "Habits",
       journal: "Journal",
       review: "Weekly Review",
       dates: "Dates & Counters",
@@ -2131,18 +2100,7 @@
     const defaultFinanceCategories = [];
     const taskCategories = ["Travel admin", "Budget", "TEFL", "Route", "Packing", "Content", "Writing", "Destination"];
     const taskTimeframes = ["Setup", "Pre-trip", "Final prep", "During travel", "Later"];
-    const defaultHabits = [
-      { key: "tefl", label: "TEFL study" },
-      { key: "exercise", label: "Exercise" },
-      { key: "walk", label: "Walking" },
-      { key: "reading", label: "Reading" },
-      { key: "writing", label: "Poetry writing" },
-      { key: "content", label: "Content creation" },
-      { key: "travelPlanning", label: "Travel planning" },
-      { key: "budgetDiscipline", label: "Budget discipline" },
-      { key: "earlyBedtime", label: "Early bedtime" }
-    ];
-    const habitKeys = defaultHabits.map((habit) => [habit.key, habit.label]);
+    const legacyHabitKeys = ["tefl", "exercise", "walk", "reading", "writing", "content", "travelPlanning", "budgetDiscipline", "earlyBedtime", "leftHouse", "social"];
 
     function id() {
       return "id-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -2200,7 +2158,9 @@
         travelDates: defaultTravelDates(),
         dateItems: [],
         phases: defaultPhases.map((name, index) => ({ id: id(), name, order: index + 1, archived: false })),
-        habits: defaultHabits.map((habit, index) => ({ id: id(), ...habit, order: index + 1, archived: false })),
+        habits: [],
+        legacyHabits: [],
+        dismissedInsights: [],
         timelinePhases: [],
         categories: defaultFinanceCategories.map((category, index) => ({ id: id(), ...category, order: index + 1, archived: false }))
       },
@@ -2410,12 +2370,19 @@
       );
       merged.meta.setupComplete = Boolean(data.meta?.setupComplete || (data.meta && data.meta.setupComplete === undefined && hasExistingUserData));
       if (merged.settings.sectionLabels?.settings === "Settings & Data") merged.settings.sectionLabels.settings = "Settings";
+      if (/habits|daily check-ins/i.test(merged.settings.dashboardSubtitle || "")) merged.settings.dashboardSubtitle = defaultSubtitle;
       merged.settings.keyDates = { ...next.settings.keyDates, ...(data.settings?.keyDates || {}) };
       merged.settings.travelDates = normalizeTravelDates(data.settings?.travelDates, merged.settings.keyDates);
       merged.settings.deletedDateItemRefs = data.settings?.deletedDateItemRefs || data.settings?.deletedCounterRefs || [];
       merged.settings.dateItems = normalizeDateItems(data.settings?.dateItems, merged.settings.travelDates, merged.settings.deletedDateItemRefs);
       merged.settings.phases = normalizePhases(data.settings?.phases);
-      merged.settings.habits = normalizeHabits(data.settings?.habits);
+      merged.settings.habits = [];
+      merged.settings.legacyHabits = Array.isArray(data.settings?.legacyHabits)
+        ? data.settings.legacyHabits
+        : Array.isArray(data.settings?.habits)
+          ? data.settings.habits.map((habit) => ({ ...habit, archived: true, legacy: true }))
+          : [];
+      merged.settings.dismissedInsights = Array.isArray(data.settings?.dismissedInsights) ? data.settings.dismissedInsights : [];
       merged.settings.categories = normalizeCategories(data.settings?.categories);
       merged.settings.timelinePhases = (data.settings?.timelinePhases || next.settings.timelinePhases).map((phase) => ({
         id: phase.id || id(),
@@ -2469,7 +2436,7 @@
         done: Boolean(task.done)
       }));
       merged.checkins = (data.checkins || next.checkins).map((entry) => ({ ...entry, id: entry.id || id(), date: entry.date || today() }));
-      merged.journals = normalizeJournalEntries(data.journals || next.journals, merged.checkins, merged.settings.habits);
+      merged.journals = normalizeJournalEntries(data.journals || next.journals, merged.checkins, merged.settings.legacyHabits);
       merged.milestones = (data.milestones || next.milestones).map((entry) => ({ ...entry, id: entry.id || id() }));
       normaliseOrderedList(merged.route);
       return merged;
@@ -2632,19 +2599,6 @@
       }))).map((phase, index) => ({ ...phase, order: index + 1 }));
     }
 
-    function normalizeHabits(savedHabits) {
-      const source = savedHabits?.length ? savedHabits : defaultHabits.map((habit, index) => ({ ...habit, order: index + 1 }));
-      return orderedItems(source.map((habit, index) => ({
-        id: habit.id || id(),
-        key: habit.key || `habit_${index + 1}`,
-        label: habit.label || habit.name || "Habit",
-        notes: habit.notes || habit.note || "",
-        showInJournal: habit.showInJournal !== false,
-        order: Number(habit.order) || index + 1,
-        archived: Boolean(habit.archived)
-      }))).map((habit, index) => ({ ...habit, order: index + 1 }));
-    }
-
     function emptyJournalEntry(date = today()) {
       const now = new Date().toISOString();
       return {
@@ -2663,16 +2617,20 @@
         sleepQuality: "",
         physicalHealth: "",
         mentalWellbeing: "",
-        habits: {},
-        reflections: { bestMoment: "", biggestChallenge: "", learned: "", gratitude: "", tomorrowFocus: "" },
-        travel: { country: "", city: "", accommodation: "", travelDay: false, notes: "" },
+        legacyHabitData: {},
+        reflections: { bestMoment: "", biggestChallenge: "", learned: "", gratitude: "", remember: "", lookingForward: "", tomorrowFocus: "" },
+        travel: { location: "", country: "", city: "", phase: "", routeStopId: "", accommodation: "", travelDay: false, importantEvent: "", peopleMentioned: "", notes: "" },
         finance: { spendingNote: "", financialThoughts: "", transactionIds: [] },
         tags: [],
         archived: false
       };
     }
 
-    function normalizeJournalEntry(entry, habits = []) {
+    function normalizeJournalEntry(entry, legacyHabits = []) {
+      const legacyHabitData = { ...(entry.legacyHabitData || entry.habits || {}) };
+      legacyHabitKeys.forEach((key) => {
+        if (entry[key] !== undefined && legacyHabitData[key] === undefined) legacyHabitData[key] = Boolean(entry[key]);
+      });
       const normal = {
         ...emptyJournalEntry(entry.date || today()),
         ...entry,
@@ -2691,19 +2649,26 @@
         sleepQuality: entry.sleepQuality || "",
         physicalHealth: entry.physicalHealth || "",
         mentalWellbeing: entry.mentalWellbeing || "",
-        habits: { ...(entry.habits || {}) },
+        legacyHabitData,
         reflections: {
           bestMoment: entry.reflections?.bestMoment || entry.bestMoment || "",
           biggestChallenge: entry.reflections?.biggestChallenge || entry.biggestChallenge || "",
           learned: entry.reflections?.learned || entry.learned || "",
           gratitude: entry.reflections?.gratitude || entry.gratitude || "",
+          remember: entry.reflections?.remember || entry.remember || "",
+          lookingForward: entry.reflections?.lookingForward || entry.lookingForward || "",
           tomorrowFocus: entry.reflections?.tomorrowFocus || entry.tomorrowFocus || ""
         },
         travel: {
+          location: entry.travel?.location || entry.location || "",
           country: entry.travel?.country || entry.country || "",
           city: entry.travel?.city || entry.city || "",
+          phase: entry.travel?.phase || entry.travelPhase || entry.phase || "",
+          routeStopId: entry.travel?.routeStopId || entry.routeStopId || "",
           accommodation: entry.travel?.accommodation || entry.accommodation || "",
           travelDay: Boolean(entry.travel?.travelDay || entry.travelDay),
+          importantEvent: entry.travel?.importantEvent || entry.importantEvent || "",
+          peopleMentioned: entry.travel?.peopleMentioned || entry.peopleMentioned || "",
           notes: entry.travel?.notes || entry.travelNotes || ""
         },
         finance: {
@@ -2714,16 +2679,16 @@
         tags: normalizeTags(entry.tags || entry.tag || ""),
         archived: Boolean(entry.archived)
       };
-      habits.forEach((habit) => {
-        if (entry[habit.key] !== undefined && normal.habits[habit.key] === undefined) normal.habits[habit.key] = Boolean(entry[habit.key]);
+      legacyHabits.forEach((habit) => {
+        if (entry[habit.key] !== undefined && normal.legacyHabitData[habit.key] === undefined) normal.legacyHabitData[habit.key] = Boolean(entry[habit.key]);
       });
       return normal;
     }
 
-    function normalizeJournalEntries(savedJournals, checkins, habits) {
+    function normalizeJournalEntries(savedJournals, checkins, legacyHabits) {
       const byDate = new Map();
       (savedJournals || []).forEach((entry) => {
-        const normal = normalizeJournalEntry(entry, habits);
+        const normal = normalizeJournalEntry(entry, legacyHabits);
         const existing = byDate.get(normal.date);
         if (!existing) {
           byDate.set(normal.date, normal);
@@ -2737,7 +2702,7 @@
         existing.motivation = existing.motivation || normal.motivation;
         existing.sleep = existing.sleep || normal.sleep;
         existing.tags = Array.from(new Set([...(existing.tags || []), ...(normal.tags || [])]));
-        existing.habits = { ...normal.habits, ...existing.habits };
+        existing.legacyHabitData = { ...normal.legacyHabitData, ...existing.legacyHabitData };
         existing.updatedAt = [existing.updatedAt, normal.updatedAt].filter(Boolean).sort().pop() || existing.updatedAt;
       });
       (checkins || []).forEach((entry) => {
@@ -2747,8 +2712,8 @@
         journal.energy = journal.energy || Number(entry.energy) || "";
         journal.sleep = journal.sleep || Number(entry.sleep) || "";
         journal.finance.spendingNote = journal.finance.spendingNote || (Number(entry.spending || 0) ? `Spending logged: ${money(entry.spending)}` : "");
-        habits.forEach((habit) => {
-          if (entry[habit.key] !== undefined && journal.habits[habit.key] === undefined) journal.habits[habit.key] = Boolean(entry[habit.key]);
+        legacyHabitKeys.forEach((key) => {
+          if (entry[key] !== undefined && journal.legacyHabitData[key] === undefined) journal.legacyHabitData[key] = Boolean(entry[key]);
         });
         byDate.set(date, journal);
       });
@@ -2756,8 +2721,13 @@
     }
 
     function normalizeTags(value) {
-      if (Array.isArray(value)) return value.map((tag) => String(tag).trim()).filter(Boolean);
-      return String(value || "").split(",").map((tag) => tag.trim()).filter(Boolean);
+      const tags = Array.isArray(value) ? value : String(value || "").split(",");
+      const seen = new Map();
+      tags.map((tag) => String(tag).trim()).filter(Boolean).forEach((tag) => {
+        const key = tag.toLowerCase();
+        if (!seen.has(key)) seen.set(key, tag);
+      });
+      return [...seen.values()];
     }
 
     function normalizeCategories(savedCategories) {
@@ -3011,14 +2981,6 @@
         .map((phase) => phase.name)
         .filter(Boolean);
       return names.length ? names : ["Unassigned"];
-    }
-
-    function activeHabits() {
-      return orderedItems(state.settings.habits || []).filter((habit) => !habit.archived);
-    }
-
-    function journalHabits() {
-      return activeHabits().filter((habit) => habit.showInJournal !== false);
     }
 
     function journalEntryForDate(date = today()) {
@@ -3792,7 +3754,7 @@
       state.meta.lastSaved = new Date().toISOString();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       const stamp = new Date(state.meta.lastSaved).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      document.getElementById("saveStatus").textContent = `Local saved ${stamp}`;
+      document.getElementById("saveStatus").textContent = `${currentUser?.email ? "Signed in" : offlineMode ? "Offline" : "Signed out"} · Saved ${stamp}`;
       renderAbout();
     }
 
@@ -4502,6 +4464,7 @@
       applyTheme();
       applyDashboardSettings();
       renderPhaseSelects();
+      renderRouteStopSelects();
       renderFinanceSelects();
       renderWalletSelects();
       renderAllocationSelects();
@@ -4520,7 +4483,6 @@
       renderContent();
       renderWriting();
       renderLife();
-      renderHabits();
       renderJournal();
       renderReview();
       renderDates();
@@ -4538,8 +4500,10 @@
     }
 
     function applyActiveView() {
-      const view = state.settings.activeView || "command";
-      if (!document.getElementById(view)) return;
+      let view = state.settings.activeView || "command";
+      if (view === "habits") view = "journal";
+      if (!document.getElementById(view)) view = "command";
+      state.settings.activeView = view;
       document.querySelectorAll(".tab").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
       document.querySelectorAll(".view").forEach((section) => section.classList.toggle("active", section.id === view));
     }
@@ -4617,13 +4581,9 @@
       setText("teflPct", `${t.teflPercent}%`);
       document.getElementById("teflFill").style.width = `${t.teflPercent}%`;
       setText("teflMeta", `${t.teflHours} of ${state.settings.teflTargetHours} hours, ${Math.max(0, state.settings.teflTargetHours - t.teflHours)} remaining.`);
-      const habit = getHabitScore();
-      setText("habitScore", `${habit.rate}%`);
-      setText("habitMeta", `${habit.done} of ${habit.total} completions, last 7 days`);
     }
 
     function renderCommand() {
-      document.querySelector("#checkinForm [name='date']").value = today();
       renderDailyBriefing();
       renderReadinessScores();
       renderCoreSettingsSummary();
@@ -4759,6 +4719,15 @@
       });
     }
 
+    function renderRouteStopSelects() {
+      const stops = orderedItems(state.route || []);
+      document.querySelectorAll("select[data-route-stop-select]").forEach((select) => {
+        const current = select.value;
+        select.innerHTML = `<option value="">None</option>${stops.map((stop) => `<option value="${escapeHtml(stop.id)}">${escapeHtml([stop.place, stop.country].filter(Boolean).join(", ") || "Route stop")}</option>`).join("")}`;
+        if (current && stops.some((stop) => stop.id === current)) select.value = current;
+      });
+    }
+
     function renderFinanceSelects() {
       const categories = financeCategories();
       const names = categories.map((category) => category.name);
@@ -4853,21 +4822,6 @@
         },
         phase.archived ? "Unarchive" : "Archive",
         () => removePhase(phase.id)
-      ));
-    }
-
-    function renderHabitSettings() {
-      renderList("habitSettingsList", orderedItems(state.settings.habits || []), (habit) => settingRow(
-        habit,
-        `${habit.archived ? "Archived" : "Active"} - position ${habit.order} - ${habit.showInJournal === false ? "Hidden from Journal" : "Shown in Journal"}${habit.notes ? " - " + habit.notes : ""}`,
-        () => editHabitSetting(habit),
-        () => {
-          habit.archived = !habit.archived;
-          normaliseOrderedList(state.settings.habits);
-          render();
-        },
-        habit.archived ? "Unarchive" : "Archive",
-        () => removeHabitSetting(habit.id)
       ));
     }
 
@@ -5465,9 +5419,10 @@
       const last14 = recentJournalEntries(14);
       document.getElementById("trendStats").innerHTML = statsHtml([
         ["Journal records", String(last14.length)],
-        ["Average mood", average(last14.map((entry) => Number(entry.mood || 0)).filter(Boolean)).toFixed(1)],
-        ["Average energy", average(last14.map((entry) => Number(entry.energy || 0)).filter(Boolean)).toFixed(1)],
-        ["Habit completion", `${habitStats().rate}%`]
+        ["Average mood", formatAverage(last14, "mood", "/10")],
+        ["Average energy", formatAverage(last14, "energy", "/10")],
+        ["Average sleep", formatAverage(last14, "sleep", " hours")],
+        ["Recent stress", formatAverage(last14, "stress", "/10")]
       ]);
       const chart = document.getElementById("lifeChart");
       chart.innerHTML = "";
@@ -5484,23 +5439,11 @@
       });
     }
 
-    function renderHabits() {
-      renderHabitSettings();
-      const root = document.getElementById("habitTable");
-      root.innerHTML = "";
-      journalHabits().forEach(({ key, label }) => {
-        const stat = habitStatFor(key);
-        const box = document.createElement("div");
-        box.className = "panel span-4";
-        box.innerHTML = `<h2>${label}</h2><div class="metric">${stat.rate}%</div><div class="progress-bar"><div class="progress-fill" style="width:${stat.rate}%"></div></div><div class="hint">${stat.done} of ${stat.total} days, ${stat.streak}-day streak</div>`;
-        root.appendChild(box);
-      });
-    }
-
     function renderJournal() {
       renderJournalDashboard();
       renderJournalForm();
       renderJournalList();
+      renderJournalInsights();
     }
 
     function selectedJournalDate() {
@@ -5514,7 +5457,6 @@
       const recent = recentJournalEntries(7);
       const moodValues = recent.map((entry) => Number(entry.mood || 0)).filter(Boolean);
       const energyValues = recent.map((entry) => Number(entry.energy || 0)).filter(Boolean);
-      const habit = habitStats();
       const tags = tagCounts().slice(0, 5).map(([tag, count]) => `${tag} (${count})`).join(", ") || "No tags yet";
       root.innerHTML = [
         ["Today", todayEntry?.body || todayEntry?.title ? "Written" : "Not started"],
@@ -5522,7 +5464,6 @@
         ["Entries this week", String(recent.length)],
         ["Avg mood", moodValues.length ? average(moodValues).toFixed(1) : "No data"],
         ["Avg energy", energyValues.length ? average(energyValues).toFixed(1) : "No data"],
-        ["Habit completion", `${habit.rate}%`],
         ["Top tags", tags]
       ].map(([label, value]) => `<div class="score-card"><span class="muted">${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
     }
@@ -5530,6 +5471,8 @@
     function renderJournalForm() {
       const form = document.getElementById("journalForm");
       if (!form) return;
+      const panel = document.getElementById("journalEditorPanel");
+      if (panel?.hidden) return;
       const entry = journalEntryForDate(selectedJournalDate()) || emptyJournalEntry(selectedJournalDate());
       form.elements.id.value = entry.id;
       form.elements.date.value = entry.date || today();
@@ -5547,40 +5490,23 @@
       form.elements.biggestChallenge.value = entry.reflections?.biggestChallenge || "";
       form.elements.learned.value = entry.reflections?.learned || "";
       form.elements.gratitude.value = entry.reflections?.gratitude || "";
+      form.elements.remember.value = entry.reflections?.remember || "";
+      form.elements.lookingForward.value = entry.reflections?.lookingForward || "";
       form.elements.tomorrowFocus.value = entry.reflections?.tomorrowFocus || "";
+      form.elements.location.value = entry.travel?.location || "";
       form.elements.country.value = entry.travel?.country || "";
       form.elements.city.value = entry.travel?.city || "";
+      form.elements.travelPhase.value = entry.travel?.phase || "";
+      form.elements.routeStopId.value = entry.travel?.routeStopId || "";
       form.elements.accommodation.value = entry.travel?.accommodation || "";
       form.elements.travelDay.value = entry.travel?.travelDay ? "true" : "false";
+      form.elements.importantEvent.value = entry.travel?.importantEvent || "";
+      form.elements.peopleMentioned.value = entry.travel?.peopleMentioned || "";
       form.elements.travelNotes.value = entry.travel?.notes || "";
       form.elements.spendingNote.value = entry.finance?.spendingNote || "";
       form.elements.financialThoughts.value = entry.finance?.financialThoughts || "";
       form.elements.tags.value = (entry.tags || []).join(", ");
-      renderJournalHabitChecklist(entry);
       renderJournalFinanceSection(entry);
-    }
-
-    function renderJournalHabitChecklist(entry) {
-      const root = document.getElementById("journalHabitChecklist");
-      if (!root) return;
-      const habits = journalHabits();
-      if (!habits.length) {
-        root.innerHTML = `<div class="empty field-12">Add habits in Habit Manager to show them here.</div>`;
-        return;
-      }
-      root.innerHTML = habits.map((habit) => `
-        <label class="field-3">
-          <span>${escapeHtml(habit.label)}</span>
-          <select name="habit_${escapeHtml(habit.key)}">
-            <option value="false">No</option>
-            <option value="true">Yes</option>
-          </select>
-        </label>
-      `).join("");
-      habits.forEach((habit) => {
-        const select = root.querySelector(`[name="habit_${habit.key}"]`);
-        if (select) select.value = entry.habits?.[habit.key] ? "true" : "false";
-      });
     }
 
     function renderJournalFinanceSection(entry) {
@@ -5650,14 +5576,19 @@
       const data = form ? Object.fromEntries(new FormData(form).entries()) : {};
       const search = String(data.search || "").trim().toLowerCase();
       const tag = String(data.tag || "").trim().toLowerCase();
+      const location = String(data.location || "").trim().toLowerCase();
+      const phase = String(data.phase || "").trim();
       const moodMin = Number(data.moodMin || 0);
+      const archivedMode = data.archived || "false";
       const entries = (state.journals || [])
-        .filter((entry) => !entry.archived)
+        .filter((entry) => archivedMode === "all" ? true : archivedMode === "true" ? entry.archived : !entry.archived)
         .filter((entry) => !data.from || entry.date >= data.from)
         .filter((entry) => !data.to || entry.date <= data.to)
         .filter((entry) => !moodMin || Number(entry.mood || 0) >= moodMin)
         .filter((entry) => !tag || (entry.tags || []).some((item) => item.toLowerCase().includes(tag)))
-        .filter((entry) => !search || `${entry.title || ""} ${entry.body || ""} ${(entry.tags || []).join(" ")}`.toLowerCase().includes(search))
+        .filter((entry) => !location || `${entry.travel?.location || ""} ${entry.travel?.country || ""} ${entry.travel?.city || ""}`.toLowerCase().includes(location))
+        .filter((entry) => !phase || entry.travel?.phase === phase)
+        .filter((entry) => !search || searchableJournalText(entry).includes(search))
         .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
       renderList("journalList", entries, journalListItem);
     }
@@ -5665,37 +5596,42 @@
     function journalListItem(entry) {
       const node = document.createElement("div");
       node.className = "item compact";
-      const habit = journalHabitCompletion(entry);
-      node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn open-journal">Open</button><button type="button" class="ghost-btn archive-journal">Archive</button><button type="button" class="danger-btn delete-journal">Delete</button></div>`;
+      node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn open-journal">Open</button><button type="button" class="ghost-btn archive-journal"></button><button type="button" class="danger-btn delete-journal">Delete</button></div>`;
       node.querySelector(".item-title").textContent = entry.title || formatDate(entry.date);
       node.querySelector(".item-body").textContent = [
         formatDate(entry.date),
+        [entry.travel?.location, entry.travel?.city, entry.travel?.country].filter(Boolean).join(", "),
         entry.mood ? `Mood ${entry.mood}` : "",
         entry.energy ? `Energy ${entry.energy}` : "",
-        habit.total ? `${habit.done}/${habit.total} habits` : "",
         (entry.tags || []).join(", "),
         entry.body ? entry.body.slice(0, 100) : ""
       ].filter(Boolean).join(" - ");
       node.querySelector(".open-journal").addEventListener("click", () => openJournalEntry(entry));
-      node.querySelector(".archive-journal").addEventListener("click", () => { entry.archived = true; render(); });
+      const archiveButton = node.querySelector(".archive-journal");
+      archiveButton.textContent = entry.archived ? "Restore" : "Archive";
+      archiveButton.addEventListener("click", () => { entry.archived = !entry.archived; render(); });
       node.querySelector(".delete-journal").addEventListener("click", () => removeJournalEntry(entry.id));
       return node;
     }
 
     function openJournalEntry(entry) {
       state.settings.selectedJournalDate = entry.date || today();
+      document.getElementById("journalEditorPanel").hidden = false;
       render();
     }
 
     function renderReview() {
       const weekStats = currentWeekStats();
       document.getElementById("weeklyAutoStats").innerHTML = statsHtml([
+        ["Journal entries", String(weekStats.journalEntries)],
+        ["Average mood", weekStats.averageMood],
+        ["Average energy", weekStats.averageEnergy],
+        ["Average sleep", weekStats.averageSleep],
+        ["Notable tags", weekStats.tags || "No tags yet"],
         ["TEFL hours completed", String(weekStats.teflHours)],
         ["Money spent", money(weekStats.spent)],
         ["Content created", String(weekStats.contentCreated)],
-        ["Writing sessions", String(weekStats.writingSessions)],
-        ["Exercise sessions", String(weekStats.exerciseSessions)],
-        ["Social activities", String(weekStats.socialActivities)]
+        ["Writing sessions", String(weekStats.writingSessions)]
       ]);
       renderList("weeklyReviewList", state.weeklyReviews.slice().sort((a, b) => (b.week || "").localeCompare(a.week || "")), (entry) => simpleItem(entry, `${entry.week || "No week"} - Wins: ${entry.wins || ""} - Priorities: ${entry.priorities || ""}`, "weeklyReviews", editWeeklyReview));
     }
@@ -5987,23 +5923,6 @@
       render();
     }
 
-    function editHabitSetting(habit) {
-      const label = promptValue("Habit name", habit.label || "");
-      if (label === null) return;
-      const position = promptValue("Position", habit.order || "");
-      if (position === null) return;
-      const notes = promptValue("Notes", habit.notes || "");
-      if (notes === null) return;
-      const show = promptValue("Show in Journal? yes/no", habit.showInJournal === false ? "no" : "yes");
-      if (show === null) return;
-      habit.label = label || habit.label || "Habit";
-      habit.notes = notes || "";
-      habit.showInJournal = !/^(no|n|false|hidden)$/i.test(show);
-      moveOrderedItem(state.settings.habits, habit, position);
-      normaliseOrderedList(state.settings.habits);
-      render();
-    }
-
     function removePhase(phaseId) {
       const phase = (state.settings.phases || []).find((entry) => entry.id === phaseId);
       if (!confirm("Delete this phase? Linked route stops, pots and advanced budget periods will become unassigned.")) return;
@@ -6015,13 +5934,6 @@
         (state.planningWindows || []).forEach((windowItem) => { if (windowItem.phase === phaseName) windowItem.phase = ""; });
       }
       normaliseOrderedList(state.settings.phases);
-      render();
-    }
-
-    function removeHabitSetting(habitId) {
-      if (!confirm("Delete this habit from the active settings? Old daily log history will be kept.")) return;
-      state.settings.habits = (state.settings.habits || []).filter((habit) => habit.id !== habitId);
-      normaliseOrderedList(state.settings.habits);
       render();
     }
 
@@ -6886,42 +6798,6 @@
     });
 
     bindForm("taskForm", (data) => state.tasks.push({ id: id(), ...data, done: false }));
-    bindForm("checkinForm", (data) => {
-      const date = data.date || today();
-      const existing = state.checkins.find((item) => item.date === date);
-      const entry = {
-        id: existing?.id || id(),
-        date,
-        mood: Number(data.mood) || "",
-        energy: Number(data.energy) || "",
-        sleep: Number(data.sleep) || "",
-        exercise: bool(data.exercise),
-        walk: bool(data.walk),
-        leftHouse: bool(data.leftHouse),
-        social: bool(data.social),
-        tefl: bool(data.tefl),
-        writing: bool(data.writing),
-        content: bool(data.content),
-        reading: bool(data.reading),
-        travelPlanning: bool(data.travelPlanning),
-        budgetDiscipline: bool(data.budgetDiscipline),
-        earlyBedtime: bool(data.earlyBedtime)
-      };
-      state.checkins = state.checkins.filter((item) => item.date !== entry.date);
-      state.checkins.push(entry);
-      const journal = ensureJournalEntry(date);
-      journal.mood = journal.mood || entry.mood;
-      journal.energy = journal.energy || entry.energy;
-      journal.sleep = journal.sleep || entry.sleep;
-      journal.habits = journal.habits || {};
-      ["exercise", "walk", "leftHouse", "social", "tefl", "writing", "content", "reading", "travelPlanning", "budgetDiscipline", "earlyBedtime"].forEach((key) => {
-        if (journal.habits[key] === undefined) journal.habits[key] = Boolean(entry[key]);
-      });
-      journal.updatedAt = new Date().toISOString();
-    }, () => {
-      const status = document.getElementById("dailyLogStatus");
-      if (status) status.textContent = "Journal check-in saved";
-    });
     bindForm("routeForm", (data) => {
       const stop = { id: id(), ...data, order: state.route.length + 1 };
       state.route.push(stop);
@@ -7060,14 +6936,26 @@
         state.journals.push(entry);
       }
       const now = new Date().toISOString();
+      const ranged = {
+        mood: optionalRangeValue(data.mood, 1, 10),
+        energy: optionalRangeValue(data.energy, 1, 10),
+        stress: optionalRangeValue(data.stress, 1, 10),
+        motivation: optionalRangeValue(data.motivation, 1, 10)
+      };
+      const invalidField = Object.entries(ranged).find(([, value]) => value === null);
+      if (invalidField) {
+        const status = document.getElementById("journalSaveStatus");
+        if (status) status.textContent = `${invalidField[0]} must be between 1 and 10, or left blank.`;
+        return;
+      }
       entry.date = date;
       entry.type = "Daily journal";
       entry.title = data.title || "";
       entry.body = data.body || "";
-      entry.mood = Number(data.mood) || "";
-      entry.energy = Number(data.energy) || "";
-      entry.stress = Number(data.stress) || "";
-      entry.motivation = Number(data.motivation) || "";
+      entry.mood = ranged.mood;
+      entry.energy = ranged.energy;
+      entry.stress = ranged.stress;
+      entry.motivation = ranged.motivation;
       entry.sleep = Number(data.sleep) || "";
       entry.sleepQuality = data.sleepQuality || "";
       entry.physicalHealth = data.physicalHealth || "";
@@ -7077,13 +6965,20 @@
         biggestChallenge: data.biggestChallenge || "",
         learned: data.learned || "",
         gratitude: data.gratitude || "",
+        remember: data.remember || "",
+        lookingForward: data.lookingForward || "",
         tomorrowFocus: data.tomorrowFocus || ""
       };
       entry.travel = {
+        location: data.location || "",
         country: data.country || "",
         city: data.city || "",
+        phase: data.travelPhase || "",
+        routeStopId: data.routeStopId || "",
         accommodation: data.accommodation || "",
         travelDay: data.travelDay === "true",
+        importantEvent: data.importantEvent || "",
+        peopleMentioned: data.peopleMentioned || "",
         notes: data.travelNotes || ""
       };
       const existingTransactionIds = Array.isArray(entry.finance?.transactionIds) ? entry.finance.transactionIds : [];
@@ -7093,10 +6988,7 @@
         transactionIds: existingTransactionIds
       };
       entry.tags = normalizeTags(data.tags);
-      entry.habits = entry.habits || {};
-      journalHabits().forEach((habit) => {
-        entry.habits[habit.key] = data[`habit_${habit.key}`] === "true";
-      });
+      entry.legacyHabitData = entry.legacyHabitData || {};
       entry.createdAt = entry.createdAt || now;
       entry.updatedAt = now;
       entry.archived = false;
@@ -7104,17 +6996,24 @@
       dirtyForms.delete("journalForm");
       const status = document.getElementById("journalSaveStatus");
       if (status) status.textContent = "Journal saved";
+      document.getElementById("journalEditorPanel").hidden = true;
       render();
     });
     document.getElementById("writeTodayBtn").addEventListener("click", () => {
       state.settings.selectedJournalDate = today();
       ensureJournalEntry(today());
+      document.getElementById("journalEditorPanel").hidden = false;
       render();
     });
     document.getElementById("newJournalEntryBtn").addEventListener("click", () => {
       const entry = ensureJournalEntry(today());
       state.settings.selectedJournalDate = entry.date;
+      document.getElementById("journalEditorPanel").hidden = false;
       render();
+    });
+    document.getElementById("cancelJournalEditBtn").addEventListener("click", () => {
+      document.getElementById("journalEditorPanel").hidden = true;
+      dirtyForms.delete("journalForm");
     });
     document.getElementById("archiveJournalBtn").addEventListener("click", () => {
       const entry = journalEntryForDate(selectedJournalDate());
@@ -7318,18 +7217,6 @@
       state.settings.phases.push(phase);
       moveOrderedItem(state.settings.phases, phase, data.order);
     });
-    bindForm("habitForm", (data) => {
-      const baseKey = String(data.label || "habit").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "habit";
-      let key = baseKey;
-      let suffix = 2;
-      while ((state.settings.habits || []).some((habit) => habit.key === key)) {
-        key = `${baseKey}_${suffix}`;
-        suffix += 1;
-      }
-      const habit = { id: id(), key, label: data.label || "Habit", notes: data.notes || "", showInJournal: data.showInJournal !== "false", order: state.settings.habits.length + 1, archived: false };
-      state.settings.habits.push(habit);
-      moveOrderedItem(state.settings.habits, habit, data.order);
-    });
 
     [
       ["teflTargetInput", "teflTargetHours"],
@@ -7473,32 +7360,19 @@
       return values.reduce((sum, value) => sum + Number(value || 0), 0) / values.length;
     }
 
-    function habitStats() {
-      const recent = recentJournalEntries(7);
-      const habits = journalHabits();
-      const total = recent.length * habits.length;
-      const done = recent.reduce((sum, entry) => sum + habits.filter(({ key }) => Boolean(entry.habits?.[key])).length, 0);
-      return { total, done, rate: pct(done, total) };
+    function formatAverage(entries, key, suffix = "") {
+      const values = entries.map((entry) => Number(entry[key] || 0)).filter(Boolean);
+      return values.length ? `${average(values).toFixed(1)}${suffix}` : "No data yet";
     }
 
-    function getHabitScore() {
-      return habitStats();
-    }
-
-    function habitStatFor(key) {
-      const recent = recentJournalEntries(30);
-      const done = recent.filter((entry) => Boolean(entry.habits?.[key])).length;
-      return { total: recent.length, done, rate: pct(done, recent.length), streak: streakFor((entry) => Boolean(entry.habits?.[key]), state.journals || []) };
-    }
-
-    function journalHabitCompletion(entry) {
-      const habits = journalHabits();
-      const done = habits.filter(({ key }) => Boolean(entry.habits?.[key])).length;
-      return { total: habits.length, done, rate: pct(done, habits.length) };
+    function optionalRangeValue(value, min, max) {
+      if (value === "" || value === null || value === undefined) return "";
+      const number = Number(value);
+      return Number.isFinite(number) && number >= min && number <= max ? number : null;
     }
 
     function journalStreak() {
-      return streakFor((entry) => Boolean(entry.body || entry.title || entry.mood || entry.energy || Object.values(entry.habits || {}).some(Boolean)), state.journals || []);
+      return streakFor((entry) => Boolean(entry.body || entry.title || entry.mood || entry.energy), state.journals || []);
     }
 
     function tagCounts() {
@@ -7507,6 +7381,170 @@
         (entry.tags || []).forEach((tag) => { counts[tag] = (counts[tag] || 0) + 1; });
       });
       return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }
+
+    function searchableJournalText(entry) {
+      return [
+        entry.title,
+        entry.body,
+        ...(entry.tags || []),
+        entry.travel?.location,
+        entry.travel?.country,
+        entry.travel?.city,
+        entry.travel?.phase,
+        entry.reflections?.bestMoment,
+        entry.reflections?.biggestChallenge,
+        entry.reflections?.learned,
+        entry.reflections?.gratitude,
+        entry.reflections?.remember,
+        entry.reflections?.lookingForward,
+        entry.finance?.spendingNote,
+        entry.finance?.financialThoughts
+      ].filter(Boolean).join(" ").toLowerCase();
+    }
+
+    function insightConfidence(count) {
+      if (count >= 12) return "Strong pattern";
+      if (count >= 8) return "Repeated pattern";
+      return "Early signal";
+    }
+
+    function insightDateRange(entries) {
+      const dates = entries.map((entry) => entry.date).filter(Boolean).sort();
+      return dates.length ? `${formatDate(dates[0])} to ${formatDate(dates[dates.length - 1])}` : "No date range";
+    }
+
+    function journalInsights() {
+      const entries = (state.journals || []).filter((entry) => !entry.archived && (entry.body || entry.title || entry.mood || entry.energy || entry.sleep));
+      const insights = [];
+      if (entries.length < 5) return insights;
+      const sorted = entries.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      const pairedSleepEnergy = sorted.filter((entry) => Number(entry.sleep) && Number(entry.energy));
+      const lowSleepLowEnergy = pairedSleepEnergy.filter((entry) => Number(entry.sleep) < 6.5 && Number(entry.energy) <= 5);
+      if (pairedSleepEnergy.length >= 5 && lowSleepLowEnergy.length >= 3) {
+        insights.push({
+          id: "sleep-energy-low",
+          group: "Possible difficulties",
+          title: "Possible sleep and energy pattern",
+          description: `Across ${pairedSleepEnergy.length} entries, lower sleep often appeared alongside lower energy.`,
+          confidence: insightConfidence(pairedSleepEnergy.length),
+          count: pairedSleepEnergy.length,
+          range: insightDateRange(pairedSleepEnergy),
+          fields: "Sleep hours, energy"
+        });
+      }
+      const moodEntries = sorted.filter((entry) => Number(entry.mood));
+      if (moodEntries.length >= 8) {
+        const first = moodEntries.slice(0, Math.ceil(moodEntries.length / 2));
+        const second = moodEntries.slice(Math.floor(moodEntries.length / 2));
+        const diff = average(second.map((entry) => Number(entry.mood))) - average(first.map((entry) => Number(entry.mood)));
+        if (Math.abs(diff) >= 1) {
+          insights.push({
+            id: `mood-trend-${diff > 0 ? "up" : "down"}`,
+            group: "Changes over time",
+            title: diff > 0 ? "Recent mood may be improving" : "Recent mood may be lower",
+            description: `Recent mood entries are about ${Math.abs(diff).toFixed(1)} points ${diff > 0 ? "higher" : "lower"} than earlier entries in this range.`,
+            confidence: insightConfidence(moodEntries.length),
+            count: moodEntries.length,
+            range: insightDateRange(moodEntries),
+            fields: "Mood"
+          });
+        }
+      }
+      const travelStress = sorted.filter((entry) => entry.travel?.travelDay && Number(entry.stress));
+      const nonTravelStress = sorted.filter((entry) => !entry.travel?.travelDay && Number(entry.stress));
+      if (travelStress.length >= 3 && travelStress.length + nonTravelStress.length >= 5 && nonTravelStress.length >= 2) {
+        const diff = average(travelStress.map((entry) => Number(entry.stress))) - average(nonTravelStress.map((entry) => Number(entry.stress)));
+        if (diff >= 1) {
+          insights.push({
+            id: "travel-stress",
+            group: "Possible difficulties",
+            title: "Travel days may feel more stressful",
+            description: `Travel-day entries often showed higher stress than non-travel days.`,
+            confidence: insightConfidence(travelStress.length + nonTravelStress.length),
+            count: travelStress.length + nonTravelStress.length,
+            range: insightDateRange([...travelStress, ...nonTravelStress]),
+            fields: "Travel day, stress"
+          });
+        }
+      }
+      tagCounts().forEach(([tag, count]) => {
+        if (count < 3) return;
+        const tagged = sorted.filter((entry) => (entry.tags || []).some((item) => item.toLowerCase() === tag.toLowerCase()));
+        const motivationValues = tagged.map((entry) => Number(entry.motivation || 0)).filter(Boolean);
+        if (tagged.length >= 5 && motivationValues.length >= 3 && average(motivationValues) >= 7) {
+          insights.push({
+            id: `tag-motivation-${tag.toLowerCase()}`,
+            group: "Positive patterns",
+            title: `Entries tagged ${tag} often include higher motivation`,
+            description: `Across ${tagged.length} entries tagged ${tag}, motivation was often higher when it was recorded.`,
+            confidence: insightConfidence(tagged.length),
+            count: tagged.length,
+            range: insightDateRange(tagged),
+            fields: "Tags, motivation"
+          });
+        }
+      });
+      const last7 = recentJournalEntries(7).length;
+      const previous7 = sorted.filter((entry) => daysAgo(entry.date) >= 7 && daysAgo(entry.date) < 14).length;
+      if (last7 + previous7 >= 5 && previous7 >= 3 && last7 < previous7 / 2) {
+        insights.push({
+          id: "journal-frequency-down",
+          group: "Journal activity",
+          title: "Journal frequency has changed recently",
+          description: `There were fewer entries in the last 7 days than the previous 7-day period.`,
+          confidence: "Early signal",
+          count: last7 + previous7,
+          range: "Last 14 days",
+          fields: "Entry dates"
+        });
+      }
+      return insights.filter((insight) => !isInsightDismissed(insight));
+    }
+
+    function isInsightDismissed(insight) {
+      return (state.settings.dismissedInsights || []).some((item) => item.id === insight.id || (item.hideSimilar && item.type === insight.group));
+    }
+
+    function renderJournalInsights() {
+      const root = document.getElementById("journalInsights");
+      if (!root) return;
+      const insights = journalInsights();
+      root.innerHTML = "";
+      if (!insights.length) {
+        root.innerHTML = `<div class="empty"><strong>No patterns yet</strong><span>Patterns need at least 5 relevant journal entries before they appear.</span></div>`;
+      } else {
+        insights.forEach((insight) => root.appendChild(insightCard(insight, false)));
+      }
+      const dismissedRoot = document.getElementById("dismissedInsights");
+      if (!dismissedRoot) return;
+      const dismissed = state.settings.dismissedInsights || [];
+      dismissedRoot.innerHTML = dismissed.length ? "" : `<div class="empty"><strong>No dismissed insights</strong><span>Dismissed observations will appear here.</span></div>`;
+      dismissed.forEach((insight) => dismissedRoot.appendChild(insightCard(insight, true)));
+    }
+
+    function insightCard(insight, dismissed) {
+      const node = document.createElement("div");
+      node.className = "item compact";
+      node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn insight-action"></button></div>`;
+      node.querySelector(".item-title").textContent = insight.title || "Journal insight";
+      node.querySelector(".item-body").textContent = [
+        insight.description,
+        insight.confidence,
+        insight.range,
+        `${insight.count || insight.entry_count || 0} relevant entries`,
+        insight.fields || insight.fields_used || "",
+        "Observation only, not a medical conclusion."
+      ].filter(Boolean).join(" - ");
+      const button = node.querySelector(".insight-action");
+      button.textContent = dismissed ? "Restore" : "Dismiss";
+      button.addEventListener("click", () => {
+        state.settings.dismissedInsights = state.settings.dismissedInsights || [];
+        if (dismissed) state.settings.dismissedInsights = state.settings.dismissedInsights.filter((item) => item.id !== insight.id);
+        else state.settings.dismissedInsights.push({ ...insight, type: insight.group, dismissedAt: new Date().toISOString(), hideSimilar: false });
+        render();
+      });
+      return node;
     }
 
     function streakFor(predicate, entries) {
@@ -7526,13 +7564,19 @@
     function currentWeekStats() {
       const weekMoney = state.money.filter((entry) => daysAgo(entry.date) <= 7);
       const weekCheckins = recentJournalEntries(7);
+      const moodValues = weekCheckins.map((entry) => Number(entry.mood || 0)).filter(Boolean);
+      const energyValues = weekCheckins.map((entry) => Number(entry.energy || 0)).filter(Boolean);
+      const sleepValues = weekCheckins.map((entry) => Number(entry.sleep || 0)).filter(Boolean);
       return {
+        journalEntries: weekCheckins.length,
+        averageMood: moodValues.length ? `${average(moodValues).toFixed(1)}/10` : "No mood data yet",
+        averageEnergy: energyValues.length ? `${average(energyValues).toFixed(1)}/10` : "No energy data yet",
+        averageSleep: sleepValues.length ? `${average(sleepValues).toFixed(1)} hours` : "No sleep data yet",
+        tags: tagCounts().slice(0, 4).map(([tag, count]) => `${tag} (${count})`).join(", "),
         teflHours: state.studyLog.filter((entry) => daysAgo(entry.date) <= 7).reduce((sum, entry) => sum + Number(entry.hours || 0), 0),
         spent: weekMoney.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0),
         contentCreated: state.content.filter((entry) => daysAgo(entry.date) <= 7 && entry.status === "Published").length,
-        writingSessions: state.writingSessions.filter((entry) => daysAgo(entry.date) <= 7).length,
-        exerciseSessions: weekCheckins.filter((entry) => entry.habits?.exercise).length,
-        socialActivities: weekCheckins.filter((entry) => entry.habits?.social).length
+        writingSessions: state.writingSessions.filter((entry) => daysAgo(entry.date) <= 7).length
       };
     }
 

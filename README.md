@@ -26,13 +26,16 @@ The app is organised so normal editing happens close to the section that uses th
 - Travel contains route stops and the editable phase manager.
 - Budget contains a simplified money dashboard: overview, money pots, optional advanced budget periods, transactions, categories/subcategories, analytics and milestones.
 - Dates & Counters contains editable counters and key travel dates.
-- Journal contains the daily record for writing, mood, energy, sleep, habits, reflections and travel context.
-- Habits contains the habit manager and history summaries.
+- Journal contains diary entries, optional mood/energy/sleep context, reflections, travel context, finance reflections and Patterns and Insights.
 - Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
 
 Budget keeps the surface model simple: one editable root pot for total money, user-defined child pots, current budget, budget period and transactions. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Pot names are user-defined labels, and add/remove/transfer/spending actions are saved as transaction records so balances remain auditable. Older finance values are preserved and normalized into compatible records for existing users.
 
 Journal and Finance are connected without duplicating spending records. Finance remains the source of truth for transactions, balances, pots, Safe Spend and analytics. Journal entries show same-day Finance transactions, can link to transaction IDs, and ask before creating a new Finance transaction from a journal spending item.
+
+Habits have been removed from the active app. Older habit settings and per-entry habit values are retained as legacy data during migration so historical backups are not silently destroyed, but they are no longer displayed, edited or used in calculations.
+
+Patterns and Insights runs locally over saved Journal entries. It uses simple deterministic checks such as average comparisons, repeated tags, travel-day comparisons and recent trends. Insights only appear when there are enough relevant entries and use neutral wording such as possible pattern or repeated association.
 
 Finance calculation model: the root pot is the only real total. Every other pot stores its current total inside its parent. The app derives `available in this pot` as `pot total - direct child pot totals`, so child pots never create extra money. Transfers reallocate money between branches without changing the root total. Add/remove money can only happen at the root, and spending from any pot reduces that pot, its ancestors and the root exactly once. The legacy `walletId` and archived allocation fields remain internally only so older transactions, imports and Supabase-synced saves stay compatible.
 
@@ -46,7 +49,7 @@ Reset App Data uses a two-step confirmation, requires typing `RESET`, and prepar
 
 Departure-dependent calculations use one shared departure-date helper. If no departure date exists, pace widgets show `Not set` rather than using a fallback date.
 
-Phases and habits are editable settings. Route, budget and journal widgets read from those shared settings so changes update across the app.
+Phases are editable settings. Route, budget, dates and journal widgets read from shared phase settings so changes update across the app.
 
 ## App Updates
 
@@ -112,20 +115,19 @@ Then open the served file in the browser.
 
 ## Main Sections
 
-- `Command` - daily briefing, countdowns, quick journal check-in, priorities and readiness scores.
+- `Command` - daily briefing, countdowns, priorities and readiness scores.
 - `Travel` - route planner, phase manager, documents, packing and timeline.
 - `Budget` - money overview, pots, optional advanced budget periods, transactions, categories, analytics and milestones.
 - `TEFL` - target hours, completed hours, modules, study log and pace tracking.
 - `Content` - content ideas and pipeline tracking.
 - `Writing` - writing ideas, notes and sessions.
-- `Life` - journal-based mood, energy and habit trends.
-- `Habits` - habit management and journal-based habit history.
-- `Journal` - daily journal hub for writing, check-ins, habits, reflections, travel context, Finance-linked daily spending and tags.
+- `Life` - journal-based mood, energy, sleep, stress and recent pattern summaries.
+- `Journal` - diary-first journal hub with optional check-in data, reflections, travel context, Finance-linked daily spending, tags and Patterns and Insights.
 - `Weekly Review` - weekly summaries and review notes.
 - `Dates & Counters` - editable countdowns, count-up counters and key travel dates, with dashboard pinning.
 - `Settings` - account/sync status, backup/import/export, preferences, labels, About/version details and the protected reset flow.
 
-Daily mood, energy and habit completion now live inside Journal entries. Settings is for app-level controls, not everyday logging.
+Daily mood, energy, sleep and reflection context can be saved optionally inside Journal entries. Settings is for app-level controls, not everyday logging.
 
 ## Backup And Restore
 
