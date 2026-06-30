@@ -996,6 +996,54 @@
       gap: 14px;
     }
 
+    .daily-briefing-card,
+    .weather-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .briefing-topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .briefing-topline h3 {
+      margin: 0;
+    }
+
+    .briefing-meta,
+    .briefing-actions,
+    .weather-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .briefing-list,
+    .suggestion-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .briefing-item {
+      display: grid;
+      gap: 3px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .briefing-item:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
     .pie-chart {
       width: min(180px, 58vw);
       aspect-ratio: 1;
@@ -1384,6 +1432,69 @@
     </div>
   </section>
 
+  <section id="transactionEditModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <h2>Edit Transaction</h2>
+      <p class="hint">Corrections update the existing transaction. If the amount or pot changes, the old balance movement is reversed before the corrected one is applied.</p>
+      <form id="transactionEditForm" class="form-grid">
+        <input name="id" type="hidden">
+        <label class="field-3">Type<select name="type"><option value="expense">Expense</option><option value="income">Income</option></select></label>
+        <label class="field-3">Date<input name="date" type="date" required></label>
+        <label class="field-3">Amount<input name="amount" type="number" min="0.01" step="0.01" required></label>
+        <label class="field-3">Source pot<select name="budgetPoolId" data-money-pot-select></select></label>
+        <label class="field-4">Category<select name="category" data-finance-category-select></select></label>
+        <label class="field-4">Subcategory<select name="subcategory" data-finance-subcategory-select></select></label>
+        <label class="field-4">Phase<select name="phase" data-phase-select></select></label>
+        <label class="field-12">Description<input name="description" placeholder="Train ticket, invoice, groceries"></label>
+        <label class="field-12">Note<input name="note" placeholder="Optional detail"></label>
+        <div id="transactionEditStatus" class="field-12 hint" aria-live="polite"></div>
+        <div class="field-12 modal-actions">
+          <button id="cancelTransactionEditBtn" class="ghost-btn" type="button">Cancel</button>
+          <button class="primary-btn" type="submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="dateCounterEditModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <h2>Edit Date</h2>
+      <form id="dateCounterEditForm" class="form-grid">
+        <input name="id" type="hidden">
+        <label class="field-4">Title<input name="title" required></label>
+        <label class="field-3">Date<input name="date" type="date" required></label>
+        <label class="field-3">Type<select name="type"><option value="countdown">Countdown</option><option value="count-up">Count-up</option></select></label>
+        <label class="field-3">Category<input name="category"></label>
+        <label class="field-3"><span>Pin to dashboard</span><select name="pinned"><option value="false">No</option><option value="true">Yes</option></select></label>
+        <label class="field-3"><span>Status</span><select name="archived"><option value="false">Active</option><option value="true">Archived</option></select></label>
+        <label class="field-12">Note<input name="note"></label>
+        <div class="field-12 modal-actions">
+          <button id="cancelDateCounterEditBtn" class="ghost-btn" type="button">Cancel</button>
+          <button class="primary-btn" type="submit">Save Date</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="travelDateEditModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <h2>Edit Travel Date</h2>
+      <form id="travelDateEditForm" class="form-grid">
+        <input name="id" type="hidden">
+        <label class="field-4">Title<input name="title" required></label>
+        <label class="field-3">Start date<input name="date" type="date" required></label>
+        <label class="field-3">End date<input name="endDate" type="date"></label>
+        <label class="field-4">Location / phase<input name="location"></label>
+        <label class="field-3"><span>Status</span><select name="archived"><option value="false">Active</option><option value="true">Archived</option></select></label>
+        <label class="field-12">Notes<input name="notes"></label>
+        <div class="field-12 modal-actions">
+          <button id="cancelTravelDateEditBtn" class="ghost-btn" type="button">Cancel</button>
+          <button class="primary-btn" type="submit">Save Travel Date</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
   <section id="potEditModal" class="modal-screen" hidden aria-live="polite" aria-modal="true" role="dialog">
     <div class="modal-card">
       <h2>Edit Money Pot</h2>
@@ -1575,6 +1686,23 @@
 
     <section id="travel" class="view">
       <div class="grid">
+        <div class="panel span-12">
+          <div class="section-heading-row">
+            <div>
+              <h2>Weather & Suggestions</h2>
+              <p class="hint">Set a location manually or use your current location. Weather is cached and reused by the Dashboard briefing.</p>
+            </div>
+            <button id="refreshWeatherBtn" class="secondary-btn" type="button">Refresh Weather</button>
+          </div>
+          <form id="manualLocationForm" class="form-grid">
+            <label class="field-5">Location<input name="location" placeholder="Town, city or locality"></label>
+            <button class="field-2 primary-btn" type="submit">Set Location</button>
+            <button id="useCurrentLocationBtn" class="field-3 secondary-btn" type="button">Use Current Location</button>
+          </form>
+          <div id="weatherStatus" class="hint" aria-live="polite"></div>
+          <div id="weatherSummary" class="weather-card"></div>
+          <div id="weatherSuggestions" class="suggestion-list"></div>
+        </div>
         <div class="panel span-12">
           <h2>Editable Route Planner</h2>
           <form id="routeForm" class="form-grid">
@@ -2115,13 +2243,36 @@
     }
 
     function parseDate(dateString) {
-      return new Date((dateString || today()) + "T00:00:00");
+      return new Date((normalizeDateValue(dateString) || today()) + "T00:00:00");
     }
 
     function dayDiff(dateString, fromDate = new Date()) {
       const target = parseDate(dateString);
       const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
       return Math.ceil((target - start) / (1000 * 60 * 60 * 24));
+    }
+
+    function normalizeDateValue(value) {
+      if (!value) return "";
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        const year = value.getFullYear();
+        const month = String(value.getMonth() + 1).padStart(2, "0");
+        const day = String(value.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+      const text = String(value).trim();
+      const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+      const slash = text.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})$/);
+      if (slash) return `${slash[3]}-${slash[2].padStart(2, "0")}-${slash[1].padStart(2, "0")}`;
+      const parsed = new Date(text);
+      if (!Number.isNaN(parsed.getTime())) {
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, "0");
+        const day = String(parsed.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+      return "";
     }
 
     function formatDate(dateString) {
@@ -2186,6 +2337,10 @@
       checkins: [],
       journals: [],
       weeklyReviews: [],
+      weather_cache: { updatedAt: "", expiresAt: "", location: null, current: null, daily: [] },
+      location_settings: { mode: "manual", name: "", latitude: null, longitude: null, timezone: "" },
+      suggestions_cache: { updatedAt: "", items: [] },
+      daily_briefing_cache: { generatedAt: "", signature: "", daypart: "", items: [] },
       notes: { tefl: "", writing: "", destination: "", admin: "", general: "" }
     };
 
@@ -2358,6 +2513,13 @@
         },
         notes: { ...next.notes, ...(data.notes || {}) }
       };
+      merged.weather_cache = { ...next.weather_cache, ...(data.weather_cache || {}) };
+      merged.weather_cache.daily = Array.isArray(data.weather_cache?.daily) ? data.weather_cache.daily : [];
+      merged.location_settings = { ...next.location_settings, ...(data.location_settings || {}) };
+      merged.suggestions_cache = { ...next.suggestions_cache, ...(data.suggestions_cache || {}) };
+      merged.suggestions_cache.items = Array.isArray(data.suggestions_cache?.items) ? data.suggestions_cache.items : [];
+      merged.daily_briefing_cache = { ...next.daily_briefing_cache, ...(data.daily_briefing_cache || {}) };
+      merged.daily_briefing_cache.items = Array.isArray(data.daily_briefing_cache?.items) ? data.daily_briefing_cache.items : [];
       const hasExistingUserData = Boolean(
         data.meta?.setupComplete ||
         (data.tasks && data.tasks.length) ||
@@ -3563,6 +3725,100 @@
       return applyMoneyEntryToBalances(entry, -1);
     }
 
+    function financeBalanceSnapshot() {
+      return {
+        wallets: JSON.parse(JSON.stringify(state.wallets || [])),
+        allocations: JSON.parse(JSON.stringify(state.allocations || [])),
+        budgetPools: JSON.parse(JSON.stringify(state.budgetPools || [])),
+        money: JSON.parse(JSON.stringify(state.money || []))
+      };
+    }
+
+    function restoreFinanceBalanceSnapshot(snapshot) {
+      state.wallets = JSON.parse(JSON.stringify(snapshot.wallets || []));
+      state.allocations = JSON.parse(JSON.stringify(snapshot.allocations || []));
+      state.budgetPools = JSON.parse(JSON.stringify(snapshot.budgetPools || []));
+      state.money = JSON.parse(JSON.stringify(snapshot.money || []));
+    }
+
+    function ensureSelectOption(select, value, label = value) {
+      if (!select || !value) return;
+      if (![...select.options].some((option) => option.value === value)) {
+        select.appendChild(new Option(label, value));
+      }
+    }
+
+    function transactionSourceRefFromFormValue(value) {
+      return value === "root" || value === "__root__" || value === "" ? rootParentRef() : potRef(value);
+    }
+
+    function transactionSourceValue(entry) {
+      return selectValueForMoneyRef(sourceRefForMoneyEntry(entry));
+    }
+
+    function transactionEditNeedsBalanceChange(original, next) {
+      return original.type !== next.type
+        || Math.abs((Number(original.amount) || 0) - (Number(next.amount) || 0)) > 0.009
+        || sourceRefForMoneyEntry(original) !== sourceRefForMoneyEntry(next);
+    }
+
+    function applyTransactionEdit(transactionId, nextValues) {
+      const entry = (state.money || []).find((item) => item.id === transactionId);
+      if (!entry) return { ok: false, message: "Transaction not found." };
+      if (entry.kind === "transfer") return { ok: false, message: "Transfers are audit records. Delete and recreate the transfer if it was entered incorrectly." };
+      const amount = Number(nextValues.amount);
+      if (!(amount > 0)) return { ok: false, message: "Amount must be greater than zero." };
+      const type = nextValues.type === "income" ? "income" : nextValues.type === "expense" ? "expense" : "";
+      if (!type) return { ok: false, message: "Choose a valid transaction type." };
+      const nextRef = transactionSourceRefFromFormValue(nextValues.budgetPoolId);
+      if (!moneyNodeExists(nextRef)) return { ok: false, message: "Choose an existing active source pot." };
+
+      const original = { ...entry };
+      const nextEntry = {
+        ...entry,
+        type,
+        date: nextValues.date || entry.date || today(),
+        amount,
+        description: nextValues.description || "",
+        category: nextValues.category || "",
+        subcategory: nextValues.subcategory || "",
+        phase: nextValues.phase || "",
+        note: nextValues.note || "",
+        walletId: rootPot().id,
+        potId: nextRef.startsWith?.("pot:") ? nextRef.slice(4) : "",
+        budgetPoolId: nextRef.startsWith?.("pot:") ? nextRef.slice(4) : "",
+        allocationId: nextRef.startsWith?.("pot:")
+          ? ((state.budgetPools || []).find((pool) => pool.id === nextRef.slice(4))?.allocationId || "")
+          : "",
+        balanceApplied: true,
+        edited: true,
+        editedAt: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (!transactionEditNeedsBalanceChange(original, nextEntry)) {
+        Object.assign(entry, nextEntry);
+        return { ok: true, changedBalances: false };
+      }
+
+      const snapshot = financeBalanceSnapshot();
+      const workingEntry = (state.money || []).find((item) => item.id === transactionId);
+      if (!workingEntry) {
+        restoreFinanceBalanceSnapshot(snapshot);
+        return { ok: false, message: "Transaction not found." };
+      }
+      if (workingEntry.balanceApplied && !reverseMoneyEntry(workingEntry)) {
+        restoreFinanceBalanceSnapshot(snapshot);
+        return { ok: false, message: "The original transaction could not be reversed safely, so no changes were saved." };
+      }
+      Object.assign(workingEntry, nextEntry);
+      if (!applyMoneyEntryToBalances(workingEntry, 1)) {
+        restoreFinanceBalanceSnapshot(snapshot);
+        return { ok: false, message: `This edit would make ${labelForMoneyRef(nextRef)} negative. Transfer money into that pot first.` };
+      }
+      return { ok: true, changedBalances: true };
+    }
+
     function createPotTransaction(poolId, type, amount, note = "", kind = "adjustment") {
       return createMoneyRecord({ ref: potRef(poolId), type, amount, note, kind });
     }
@@ -3612,11 +3868,22 @@
       return transferBetweenRefs(potRef(fromPoolId), potRef(toPoolId), amount, note);
     }
 
-    function addMoneyToRoot(amount, note = "", date = today()) {
+    function addMoneyToRoot(amount, note = "", date = today(), data = {}) {
       const value = Number(amount) || 0;
       if (value <= 0) return false;
       adjustNodeTotal(rootParentRef(), value);
-      createMoneyRecord({ ref: rootParentRef(), type: "income", amount: value, note, date, kind: "root-add", description: "Added money" });
+      createMoneyRecord({
+        ref: rootParentRef(),
+        type: "income",
+        amount: value,
+        note,
+        date,
+        kind: data.kind || "root-add",
+        description: data.description || "Added money",
+        category: data.category || "",
+        subcategory: data.subcategory || "",
+        phase: data.phase || ""
+      });
       return true;
     }
 
@@ -4460,6 +4727,337 @@
       return [...dateItems, ...docs, ...tasks].sort((a, b) => a.days - b.days);
     }
 
+    function getBriefingDaypart(date = new Date()) {
+      const hour = date.getHours();
+      if (hour >= 5 && hour < 12) return { key: "morning", greeting: "Good morning" };
+      if (hour >= 12 && hour < 18) return { key: "afternoon", greeting: "Good afternoon" };
+      return { key: "evening", greeting: "Good evening" };
+    }
+
+    function weatherCodeLabel(code) {
+      const value = Number(code);
+      if (value === 0) return "Clear";
+      if ([1, 2].includes(value)) return "Partly cloudy";
+      if (value === 3) return "Cloudy";
+      if ([45, 48].includes(value)) return "Fog";
+      if ([51, 53, 55, 56, 57].includes(value)) return "Drizzle";
+      if ([61, 63, 65, 66, 67, 80, 81, 82].includes(value)) return "Rain";
+      if ([71, 73, 75, 77, 85, 86].includes(value)) return "Snow";
+      if ([95, 96, 99].includes(value)) return "Thunderstorm";
+      return "Weather";
+    }
+
+    function weatherCacheValid() {
+      return Boolean(state.weather_cache?.current && state.weather_cache?.expiresAt && new Date(state.weather_cache.expiresAt) > new Date());
+    }
+
+    function getBriefingWeatherSummary() {
+      const cache = state.weather_cache || {};
+      const location = readableLocationLabel(cache.location || state.location_settings);
+      if (!cache.current) {
+        return {
+          label: location ? location : "Location not set",
+          detail: location ? "Weather unavailable" : "Set a location in Travel",
+          suggestion: location ? "Weather can be refreshed from Travel." : "Add a manual location to unlock weather suggestions."
+        };
+      }
+      const summary = `${weatherCodeLabel(cache.current.weather_code)} · ${Math.round(Number(cache.current.temperature_2m) || 0)}°C`;
+      const wind = Number(cache.current.wind_speed_10m || 0);
+      const rain = Number(cache.current.precipitation || 0);
+      let suggestion = "Weather looks usable for flexible plans.";
+      if (/rain|drizzle|thunderstorm/i.test(summary) || rain > 0) suggestion = "Consider an indoor option or travel admin if rain continues.";
+      else if (wind >= 30) suggestion = "Wind is up, so choose sheltered or low-effort plans.";
+      else if (Number(cache.current.temperature_2m) >= 20) suggestion = "Dry, warmer weather may suit an outdoor plan.";
+      return { label: location || "Weather", detail: summary, suggestion };
+    }
+
+    function readableLocationLabel(location) {
+      if (!location) return "";
+      const name = String(location.name || "").trim();
+      if (name && !/^current location$/i.test(name)) return name;
+      const lat = Number(location.latitude);
+      const lon = Number(location.longitude);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) return `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+      return name;
+    }
+
+    function getBriefingDateItems() {
+      const all = [
+        ...(state.settings.dateItems || []).filter((entry) => !entry.archived && entry.date).map((entry) => ({ ...entry, source: "dates" })),
+        ...(state.settings.travelDates || []).filter((entry) => !entry.archived && entry.date).map((entry) => ({ ...entry, source: "travelDates", type: "countdown" }))
+      ]
+        .map((entry) => ({ ...entry, normalizedDate: normalizeDateValue(entry.date) }))
+        .filter((entry) => entry.normalizedDate)
+        .map((entry) => ({ ...entry, days: dayDiff(entry.normalizedDate) }));
+      const overdue = all.filter((entry) => (entry.type || "countdown") !== "count-up" && entry.days < 0).sort((a, b) => a.days - b.days);
+      if (overdue.length) return [{ level: "Overdue", title: overdue.length === 1 ? `${overdue[0].title} is overdue` : `${overdue.length} dates are overdue`, view: "dates" }];
+      const urgent = all
+        .filter((entry) => (entry.type || "countdown") !== "count-up" && entry.days >= 0)
+        .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || a.days - b.days);
+      const next = urgent[0];
+      if (!next) return [];
+      const when = next.days === 0 ? "today" : next.days === 1 ? "tomorrow" : `in ${next.days} days`;
+      return [{ level: next.days <= 7 ? "Important" : "Information", title: `${next.title || "Date"} ${when}`, detail: formatDate(next.normalizedDate), view: "dates" }];
+    }
+
+    function getCurrentRouteContext() {
+      const now = parseDate(today());
+      const stops = getRouteStops();
+      const current = stops.filter((stop) => stop.targetArrival && parseDate(stop.targetArrival) <= now).sort((a, b) => parseDate(b.targetArrival) - parseDate(a.targetArrival))[0] || null;
+      const nextStop = stops.filter((stop) => !stop.targetArrival || parseDate(stop.targetArrival) >= now).sort((a, b) => (a.targetArrival || "9999").localeCompare(b.targetArrival || "9999"))[0] || null;
+      return { current, nextStop };
+    }
+
+    function getBriefingTravelItems() {
+      const { current, nextStop } = getCurrentRouteContext();
+      const items = [];
+      if (current) items.push({ level: "Information", title: `Current location: ${[current.place, current.country].filter(Boolean).join(", ")}`, detail: current.phase || currentPhase(), view: "travel" });
+      else items.push({ level: "Information", title: `Current phase: ${currentPhase()}`, detail: "Route location not set", view: "travel" });
+      if (nextStop?.targetArrival) {
+        const days = dayDiff(nextStop.targetArrival);
+        if (days >= 0 && days <= 30) items.push({ level: days <= 1 ? "Important" : "Worth reviewing", title: `${days === 0 ? "Travel day today" : `Next destination in ${days} days`}`, detail: [nextStop.place, nextStop.country].filter(Boolean).join(", "), view: "travel" });
+      }
+      return items.slice(0, 2);
+    }
+
+    function getBriefingFinanceItems() {
+      try {
+        const pace = getBudgetPace();
+        const todaySpent = (state.money || []).filter((entry) => isSpendingEntry(entry) && entry.date === today()).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+        if (!pace.pots?.length) return [{ level: "Worth reviewing", title: "No current spending pot selected", detail: "Budget pace will appear after you choose one.", view: "budget" }];
+        const safe = pace.safeDaily === null ? "daily allowance not set" : `${money(pace.safeDaily)} safe daily spend`;
+        const detail = todaySpent ? `${money(todaySpent)} spent today · ${safe}` : safe;
+        return [{ level: pace.warning === "Within current pace" ? "Information" : "Worth reviewing", title: `${getBudgetPaceSource()}: ${money(pace.remaining)} available`, detail, view: "budget" }];
+      } catch (error) {
+        console.error("Daily briefing finance unavailable", error);
+        return [{ level: "Worth reviewing", title: "Budget summary unavailable", detail: "Open Budget to review current figures.", view: "budget" }];
+      }
+    }
+
+    function getBriefingJournalItems() {
+      const entry = journalEntryForDate(today());
+      if (!entry || !(entry.body || entry.title)) return [{ level: "Information", title: "No journal entry yet today", detail: "A short note is enough.", view: "journal" }];
+      const energy = Number(entry.energy || 0);
+      if (energy && energy <= 4) return [{ level: "Information", title: "Journal energy looks low today", detail: "A lower-effort focus may suit.", view: "journal" }];
+      return [];
+    }
+
+    function getBriefingTeflItems() {
+      if (!state.settings.teflTargetHours) return [];
+      const t = totals();
+      const pace = teflPace();
+      if (pace.status === "Behind") return [{ level: "Worth reviewing", title: "TEFL pace needs attention", detail: `${t.teflHours} hours complete · ${pace.remainingHours} remaining`, view: "tefl" }];
+      return [{ level: "Information", title: `TEFL: ${t.teflHours} hours complete`, detail: `${pace.remainingHours} remaining`, view: "tefl" }];
+    }
+
+    function getBriefingSuggestedFocus(items, weather) {
+      const travelToday = items.find((item) => /Travel day today/i.test(item.title));
+      if (travelToday) return "Focus: Confirm transport, accommodation and documents.";
+      const urgent = items.find((item) => item.level === "Overdue" || item.level === "Important");
+      if (urgent) return `Focus: Review ${urgent.title.toLowerCase()}.`;
+      const finance = items.find((item) => item.view === "budget" && item.level !== "Information");
+      if (finance) return "Focus: Review today’s spending before making further plans.";
+      if (/rain|drizzle|thunderstorm/i.test(weather.detail || "")) return "Focus: Use indoor time for travel admin or TEFL.";
+      const journal = items.find((item) => /energy looks low/i.test(item.title));
+      if (journal) return "Focus: Choose one important task and a lower-effort activity.";
+      return "Focus: Choose one useful task and leave room for the day to breathe.";
+    }
+
+    function dailyBriefingSignature() {
+      return JSON.stringify({
+        date: today(),
+        daypart: getBriefingDaypart().key,
+        activeView: state.settings.activeView,
+        dates: (state.settings.dateItems || []).map((item) => [item.id, item.date, item.title, item.pinned, item.archived]),
+        route: (state.route || []).map((stop) => [stop.id, stop.place, stop.country, stop.targetArrival, stop.phase]),
+        moneyCount: (state.money || []).length,
+        moneyLatest: (state.money || []).slice(-3).map((entry) => [entry.id, entry.amount, entry.date, entry.potId, entry.updated_at, entry.editedAt]),
+        pots: (state.budgetPools || []).map((pot) => [pot.id, pot.amount, pot.active, pot.startDate, pot.endDate]),
+        journalToday: journalEntryForDate(today())?.updatedAt || journalEntryForDate(today())?.id || "",
+        tefl: [totals().teflHours, state.settings.teflTargetHours],
+        weather: state.weather_cache?.updatedAt || ""
+      });
+    }
+
+    function buildDailyBriefing() {
+      const daypart = getBriefingDaypart();
+      const weather = getBriefingWeatherSummary();
+      const dateItems = getBriefingDateItems();
+      const travelItems = getBriefingTravelItems();
+      const financeItems = getBriefingFinanceItems();
+      const journalItems = daypart.key === "evening" ? getBriefingJournalItems() : [];
+      const teflItems = getBriefingTeflItems();
+      const items = [...dateItems, ...financeItems, ...travelItems, ...teflItems, ...journalItems].slice(0, 6);
+      const focus = getBriefingSuggestedFocus(items, weather);
+      return {
+        generatedAt: new Date().toISOString(),
+        signature: dailyBriefingSignature(),
+        daypart: daypart.key,
+        greeting: daypart.greeting,
+        date: new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+        weather,
+        items,
+        focus,
+        cachedWeather: Boolean(state.weather_cache?.current),
+        weatherFresh: weatherCacheValid()
+      };
+    }
+
+    function refreshDailyBriefing(force = false) {
+      const signature = dailyBriefingSignature();
+      if (!force && state.daily_briefing_cache?.signature === signature) return state.daily_briefing_cache;
+      const briefing = buildDailyBriefing();
+      state.daily_briefing_cache = briefing;
+      return briefing;
+    }
+
+    function setWeatherStatus(message) {
+      const status = document.getElementById("weatherStatus");
+      if (status) status.textContent = message || "";
+    }
+
+    async function fetchJsonWithTimeout(url, timeoutMs = 8000) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+        return await response.json();
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    async function geocodeLocation(name) {
+      const query = String(name || "").trim();
+      if (!query) throw new Error("Enter a location first.");
+      const data = await fetchJsonWithTimeout(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
+      const result = data.results?.[0];
+      if (!result) throw new Error("Location not found.");
+      return {
+        name: [result.name, result.admin1, result.country].filter(Boolean).join(", "),
+        latitude: result.latitude,
+        longitude: result.longitude,
+        timezone: result.timezone || "auto"
+      };
+    }
+
+    async function reverseGeocodeLocation(latitude, longitude) {
+      const lat = Number(latitude);
+      const lon = Number(longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error("Location coordinates are missing.");
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=10&addressdetails=1`;
+      const data = await fetchJsonWithTimeout(url, 8000);
+      const address = data.address || {};
+      const locality = address.city || address.town || address.village || address.hamlet || address.suburb || address.county || data.name || "";
+      const country = address.country || "";
+      const label = [locality, country].filter(Boolean).join(", ");
+      return label || `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+    }
+
+    async function fetchWeatherForLocation(location) {
+      const latitude = Number(location.latitude);
+      const longitude = Number(location.longitude);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) throw new Error("Location coordinates are missing.");
+      const params = new URLSearchParams({
+        latitude: String(latitude),
+        longitude: String(longitude),
+        current: "temperature_2m,weather_code,wind_speed_10m,precipitation",
+        daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+        forecast_days: "3",
+        timezone: location.timezone || "auto"
+      });
+      const data = await fetchJsonWithTimeout(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+      const current = data.current || null;
+      const daily = (data.daily?.time || []).map((date, index) => ({
+        date,
+        weather_code: data.daily.weather_code?.[index],
+        temperature_2m_max: data.daily.temperature_2m_max?.[index],
+        temperature_2m_min: data.daily.temperature_2m_min?.[index],
+        precipitation_probability_max: data.daily.precipitation_probability_max?.[index]
+      }));
+      const now = new Date();
+      state.weather_cache = {
+        updatedAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + 60 * 60 * 1000).toISOString(),
+        location: { ...location, timezone: data.timezone || location.timezone || "" },
+        current,
+        daily
+      };
+      state.suggestions_cache = { updatedAt: now.toISOString(), items: buildWeatherSuggestions(state.weather_cache) };
+      state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+      return state.weather_cache;
+    }
+
+    function buildWeatherSuggestions(cache = state.weather_cache) {
+      const current = cache?.current;
+      if (!current) return ["Add or refresh a location to see weather-based suggestions."];
+      const label = weatherCodeLabel(current.weather_code);
+      const temp = Number(current.temperature_2m || 0);
+      const wind = Number(current.wind_speed_10m || 0);
+      const rain = Number(current.precipitation || 0);
+      const suggestions = [];
+      if (/rain|drizzle|thunderstorm/i.test(label) || rain > 0) suggestions.push("Indoor admin, TEFL or writing may fit the weather.");
+      else suggestions.push("Dry conditions may suit a walk, errand or local exploration.");
+      if (wind >= 30) suggestions.push("Wind looks noticeable, so keep outdoor plans sheltered.");
+      if (temp <= 5) suggestions.push("Cold weather may suit shorter outside plans.");
+      if (temp >= 24) suggestions.push("Warmer weather may suit earlier or shaded plans.");
+      return suggestions.slice(0, 3);
+    }
+
+    async function updateManualLocationWeather(locationName) {
+      try {
+        setWeatherStatus("Loading weather...");
+        const location = await geocodeLocation(locationName);
+        state.location_settings = { mode: "manual", ...location };
+        await fetchWeatherForLocation(location);
+        setWeatherStatus(`Weather updated for ${location.name}.`);
+        render();
+      } catch (error) {
+        console.error("Weather update failed", error);
+        setWeatherStatus("Weather unavailable. Check the location or try again later.");
+        renderWeather();
+      }
+    }
+
+    async function updateCurrentLocationWeather() {
+      if (!navigator.geolocation) {
+        setWeatherStatus("Current location is not available in this browser.");
+        return;
+      }
+      setWeatherStatus("Requesting location...");
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const fallbackName = `${position.coords.latitude.toFixed(3)}, ${position.coords.longitude.toFixed(3)}`;
+        const location = {
+          mode: "device",
+          name: fallbackName,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          timezone: "auto"
+        };
+        state.location_settings = location;
+        try {
+          try {
+            location.name = await reverseGeocodeLocation(location.latitude, location.longitude);
+            state.location_settings.name = location.name;
+          } catch (labelError) {
+            console.warn("Readable location lookup failed", labelError);
+          }
+          setWeatherStatus("Loading weather...");
+          await fetchWeatherForLocation(location);
+          setWeatherStatus(`Weather updated for ${readableLocationLabel(location)}.`);
+          render();
+        } catch (error) {
+          console.error("Weather update failed", error);
+          setWeatherStatus("Weather unavailable. Try again later.");
+          renderWeather();
+        }
+      }, (error) => {
+        console.error("Location permission denied or unavailable", error);
+        setWeatherStatus("Location was not shared. You can set a manual location instead.");
+      }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 30 * 60 * 1000 });
+    }
+
     function render() {
       applyTheme();
       applyDashboardSettings();
@@ -4628,27 +5226,68 @@
     }
 
     function renderDailyBriefing() {
-      const t = totals();
-      const tefl = teflPace();
-      const budget = budgetPace();
-      const deadlines = upcomingDeadlines(14);
+      const root = document.getElementById("dailyBriefing");
+      const briefing = refreshDailyBriefing(false);
       const priorities = recommendedPriorities();
-      const daysToDeparture = departureDaysRemaining();
-      const windowItem = activePlanningWindow();
-      document.getElementById("dailyBriefing").innerHTML = `
-        ${statsHtml([
-          ["Today", new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })],
-          ["Current phase", currentPhase()],
-          ["Days until departure", daysToDeparture === null ? "Not set" : String(daysToDeparture)],
-          ["Advanced budget period", windowItem ? `${windowItem.title} (${Math.max(0, dayDiff(windowItem.endDate))} days left)` : "None"],
-          ["Budget status", budget.pool ? `${budget.pots.length > 1 ? budget.pots.length + " current budgets" : budget.pool.name}: ${money(budget.remaining)} left, ${budget.safeDaily === null ? "Not set" : money(budget.safeDaily)} safe daily spend` : "No current spending pot selected"],
-          ["TEFL status", `${t.teflHours} hours done, ${tefl.remainingHours} remaining, ${tefl.status}`]
-        ])}
-        <h3>Top 3 Priorities</h3>
-        <div>${priorities.map((item) => `<span class="pill">${item}</span>`).join("")}</div>
-        <h3>Deadlines Within 14 Days</h3>
-        <div>${deadlines.length ? deadlines.map((item) => `<span class="pill">${item.title}: ${item.days} days</span>`).join("") : '<span class="hint">No deadlines in the next 14 days.</span>'}</div>
+      const updated = briefing.generatedAt ? new Date(briefing.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "unknown";
+      const items = briefing.items?.length ? briefing.items : [{
+        level: "Information",
+        title: "Your briefing will become more useful as you add dates, budgets, location and journal entries.",
+        detail: "Start with one important date or a current budget pot.",
+        view: "dates"
+      }];
+      root.innerHTML = `
+        <article class="daily-briefing-card" aria-live="polite">
+          <div class="briefing-topline">
+            <div>
+              <h3>${escapeHtml(briefing.greeting || "Hello")}</h3>
+              <div class="hint">${escapeHtml(briefing.date || "")}</div>
+            </div>
+            <div class="briefing-meta">
+              <span class="pill">${escapeHtml(briefing.weather?.label || "Location not set")}</span>
+              <span class="pill">${escapeHtml(briefing.weather?.detail || "Weather unavailable")}</span>
+              <span class="hint">Updated ${escapeHtml(updated)}</span>
+            </div>
+          </div>
+          <ul class="briefing-list">
+            ${items.map((item) => `
+              <li class="briefing-item">
+                <span class="muted">${escapeHtml(item.level || "Information")}</span>
+                <strong>${escapeHtml(item.title || "")}</strong>
+                ${item.detail ? `<span class="hint">${escapeHtml(item.detail)}</span>` : ""}
+              </li>
+            `).join("")}
+          </ul>
+          <div>
+            <strong>Today’s focus</strong>
+            <p class="hint">${escapeHtml(briefing.focus || "Choose one useful task.")}</p>
+            ${briefing.weather?.suggestion ? `<p class="hint">${escapeHtml(briefing.weather.suggestion)}</p>` : ""}
+          </div>
+          <div>
+            <strong>Top priorities</strong>
+            <div class="briefing-meta">${priorities.map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join("") || '<span class="hint">No open priorities yet.</span>'}</div>
+          </div>
+          <div class="briefing-actions">
+            <button id="refreshBriefingBtn" class="secondary-btn" type="button" aria-label="Refresh Daily Briefing">Refresh briefing</button>
+            <button class="ghost-btn" type="button" data-briefing-view="travel">View suggestions</button>
+            <button class="ghost-btn" type="button" data-briefing-view="dates">Open dates</button>
+            <button class="ghost-btn" type="button" data-briefing-view="budget">Review budget</button>
+            <button class="ghost-btn" type="button" data-briefing-view="journal">Write journal</button>
+          </div>
+        </article>
       `;
+      document.getElementById("refreshBriefingBtn")?.addEventListener("click", () => {
+        const button = document.getElementById("refreshBriefingBtn");
+        if (button) button.textContent = "Refreshing...";
+        state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+        render();
+      });
+      root.querySelectorAll("[data-briefing-view]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.settings.activeView = button.dataset.briefingView;
+          render();
+        });
+      });
     }
 
     function renderReadinessScores() {
@@ -4938,6 +5577,7 @@
     }
 
     function renderTravel() {
+      renderWeather();
       const routeList = document.getElementById("routeList");
       routeList.innerHTML = "";
       getRouteStops().forEach((stop, index) => {
@@ -4956,6 +5596,34 @@
       renderPacking();
       renderTimeline();
       renderRouteDateSettings();
+    }
+
+    function renderWeather() {
+      const summary = document.getElementById("weatherSummary");
+      const suggestions = document.getElementById("weatherSuggestions");
+      if (!summary || !suggestions) return;
+      const cache = state.weather_cache || {};
+      const location = readableLocationLabel(cache.location || state.location_settings);
+      const manualForm = document.getElementById("manualLocationForm");
+      if (manualForm?.elements.location && location && !manualForm.elements.location.value) manualForm.elements.location.value = location;
+      if (!cache.current) {
+        summary.innerHTML = `<div class="empty"><strong>No weather loaded</strong><span>${location ? "Refresh weather to update this location." : "Set a location manually or use current location when you choose."}</span></div>`;
+        suggestions.innerHTML = `<div class="empty"><strong>Suggestions will appear here</strong><span>Weather-based ideas stay in Travel and are summarised briefly on the Dashboard.</span></div>`;
+        return;
+      }
+      const current = cache.current;
+      const label = weatherCodeLabel(current.weather_code);
+      const updated = cache.updatedAt ? new Date(cache.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "unknown";
+      const dailyRows = (cache.daily || []).slice(0, 3).map((day) => `<span class="pill">${escapeHtml(formatDate(day.date))}: ${escapeHtml(weatherCodeLabel(day.weather_code))}, ${Math.round(Number(day.temperature_2m_min) || 0)}-${Math.round(Number(day.temperature_2m_max) || 0)}°C</span>`).join("");
+      summary.innerHTML = `
+        <div class="finance-kpis">
+          <div class="finance-kpi"><span class="muted">Location</span><strong>${escapeHtml(location || "Not set")}</strong><span class="hint">Manual/device location for weather only.</span></div>
+          <div class="finance-kpi"><span class="muted">Current weather</span><strong>${escapeHtml(label)} · ${Math.round(Number(current.temperature_2m) || 0)}°C</strong><span class="hint">Wind ${Math.round(Number(current.wind_speed_10m) || 0)} km/h</span></div>
+          <div class="finance-kpi"><span class="muted">Cache</span><strong>${weatherCacheValid() ? "Fresh" : "Stale"}</strong><span class="hint">Updated ${escapeHtml(updated)}</span></div>
+        </div>
+        <div class="briefing-meta">${dailyRows}</div>
+      `;
+      suggestions.innerHTML = buildWeatherSuggestions(cache).map((item) => `<div class="item compact"><div><div class="item-title">${escapeHtml(item)}</div></div></div>`).join("");
     }
 
     function renderTimeline() {
@@ -5891,22 +6559,17 @@
     }
 
     function editDateCounter(entry) {
-      const title = promptValue("Title", entry.title || "");
-      if (title === null) return;
-      const date = promptValue("Date, YYYY-MM-DD", entry.date || "");
-      if (date === null) return;
-      const type = promptValue("Type: countdown or count-up", entry.type || "countdown");
-      if (type === null) return;
-      const category = promptValue("Category", entry.category || "");
-      if (category === null) return;
-      const note = promptValue("Note", entry.note || "");
-      if (note === null) return;
-      entry.title = title || entry.title || "Date";
-      entry.date = date || entry.date;
-      entry.type = type === "count-up" ? "count-up" : "countdown";
-      entry.category = category || "";
-      entry.note = note || "";
-      render();
+      const form = document.getElementById("dateCounterEditForm");
+      if (!form) return;
+      form.elements.id.value = entry.id;
+      form.elements.title.value = entry.title || "";
+      form.elements.date.value = entry.date || "";
+      form.elements.type.value = entry.type === "count-up" ? "count-up" : "countdown";
+      form.elements.category.value = entry.category || "";
+      form.elements.note.value = entry.note || "";
+      form.elements.pinned.value = entry.pinned ? "true" : "false";
+      form.elements.archived.value = entry.archived ? "true" : "false";
+      document.getElementById("dateCounterEditModal").hidden = false;
     }
 
     function editPhase(phase) {
@@ -6027,22 +6690,16 @@
     }
 
     function editTravelDate(item) {
-      const title = promptValue("Title", item.title || "");
-      if (title === null) return;
-      const date = promptValue("Start date YYYY-MM-DD", item.date || "");
-      if (date === null) return;
-      const endDate = promptValue("End date, optional YYYY-MM-DD", item.endDate || "");
-      if (endDate === null) return;
-      const location = promptValue("Location / phase", item.location || "");
-      if (location === null) return;
-      const notes = promptValue("Notes", item.notes || "");
-      if (notes === null) return;
-      item.title = title || item.title || "Travel date";
-      item.date = date || item.date;
-      item.endDate = endDate;
-      item.location = location;
-      item.notes = notes;
-      render();
+      const form = document.getElementById("travelDateEditForm");
+      if (!form) return;
+      form.elements.id.value = item.id;
+      form.elements.title.value = item.title || "";
+      form.elements.date.value = item.date || "";
+      form.elements.endDate.value = item.endDate || "";
+      form.elements.location.value = item.location || "";
+      form.elements.notes.value = item.notes || "";
+      form.elements.archived.value = item.archived ? "true" : "false";
+      document.getElementById("travelDateEditModal").hidden = false;
     }
 
     function editRoute(item) {
@@ -6062,56 +6719,34 @@
     }
 
     function editMoney(item) {
-      if (item.kind === "transfer") {
-        alert("Transfer records are kept as audit history. Delete and recreate the transfer if the amount was wrong.");
-        return;
-      }
-      const original = { ...item };
-      const type = promptValue("Type: expense or income", item.type || "expense");
-      if (type === null) return;
-      const date = promptValue("Date YYYY-MM-DD", item.date || today());
-      if (date === null) return;
-      const description = promptValue("Description", item.description || "");
-      if (description === null) return;
-      const category = promptValue("Category", item.category || "");
-      if (category === null) return;
-      const subcategory = promptValue("Subcategory", item.subcategory || "");
-      if (subcategory === null) return;
-      const phase = promptValue(`Phase (${phaseNames(true).join(", ")})`, item.phase || phaseNames()[0] || "Unassigned");
-      if (phase === null) return;
-      const poolName = promptValue(`Pot (${visibleBudgetPots().map((pool) => pool.name).join(", ") || "none"})`, (state.budgetPools || []).find((pool) => pool.id === (item.potId || item.budgetPoolId))?.name || "");
-      if (poolName === null) return;
-      const amount = promptValue("Amount", item.amount);
-      if (amount === null) return;
-      const note = promptValue("Note", item.note || "");
-      if (note === null) return;
-      const normalType = type.toLowerCase().startsWith("in") ? "income" : "expense";
-      if (item.balanceApplied && !reverseMoneyEntry(item)) {
-        alert("This transaction could not be edited safely because the original balance change could not be reversed.");
-        return;
-      }
-      item.type = normalType;
-      item.date = date || item.date || today();
-      item.description = description || "";
-      item.category = category;
-      item.subcategory = subcategory;
-      item.phase = phase || item.phase || phaseNames()[0] || "Unassigned";
-      const pot = visibleBudgetPots().find((pool) => pool.name.toLowerCase() === poolName.toLowerCase());
-      const allocation = (state.allocations || []).find((entry) => entry.id === pot?.allocationId);
-      item.potId = pot?.id || "";
-      item.budgetPoolId = item.potId;
-      item.allocationId = allocation?.id || "";
-      item.walletId = rootPot().id;
-      item.amount = Number(amount) || 0;
-      item.note = note;
-      item.balanceApplied = true;
-      if (!applyMoneyEntryToBalances(item, 1)) {
-        Object.assign(item, original);
-        if (original.balanceApplied) applyMoneyEntryToBalances(item, 1);
-        alert("This edit would make a pot negative. Transfer money into the pot first.");
-        return;
-      }
-      render();
+      const modal = document.getElementById("transactionEditModal");
+      const form = document.getElementById("transactionEditForm");
+      const status = document.getElementById("transactionEditStatus");
+      if (!modal || !form) return;
+      renderFinanceSelects();
+      renderPhaseSelects();
+      if (status) status.textContent = item.kind === "transfer"
+        ? "Transfers are audit records. Delete and recreate the transfer if it was entered incorrectly."
+        : "";
+      form.elements.id.value = item.id;
+      form.elements.type.value = item.type === "income" ? "income" : "expense";
+      form.elements.date.value = item.date || today();
+      form.elements.amount.value = Number(item.amount || 0).toFixed(2);
+      form.elements.description.value = item.description || "";
+      form.elements.note.value = item.note || "";
+      renderFinanceSelects();
+      ensureSelectOption(form.elements.category, item.category || "", item.category || "");
+      form.elements.category.value = item.category || "";
+      ensureSelectOption(form.elements.subcategory, item.subcategory || "", item.subcategory || "");
+      form.elements.subcategory.value = item.subcategory || "";
+      ensureSelectOption(form.elements.phase, item.phase || "", item.phase || "");
+      form.elements.phase.value = item.phase || "";
+      const sourceValue = transactionSourceValue(item);
+      ensureSelectOption(form.elements.budgetPoolId, sourceValue, labelForMoneyRef(sourceRefForMoneyEntry(item)));
+      form.elements.budgetPoolId.value = sourceValue || "root";
+      [...form.elements].forEach((element) => { element.disabled = item.kind === "transfer" && element.name !== "id"; });
+      form.querySelector("button[type='submit']").disabled = item.kind === "transfer";
+      modal.hidden = false;
     }
 
     function editAllocation(allocation) {
@@ -6821,6 +7456,63 @@
       document.getElementById("routeEditModal").hidden = true;
       render();
     });
+    document.getElementById("cancelTransactionEditBtn").addEventListener("click", () => {
+      document.getElementById("transactionEditModal").hidden = true;
+      dirtyForms.delete("transactionEditForm");
+    });
+    document.getElementById("transactionEditForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      const status = document.getElementById("transactionEditStatus");
+      const result = applyTransactionEdit(data.id, data);
+      if (!result.ok) {
+        if (status) status.textContent = result.message || "Transaction edit failed.";
+        return;
+      }
+      dirtyForms.delete("transactionEditForm");
+      document.getElementById("transactionEditModal").hidden = true;
+      render();
+    });
+    document.getElementById("cancelDateCounterEditBtn").addEventListener("click", () => {
+      document.getElementById("dateCounterEditModal").hidden = true;
+      dirtyForms.delete("dateCounterEditForm");
+    });
+    document.getElementById("dateCounterEditForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      const entry = (state.settings.dateItems || []).find((item) => item.id === data.id);
+      if (!entry) return;
+      entry.title = data.title || entry.title || "Date";
+      entry.date = data.date || entry.date || today();
+      entry.type = data.type === "count-up" ? "count-up" : "countdown";
+      entry.category = data.category || "";
+      entry.note = data.note || "";
+      entry.pinned = bool(data.pinned);
+      entry.archived = bool(data.archived);
+      dirtyForms.delete("dateCounterEditForm");
+      document.getElementById("dateCounterEditModal").hidden = true;
+      render();
+    });
+    document.getElementById("cancelTravelDateEditBtn").addEventListener("click", () => {
+      document.getElementById("travelDateEditModal").hidden = true;
+      dirtyForms.delete("travelDateEditForm");
+    });
+    document.getElementById("travelDateEditForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      const entry = (state.settings.travelDates || []).find((item) => item.id === data.id);
+      if (!entry) return;
+      entry.title = data.title || entry.title || "Travel date";
+      entry.date = data.date || entry.date || today();
+      entry.endDate = data.endDate || "";
+      entry.location = data.location || "";
+      entry.notes = data.notes || "";
+      entry.archived = bool(data.archived);
+      dirtyForms.delete("travelDateEditForm");
+      document.getElementById("travelDateEditModal").hidden = true;
+      render();
+    });
     document.getElementById("openAddPotBtn").addEventListener("click", () => openAddPotModal());
     document.getElementById("cancelAddPotBtn").addEventListener("click", () => {
       document.getElementById("addPotModal").hidden = true;
@@ -7042,7 +7734,7 @@
         return false;
       }
       if (data.type === "income") {
-        addMoneyToRoot(amount, data.note || data.description || "Income", data.date || today());
+        addMoneyToRoot(amount, data.note || data.description || "Income", data.date || today(), data);
         return true;
       }
       if (!logSpendingFromRef(ref, amount, data)) {
@@ -7198,6 +7890,31 @@
         archived: false
       });
     });
+    document.getElementById("manualLocationForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target).entries());
+      updateManualLocationWeather(data.location);
+    });
+    document.getElementById("refreshWeatherBtn").addEventListener("click", () => {
+      const location = state.location_settings || {};
+      if (location.latitude && location.longitude) {
+        fetchWeatherForLocation(location)
+          .then(() => {
+            setWeatherStatus(`Weather updated for ${location.name || "saved location"}.`);
+            render();
+          })
+          .catch((error) => {
+            console.error("Weather refresh failed", error);
+            setWeatherStatus("Weather unavailable. Showing cached data if available.");
+            renderWeather();
+          });
+      } else if (location.name) {
+        updateManualLocationWeather(location.name);
+      } else {
+        setWeatherStatus("Set a location first.");
+      }
+    });
+    document.getElementById("useCurrentLocationBtn").addEventListener("click", () => updateCurrentLocationWeather());
     bindForm("dateItemForm", (data) => {
       state.settings.dateItems = state.settings.dateItems || [];
       state.settings.dateItems.push({
@@ -7598,6 +8315,10 @@
       setUpdateStatus("Refreshing...");
       pendingServiceWorker.postMessage({ type: "SKIP_WAITING" });
     });
+    setInterval(() => {
+      state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+      if (state.settings.activeView === "command") renderCommand();
+    }, 45 * 60 * 1000);
 </script>
 </body>
 </html>
