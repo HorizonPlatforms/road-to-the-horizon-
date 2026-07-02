@@ -2368,6 +2368,928 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Modern website redesign pass */
+    :root {
+      --site-max: 1440px;
+      --content-gutter: clamp(22px, 4vw, 56px);
+      --section-gap: clamp(24px, 4vw, 44px);
+      --sidebar-bg: color-mix(in srgb, var(--surface-muted) 64%, var(--surface));
+      --row-hover: color-mix(in srgb, var(--accent-soft-ui) 44%, transparent);
+    }
+
+    body {
+      background:
+        linear-gradient(90deg, var(--sidebar-bg) 0, var(--sidebar-bg) min(26vw, 360px), var(--bg) min(26vw, 360px), var(--bg) 100%);
+    }
+
+    body.dark {
+      --sidebar-bg: color-mix(in srgb, var(--surface-subtle) 82%, #000000);
+      --row-hover: color-mix(in srgb, var(--accent-soft-ui) 36%, transparent);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid var(--workspace-line);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+    }
+
+    header .wrap {
+      width: min(var(--site-max), calc(100% - 36px));
+    }
+
+    .header-grid {
+      grid-template-columns: minmax(0, 1fr) auto;
+      min-height: 54px;
+    }
+
+    .header-title-row h1 {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      font-size: .82rem;
+    }
+
+    .header-status {
+      margin-top: 6px;
+    }
+
+    .date-box {
+      min-width: 260px;
+      border: 0;
+      border-left: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    main.wrap {
+      width: min(var(--site-max), 100%);
+      padding: 0;
+      grid-template-columns: 248px minmax(0, 1fr);
+      border: 0;
+      background: var(--surface);
+    }
+
+    .tabs {
+      top: 71px;
+      min-height: calc(100vh - 71px);
+      padding: 26px 18px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--workspace-line);
+    }
+
+    .tabs::before {
+      content: "Workspace";
+      margin: 0 12px 18px;
+      color: var(--text-faint);
+      font-size: .68rem;
+      letter-spacing: .12em;
+    }
+
+    .tab {
+      min-height: 34px;
+      justify-content: flex-start;
+      padding: 7px 10px;
+      color: var(--text-soft);
+      font-size: .9rem;
+      font-weight: 650;
+      border-radius: 7px;
+    }
+
+    .tab.nav-secondary:first-of-type {
+      margin-top: 12px;
+    }
+
+    .tab.nav-secondary {
+      font-size: .84rem;
+      color: color-mix(in srgb, var(--text-soft) 82%, var(--text-faint));
+    }
+
+    .tab:hover {
+      background: color-mix(in srgb, var(--surface) 58%, transparent);
+      color: var(--text);
+    }
+
+    .tab.active {
+      background: var(--accent-soft-ui);
+      color: var(--accent);
+      font-weight: 760;
+    }
+
+    .tab.active::before {
+      width: 3px;
+      height: 16px;
+      margin-right: 8px;
+      border-radius: 999px;
+    }
+
+    .main-content,
+    main > :not(.tabs) {
+      min-width: 0;
+    }
+
+    main > .metrics,
+    main > .view,
+    main > .setup-panel {
+      grid-column: 2;
+      margin-left: var(--content-gutter);
+      margin-right: var(--content-gutter);
+    }
+
+    main > .view {
+      padding-bottom: 76px;
+    }
+
+    .metrics {
+      display: none;
+    }
+
+    .app-shell[data-active-view="command"] .metrics {
+      display: grid;
+      margin-top: 24px;
+      margin-bottom: 8px;
+      border: 1px solid var(--workspace-line);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--surface) 78%, var(--surface-muted));
+      overflow: hidden;
+    }
+
+    .metric-card {
+      padding: 16px 18px;
+    }
+
+    .metric-card:first-child {
+      background: color-mix(in srgb, var(--accent-soft-ui) 48%, transparent);
+    }
+
+    .metric {
+      font-size: clamp(1.25rem, 1.7vw, 1.8rem);
+      font-weight: 820;
+      letter-spacing: 0;
+    }
+
+    .view.active {
+      gap: var(--section-gap);
+      padding-top: 36px;
+    }
+
+    .view.active::before {
+      max-width: 820px;
+      padding-bottom: 26px;
+      border-bottom: 0;
+      font-size: .98rem;
+      color: var(--text-secondary);
+    }
+
+    .view.active::first-line {
+      font-size: clamp(2rem, 4vw, 3.3rem);
+      font-weight: 850;
+      letter-spacing: -.02em;
+      color: var(--text-primary);
+    }
+
+    .grid {
+      gap: 0 clamp(24px, 3vw, 40px);
+    }
+
+    .panel {
+      padding: 28px 0;
+      border-top: 1px solid var(--workspace-line);
+    }
+
+    .panel:first-child {
+      border-top: 0;
+    }
+
+    .panel h2 {
+      margin-bottom: 12px;
+      font-size: clamp(1.08rem, 1.4vw, 1.28rem);
+      font-weight: 800;
+      letter-spacing: -.01em;
+    }
+
+    .panel h3 {
+      color: var(--text-secondary);
+      text-transform: none;
+    }
+
+    .daily-briefing-card,
+    .root-pot-card,
+    .weather-card {
+      padding: 18px 0;
+    }
+
+    #command .grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    #command .grid > .panel:first-child {
+      padding-top: 0;
+      padding-bottom: 32px;
+    }
+
+    #command .grid > .panel:nth-child(2),
+    #command .grid > .panel:nth-child(3) {
+      border-top: 0;
+    }
+
+    #command .grid > .span-4 {
+      border-top: 1px solid var(--workspace-line);
+    }
+
+    #budget .grid {
+      gap: 0 clamp(28px, 4vw, 52px);
+    }
+
+    #budget .grid > .panel:first-child {
+      position: sticky;
+      top: 71px;
+      z-index: 20;
+      padding: 0 0 16px;
+      background: color-mix(in srgb, var(--surface) 96%, transparent);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--workspace-line);
+    }
+
+    #budget .grid > .panel:first-child h2 {
+      display: none;
+    }
+
+    .budget-tabs {
+      width: 100%;
+      justify-content: flex-start;
+      overflow-x: auto;
+      border-bottom: 0;
+    }
+
+    .budget-tab {
+      min-height: 42px;
+      padding: 10px 14px;
+      color: var(--text-secondary);
+      font-weight: 720;
+      white-space: nowrap;
+    }
+
+    .budget-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .finance-kpis {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border: 1px solid var(--workspace-line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--surface) 80%, var(--surface-muted));
+    }
+
+    .finance-kpi {
+      min-height: 118px;
+      padding: 18px;
+      background: transparent;
+    }
+
+    .finance-kpi strong {
+      display: block;
+      margin-top: 8px;
+      font-size: clamp(1.35rem, 2.1vw, 2rem);
+      letter-spacing: -.02em;
+    }
+
+    .root-pot-card {
+      border: 1px solid var(--workspace-line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--surface) 82%, var(--surface-muted));
+    }
+
+    .pot-tree,
+    .list,
+    .table-ish {
+      border-top-color: var(--workspace-line);
+    }
+
+    .pot-card,
+    .item,
+    .place-card,
+    .transaction-row,
+    .route-row,
+    .budget-pool-row,
+    .packing-group {
+      padding: 14px 10px;
+      margin-inline: -10px;
+    }
+
+    .pot-card:hover,
+    .item:hover,
+    .place-card:hover,
+    .route-row:hover,
+    .transaction-row:hover {
+      background: var(--row-hover);
+    }
+
+    .item-actions {
+      align-items: center;
+    }
+
+    .item-actions button,
+    .place-card .item-actions button,
+    .place-card .item-actions a {
+      min-height: 28px;
+      padding: 3px 7px;
+      font-size: .78rem;
+      color: var(--text-faint);
+    }
+
+    .item-actions .danger-btn,
+    .danger-btn {
+      color: var(--danger);
+    }
+
+    button,
+    .file-label {
+      min-height: 34px;
+      padding: 7px 11px;
+      border-radius: 7px;
+    }
+
+    .primary-btn,
+    button[type="submit"]:not(.ghost-btn):not(.danger-btn):not(.secondary-btn) {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .primary-btn:hover,
+    button[type="submit"]:not(.ghost-btn):not(.danger-btn):not(.secondary-btn):hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .secondary-btn,
+    .ghost-btn {
+      background: transparent;
+      border-color: var(--workspace-line);
+    }
+
+    .inline-actions {
+      gap: 6px;
+    }
+
+    input,
+    select,
+    textarea {
+      min-height: 38px;
+      border-radius: 7px;
+      background: var(--surface);
+    }
+
+    textarea {
+      min-height: 92px;
+    }
+
+    .form-grid {
+      row-gap: 14px;
+    }
+
+    label {
+      color: var(--text-secondary);
+      font-weight: 680;
+    }
+
+    label input,
+    label select,
+    label textarea {
+      margin-top: 4px;
+    }
+
+    .hint,
+    .muted {
+      color: var(--text-muted);
+    }
+
+    .sync-status,
+    .pill,
+    .pot-stats span,
+    .category-chip {
+      border: 1px solid var(--workspace-line);
+      background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+    }
+
+    .advanced-details,
+    .advanced-panel {
+      margin-top: 18px;
+    }
+
+    .chart-card,
+    .score-card,
+    .countdown-card,
+    .about-card {
+      background: transparent;
+    }
+
+    @media (max-width: 1060px) {
+      main.wrap {
+        grid-template-columns: 212px minmax(0, 1fr);
+      }
+
+      .finance-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 820px) {
+      body {
+        background: var(--bg);
+      }
+
+      header .wrap,
+      main.wrap {
+        width: min(100% - 24px, var(--site-max));
+      }
+
+      main.wrap {
+        display: block;
+        background: transparent;
+      }
+
+      main > .metrics,
+      main > .view,
+      main > .setup-panel {
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      .app-shell[data-active-view="command"] .metrics {
+        grid-template-columns: 1fr;
+        margin-top: 16px;
+      }
+
+      .metric-card {
+        border-right: 0;
+        border-bottom: 1px solid var(--workspace-line);
+      }
+
+      .metric-card:last-child {
+        border-bottom: 0;
+      }
+
+      .view.active {
+        padding-top: 26px;
+      }
+
+      .view.active::first-line {
+        font-size: 2rem;
+      }
+
+      .tabs {
+        min-height: 0;
+        background: color-mix(in srgb, var(--surface) 96%, transparent);
+      }
+
+      .finance-kpis,
+      .root-pot-card {
+        grid-template-columns: 1fr;
+      }
+
+      #budget .grid > .panel:first-child {
+        top: 0;
+      }
+    }
+
+    /* Finance responsive repair */
+    #budget {
+      min-width: 0;
+    }
+
+    #budget .grid,
+    #budget .panel,
+    #budget .budget-panel,
+    #budgetOverviewCards,
+    #budgetPace {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .breakdown-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      gap: 0;
+      margin: 10px 0 8px;
+      border-top: 1px solid var(--workspace-line);
+    }
+
+    .breakdown-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: baseline;
+      padding: 10px 12px 10px 0;
+      border-bottom: 1px solid var(--workspace-line);
+      min-width: 0;
+    }
+
+    .breakdown-row span,
+    .breakdown-row strong {
+      min-width: 0;
+    }
+
+    .breakdown-row span {
+      color: var(--text-secondary);
+      overflow-wrap: anywhere;
+    }
+
+    .breakdown-row strong {
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .suggestion-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--workspace-line);
+      min-width: 0;
+    }
+
+    .suggestion-row .item-title::before {
+      content: "Suggestion";
+      display: inline-block;
+      margin-right: 8px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft-ui);
+      color: var(--accent);
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+
+    .action-menu {
+      position: relative;
+    }
+
+    .action-menu summary {
+      list-style: none;
+      min-height: 28px;
+      padding: 4px 8px;
+      border: 1px solid var(--workspace-line);
+      border-radius: 7px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: .78rem;
+      font-weight: 760;
+    }
+
+    .action-menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .action-menu[open] {
+      z-index: 30;
+    }
+
+    .action-menu[open] summary {
+      background: var(--surface-muted);
+    }
+
+    .action-menu[open] > :not(summary) {
+      display: block;
+      width: 100%;
+      margin-top: 4px;
+      text-align: left;
+    }
+
+    @media (max-width: 680px) {
+      .breakdown-list {
+        grid-template-columns: 1fr;
+      }
+
+      .breakdown-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .breakdown-row strong {
+        white-space: normal;
+      }
+
+      .suggestion-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Finance mock-up reconstruction */
+    #budget .finance-page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 6px 0 18px;
+    }
+
+    #budget .finance-page-header h2 {
+      display: block;
+      margin: 0 0 4px;
+      font-size: 1.35rem;
+      letter-spacing: -.01em;
+    }
+
+    .finance-header-actions {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    #budget .grid > .panel:first-child h2 {
+      display: block;
+    }
+
+    .finance-summary-band {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0;
+      border-block: 1px solid var(--workspace-line);
+      background: transparent;
+    }
+
+    .finance-summary-band .finance-kpi {
+      min-height: 96px;
+      padding: 16px 18px;
+      border: 0;
+      border-right: 1px solid var(--workspace-line);
+      background: transparent;
+    }
+
+    .finance-summary-band .finance-kpi:last-child {
+      border-right: 0;
+    }
+
+    .finance-summary-band .finance-kpi strong {
+      margin-top: 6px;
+      font-size: clamp(1.15rem, 1.65vw, 1.6rem);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: break-word;
+    }
+
+    .finance-summary-band .finance-breakdown {
+      grid-column: 1 / -1;
+      min-height: 0;
+      padding: 12px 18px;
+      border-top: 1px solid var(--workspace-line);
+      border-right: 0;
+      background: color-mix(in srgb, var(--surface-muted) 32%, transparent);
+    }
+
+    .finance-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.75fr) minmax(280px, .78fr);
+      gap: clamp(26px, 3.5vw, 48px);
+      align-items: start;
+      margin-top: 28px;
+    }
+
+    .finance-main-column,
+    .finance-support-column {
+      display: grid;
+      gap: 28px;
+      min-width: 0;
+    }
+
+    .finance-support-column {
+      position: sticky;
+      top: 140px;
+    }
+
+    .finance-section {
+      min-width: 0;
+      padding-top: 0;
+      border-top: 1px solid var(--workspace-line);
+    }
+
+    .finance-section:first-child {
+      border-top: 0;
+    }
+
+    .finance-section h2 {
+      margin: 0 0 10px;
+      font-size: 1.02rem;
+      font-weight: 820;
+      letter-spacing: -.01em;
+    }
+
+    .finance-table {
+      width: 100%;
+      min-width: 0;
+      border-top: 1px solid var(--workspace-line);
+    }
+
+    .finance-table-header,
+    .finance-table-row {
+      display: grid;
+      grid-template-columns: minmax(190px, 1.4fr) minmax(96px, .72fr) minmax(96px, .72fr) minmax(130px, .9fr) minmax(72px, auto);
+      gap: 14px;
+      align-items: center;
+      min-width: 0;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--workspace-line);
+    }
+
+    #recentMoneyList .finance-table-header,
+    #recentMoneyList .finance-table-row {
+      grid-template-columns: minmax(88px, .55fr) minmax(150px, 1.1fr) minmax(110px, .75fr) minmax(120px, .8fr) minmax(92px, .55fr) minmax(140px, 1fr) minmax(72px, auto);
+    }
+
+    .finance-table-header {
+      color: var(--text-muted);
+      font-size: .72rem;
+      font-weight: 820;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .finance-table-row {
+      color: var(--text-secondary);
+      font-size: .88rem;
+    }
+
+    .finance-table-row > span {
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
+
+    .finance-table-row:hover {
+      background: var(--row-hover);
+    }
+
+    .finance-pot-name {
+      display: block;
+      padding-left: calc(var(--depth, 0) * 18px);
+      color: var(--text-primary);
+      font-weight: 760;
+    }
+
+    .money-value,
+    .money-positive,
+    .money-negative {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .money-positive {
+      color: var(--success);
+    }
+
+    .money-negative {
+      color: var(--danger);
+    }
+
+    .finance-progress {
+      display: grid;
+      grid-template-columns: minmax(58px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .finance-progress i {
+      display: block;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .finance-progress::before {
+      content: "";
+      grid-column: 1;
+      grid-row: 1;
+      height: 5px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface-muted) 82%, var(--border));
+    }
+
+    .finance-progress i {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .finance-progress em {
+      color: var(--text-muted);
+      font-style: normal;
+      font-size: .76rem;
+      white-space: nowrap;
+    }
+
+    .finance-row-menu {
+      display: inline-block;
+    }
+
+    .finance-row-menu[open] {
+      min-width: 112px;
+    }
+
+    #budgetPace .stat-line {
+      padding: 9px 0;
+      border-bottom: 1px solid var(--workspace-line);
+    }
+
+    .finance-insight {
+      display: grid;
+      gap: 4px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--workspace-line);
+    }
+
+    .finance-insight strong {
+      color: var(--text-primary);
+      font-size: .92rem;
+    }
+
+    .finance-insight span {
+      color: var(--text-secondary);
+      font-size: .86rem;
+    }
+
+    .finance-insight.warning strong {
+      color: var(--warning);
+    }
+
+    .finance-insight.success strong {
+      color: var(--success);
+    }
+
+    @media (max-width: 1180px) {
+      .finance-workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .finance-support-column {
+        position: static;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .finance-summary-band {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 820px) {
+      #budget .finance-page-header {
+        display: grid;
+      }
+
+      .finance-header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .finance-support-column {
+        grid-template-columns: 1fr;
+      }
+
+      .finance-summary-band {
+        grid-template-columns: 1fr;
+        border-inline: 0;
+      }
+
+      .finance-summary-band .finance-kpi {
+        border-right: 0;
+        border-bottom: 1px solid var(--workspace-line);
+      }
+
+      .finance-table-header {
+        display: none;
+      }
+
+      .finance-table-row,
+      #recentMoneyList .finance-table-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+        padding: 14px 0;
+      }
+
+      .finance-pot-name {
+        padding-left: 0;
+      }
+
+      .finance-progress {
+        grid-template-columns: 1fr auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2890,8 +3812,24 @@
           <div id="documentList" class="list"></div>
         </div>
         <div class="panel span-6">
-          <h2>Departure Checklist</h2>
+          <h2>Preparation Checklist</h2>
+          <p class="hint">Editable travel prep tasks. Suggestions are only added when you choose to add them.</p>
+          <form id="travelPrepTaskForm" class="form-grid">
+            <label class="field-5">Task<input name="title" required placeholder="Add a preparation task"></label>
+            <label class="field-3">Category<select name="category"><option>Travel admin</option><option>Route</option><option>Packing</option><option>Budget</option><option>Destination</option><option>Content</option><option>Writing</option><option>TEFL</option></select></label>
+            <label class="field-3">Due date<input name="due" type="date"></label>
+            <label class="field-2">Position<input name="order" type="number" min="1"></label>
+            <button class="field-3 primary-btn" type="submit">Add Task</button>
+          </form>
           <div id="departureList" class="list"></div>
+          <details class="advanced-details">
+            <summary>Completed preparation tasks</summary>
+            <div id="completedDepartureList" class="list"></div>
+          </details>
+          <details class="advanced-details">
+            <summary>Archived preparation tasks</summary>
+            <div id="archivedDepartureList" class="list"></div>
+          </details>
         </div>
         <div class="panel span-12">
           <h2>Packing Tracker</h2>
@@ -2909,7 +3847,20 @@
     <section id="budget" class="view" data-page-title="Money" data-page-summary="A clear view of total money, pots, transfers, transactions and spending pace.">
       <div class="grid">
         <div class="panel span-12">
-          <h2>Budget</h2>
+          <div class="finance-page-header">
+            <div>
+              <h2>Money</h2>
+              <p class="hint">Total money, user-defined pots, current budget and recent transactions.</p>
+            </div>
+            <div class="finance-header-actions">
+              <button class="primary-btn" type="button" data-budget-jump="transactions">Add Transaction</button>
+              <details class="action-menu">
+                <summary>More</summary>
+                <button id="financeHeaderAddPotBtn" class="ghost-btn" type="button">Add Pot</button>
+                <button id="financeHeaderTransferBtn" class="ghost-btn" type="button">Transfer</button>
+              </details>
+            </div>
+          </div>
           <div class="budget-tabs" aria-label="Budget views">
             <button class="budget-tab active" type="button" data-budget-view="overview">Overview</button>
             <button class="budget-tab" type="button" data-budget-view="pools">Pots</button>
@@ -2919,20 +3870,41 @@
           </div>
         </div>
         <div class="panel span-12 budget-panel active" data-budget-panel="overview">
-          <h2>Finance Overview</h2>
-          <div id="budgetOverviewCards" class="finance-kpis"></div>
-          <div class="inline-actions">
-            <button class="primary-btn" type="button" data-budget-jump="transactions">Quick Add Transaction</button>
-            <button class="secondary-btn" type="button" data-budget-jump="pools">Manage Pots</button>
+          <div id="budgetOverviewCards" class="finance-summary-band"></div>
+          <div class="finance-workspace">
+            <div class="finance-main-column">
+              <section class="finance-section">
+                <div class="section-heading-row">
+                  <div>
+                    <h2>Pots Overview</h2>
+                    <p class="hint">User-defined hierarchy. Child pots sit inside their parent pots.</p>
+                  </div>
+                  <button class="secondary-btn" type="button" data-budget-jump="pools">Manage Pots</button>
+                </div>
+                <div id="budgetOverviewPots" class="finance-table"></div>
+              </section>
+              <section class="finance-section">
+                <div class="section-heading-row">
+                  <div>
+                    <h2>Recent Transactions</h2>
+                    <p class="hint">Latest income and expenses from the transaction ledger.</p>
+                  </div>
+                  <button class="secondary-btn" type="button" data-budget-jump="transactions">View All</button>
+                </div>
+                <div id="recentMoneyList" class="finance-table"></div>
+              </section>
+            </div>
+            <aside class="finance-support-column">
+              <section class="finance-section">
+                <h2>Spending Pace</h2>
+                <div id="budgetPace"></div>
+              </section>
+              <section class="finance-section">
+                <h2>Budget Health</h2>
+                <div id="budgetHealth"></div>
+              </section>
+            </aside>
           </div>
-        </div>
-        <div class="panel span-6 budget-panel active" data-budget-panel="overview">
-          <h2>Safe Spend</h2>
-          <div id="budgetPace"></div>
-        </div>
-        <div class="panel span-6 budget-panel active" data-budget-panel="overview">
-          <h2>Recent Transactions</h2>
-          <div id="recentMoneyList" class="list"></div>
         </div>
         <div class="panel span-12 budget-panel" data-budget-panel="pools">
           <div class="section-heading-row">
@@ -3347,7 +4319,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.34.0";
+    const APP_VERSION = "0.36.0";
     const defaultSubtitle = "Your local command centre for travel, money, TEFL, content, writing, journal entries and long-term planning.";
     const defaultSectionLabels = {
       command: "Dashboard",
@@ -3571,7 +4543,7 @@
       weeklyReviews: [],
       weather_cache: { updatedAt: "", expiresAt: "", location: null, current: null, daily: [] },
       location_settings: { mode: "manual", name: "", latitude: null, longitude: null, timezone: "" },
-      suggestions_cache: { updatedAt: "", items: [] },
+      suggestions_cache: { updatedAt: "", items: [], dismissed: [] },
       nearby_places_cache: emptyNearbyCache(),
       nearby_place_preferences: { category: "", interests: "", radius: DEFAULT_NEARBY_RADIUS, cost: "any", energy: "any", time: "any" },
       saved_places: [],
@@ -3754,6 +4726,7 @@
       merged.location_settings = { ...next.location_settings, ...(data.location_settings || {}) };
       merged.suggestions_cache = { ...next.suggestions_cache, ...(data.suggestions_cache || {}) };
       merged.suggestions_cache.items = Array.isArray(data.suggestions_cache?.items) ? data.suggestions_cache.items : [];
+      merged.suggestions_cache.dismissed = Array.isArray(data.suggestions_cache?.dismissed) ? data.suggestions_cache.dismissed : [];
       merged.nearby_places_cache = migrateNearbyCache(data.nearby_places_cache, next.nearby_places_cache);
       merged.nearby_place_preferences = { ...next.nearby_place_preferences, ...(data.nearby_place_preferences || {}) };
       merged.nearby_place_preferences.category = normaliseNearbyCategory(merged.nearby_place_preferences.category, merged.nearby_place_preferences.interests);
@@ -3835,18 +4808,21 @@
         const allocation = merged.allocations.find((item) => item.id === entry.allocationId);
         if (allocation && !entry.walletId) entry.walletId = allocation.walletId || "";
       });
-      merged.tasks = (data.tasks || next.tasks).map((task) => ({
+      merged.tasks = (data.tasks || next.tasks).map((task, index) => ({
         ...task,
         id: task.id || id(),
         title: task.title || "Untitled task",
         category: task.category || task.area || "Travel admin",
         timeframe: task.timeframe || "Setup",
         due: task.due || "",
-        done: Boolean(task.done)
+        done: Boolean(task.done),
+        archived: Boolean(task.archived),
+        order: Number(task.order) || index + 1
       }));
       merged.checkins = (data.checkins || next.checkins).map((entry) => ({ ...entry, id: entry.id || id(), date: entry.date || today() }));
       merged.journals = normalizeJournalEntries(data.journals || next.journals, merged.checkins, merged.settings.legacyHabits);
       merged.milestones = (data.milestones || next.milestones).map((entry) => ({ ...entry, id: entry.id || id() }));
+      normaliseOrderedList(merged.tasks);
       normaliseOrderedList(merged.route);
       return merged;
     }
@@ -5707,11 +6683,12 @@
       const studyHours = state.studyLog.reduce((sum, entry) => sum + Number(entry.hours || 0), 0);
       const teflHours = Math.max(teflModuleHours, studyHours, Number(state.settings.teflManualHours || 0));
       const teflPercent = pct(teflHours, Number(state.settings.teflTargetHours || 120));
-      const taskDone = state.tasks.filter((task) => task.done).length;
+      const activeTasks = state.tasks.filter((task) => !task.archived);
+      const taskDone = activeTasks.filter((task) => task.done).length;
       const docDone = state.documents.filter((doc) => doc.status === "Done" || doc.done).length;
       const packed = state.packing.filter((item) => item.status === "Packed").length;
       const readinessDone = taskDone + docDone + packed;
-      const readinessTotal = state.tasks.length + state.documents.length + state.packing.length;
+      const readinessTotal = activeTasks.length + state.documents.length + state.packing.length;
       return { income, expenses, prepRemaining, teflHours, teflPercent, taskDone, docDone, packed, readinessDone, readinessTotal };
     }
 
@@ -5838,8 +6815,9 @@
       const t = totals();
       const packingTotal = state.packing.length;
       const packingPacked = state.packing.filter((item) => item.status === "Packed").length;
-      const adminTotal = state.documents.length + state.tasks.filter((task) => task.category === "Travel admin").length;
-      const adminDone = state.documents.filter((doc) => doc.status === "Done" || doc.done).length + state.tasks.filter((task) => task.category === "Travel admin" && task.done).length;
+      const activeTasks = state.tasks.filter((task) => !task.archived);
+      const adminTotal = state.documents.length + activeTasks.filter((task) => task.category === "Travel admin").length;
+      const adminDone = state.documents.filter((doc) => doc.status === "Done" || doc.done).length + activeTasks.filter((task) => task.category === "Travel admin" && task.done).length;
       const budget = getBudgetPace();
       const budgetReadyParts = [
         Boolean(budget.pots?.length),
@@ -5945,7 +6923,7 @@
 
     function recommendedPriorities() {
       const phase = currentPhase();
-      const openTasks = state.tasks.filter((task) => !task.done).map((task) => task.title);
+      const openTasks = state.tasks.filter((task) => !task.archived && !task.done).map((task) => task.title);
       const defaultsByPhase = {
         "Setup Phase": ["Add your key dates", "Add your first route stop", "Set your budget targets"],
         "Planning Phase": ["Choose your next planning task", "Review your budget", "Add any upcoming deadlines"],
@@ -6118,7 +7096,7 @@
         if (priorities.some((item) => item.title === title)) return;
         priorities.push({ title, detail, view, score });
       };
-      const overdueTasks = sortedTasks((state.tasks || []).filter((task) => !task.done && task.due && dayDiff(task.due) < 0));
+      const overdueTasks = sortedTasks((state.tasks || []).filter((task) => !task.archived && !task.done && task.due && dayDiff(task.due) < 0));
       overdueTasks.slice(0, 2).forEach((task) => addPriority(`Finish overdue task: ${task.title}`, `Due ${formatDate(task.due)}`, "command", 95));
       upcomingDeadlines(7).slice(0, 2).forEach((item) => addPriority(`Prepare for ${item.title}`, item.days === 0 ? "Due today" : item.days === 1 ? "Due tomorrow" : `${item.days} days away`, item.view || "dates", 88 - item.days));
       const budget = getBudgetPace();
@@ -6177,7 +7155,7 @@
       if (nearby) opportunities.push(`${nearby.name} is a nearby option: ${placeRecommendationReason(nearby)}`);
       const journal = journalEntryForDate(today());
       if (!journal || !(journal.body || journal.title)) opportunities.push("A two-minute journal entry would keep today visible.");
-      const openTask = sortedTasks((state.tasks || []).filter((task) => !task.done))[0];
+      const openTask = sortedTasks((state.tasks || []).filter((task) => !task.archived && !task.done))[0];
       if (openTask) opportunities.push(`One useful task: ${openTask.title}.`);
       return opportunities.slice(0, 4);
     }
@@ -6190,8 +7168,9 @@
       summaries.push(`${t.teflHours} TEFL hours completed.`);
       const budget = getBudgetPace();
       if (budget.pots?.length) summaries.push(`${money(budget.remaining)} remains in the current budget.`);
-      const doneTasks = (state.tasks || []).filter((task) => task.done).length;
-      const totalTasks = (state.tasks || []).length;
+      const activeTasks = (state.tasks || []).filter((task) => !task.archived);
+      const doneTasks = activeTasks.filter((task) => task.done).length;
+      const totalTasks = activeTasks.length;
       if (totalTasks) summaries.push(`${doneTasks} of ${totalTasks} tasks complete.`);
       return summaries.slice(0, 4);
     }
@@ -6370,7 +7349,7 @@
         current,
         daily
       };
-      state.suggestions_cache = { updatedAt: now.toISOString(), items: buildWeatherSuggestions(state.weather_cache) };
+      state.suggestions_cache = { updatedAt: now.toISOString(), items: buildWeatherSuggestions(state.weather_cache), dismissed: [] };
       state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
       return state.weather_cache;
     }
@@ -7167,6 +8146,7 @@
       if (view === "habits") view = "journal";
       if (!document.getElementById(view)) view = "command";
       state.settings.activeView = view;
+      document.getElementById("appShell")?.setAttribute("data-active-view", view);
       document.querySelectorAll(".tab").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
       document.querySelectorAll(".view").forEach((section) => section.classList.toggle("active", section.id === view));
     }
@@ -7258,7 +8238,7 @@
       renderReadinessScores();
       renderCoreSettingsSummary();
       renderTaskManager();
-      const open = sortedTasks(state.tasks.filter((task) => !task.done)).slice(0, 8);
+      const open = sortedTasks(state.tasks.filter((task) => !task.archived && !task.done)).slice(0, 8);
       renderList("priorityList", open, (task) => checkboxItem(task, "tasks"));
       const last7 = recentJournalEntries(7);
       const avgMood = average(last7.map((entry) => Number(entry.mood || 0)).filter(Boolean));
@@ -7403,8 +8383,9 @@
     }
 
     function renderTaskManager() {
-      const incomplete = sortedTasks(state.tasks.filter((task) => !task.done));
-      const completed = sortedTasks(state.tasks.filter((task) => task.done));
+      const visibleTasks = state.tasks.filter((task) => !task.archived);
+      const incomplete = sortedTasks(visibleTasks.filter((task) => !task.done));
+      const completed = sortedTasks(visibleTasks.filter((task) => task.done));
       const dueSoon = incomplete.filter((task) => task.due && dayDiff(task.due) >= 0 && dayDiff(task.due) <= 14).length;
       const overdue = incomplete.filter((task) => task.due && dayDiff(task.due) < 0).length;
       document.getElementById("taskOverview").innerHTML = statsHtml([
@@ -7419,6 +8400,9 @@
 
     function sortedTasks(tasks) {
       return tasks.slice().sort((a, b) => {
+        const aOrder = Number(a.order) || Number.MAX_SAFE_INTEGER;
+        const bOrder = Number(b.order) || Number.MAX_SAFE_INTEGER;
+        if (aOrder !== bOrder) return aOrder - bOrder;
         const aDue = a.due ? parseDate(a.due).getTime() : Number.MAX_SAFE_INTEGER;
         const bDue = b.due ? parseDate(b.due).getTime() : Number.MAX_SAFE_INTEGER;
         if (aDue !== bDue) return aDue - bDue;
@@ -7690,10 +8674,28 @@
       });
       renderPhaseSettings();
       renderList("documentList", state.documents, (doc) => docItem(doc));
-      renderList("departureList", state.tasks.filter((task) => task.timeframe === "Final prep" || task.category === "Travel admin"), (task) => checkboxItem(task, "tasks"));
+      renderTravelPreparationTasks();
       renderPacking();
       renderTimeline();
       renderRouteDateSettings();
+    }
+
+    function isTravelPreparationTask(task) {
+      return ["Travel admin", "Route", "Packing", "Destination"].includes(task.category) || ["Pre-trip", "Final prep", "During travel"].includes(task.timeframe);
+    }
+
+    function renderTravelPreparationTasks() {
+      const activeRoot = document.getElementById("departureList");
+      const completedRoot = document.getElementById("completedDepartureList");
+      const archivedRoot = document.getElementById("archivedDepartureList");
+      if (!activeRoot || !completedRoot || !archivedRoot) return;
+      const tasks = sortedTasks((state.tasks || []).filter((task) => isTravelPreparationTask(task)));
+      const active = tasks.filter((task) => !task.archived && !task.done);
+      const completed = tasks.filter((task) => !task.archived && task.done);
+      const archived = tasks.filter((task) => task.archived);
+      renderList("departureList", active, (task) => travelTaskItem(task));
+      renderList("completedDepartureList", completed, (task) => travelTaskItem(task));
+      renderList("archivedDepartureList", archived, (task) => travelTaskItem(task));
     }
 
     function renderWeather() {
@@ -7723,8 +8725,69 @@
         </div>
         <div class="briefing-meta">${dailyRows}</div>
       `;
-      suggestions.innerHTML = buildWeatherSuggestions(cache).map((item) => `<div class="item compact"><div><div class="item-title">${escapeHtml(item)}</div></div></div>`).join("");
+      const dismissedSuggestions = new Set(state.suggestions_cache?.dismissed || []);
+      const visibleSuggestions = buildWeatherSuggestions(cache).filter((item) => !dismissedSuggestions.has(item));
+      suggestions.innerHTML = visibleSuggestions.length
+        ? visibleSuggestions.map((item) => travelSuggestionHtml(item)).join("")
+        : `<div class="empty"><strong>No active suggestions</strong><span>Dismissed suggestions stay hidden until the weather changes.</span></div>`;
+      suggestions.querySelectorAll("[data-add-suggestion]").forEach((button) => {
+        button.addEventListener("click", () => addTravelSuggestionToTasks(button.dataset.addSuggestion));
+      });
+      suggestions.querySelectorAll("[data-dismiss-suggestion]").forEach((button) => {
+        button.addEventListener("click", () => dismissTravelSuggestion(button.dataset.dismissSuggestion));
+      });
+      suggestions.querySelectorAll("[data-open-suggestion]").forEach((button) => {
+        button.addEventListener("click", () => activateView(button.dataset.openSuggestion || "command"));
+      });
       renderNearbyPlaces();
+    }
+
+    function travelSuggestionHtml(text) {
+      const escaped = escapeHtml(text);
+      return `
+        <div class="suggestion-row">
+          <div>
+            <div class="item-title">${escaped}</div>
+            <div class="hint">Generated from current weather. Add it before it becomes a checklist task.</div>
+          </div>
+          <div class="item-actions">
+            <button type="button" class="primary-btn" data-add-suggestion="${escaped}">Add to preparation</button>
+            <details class="action-menu">
+              <summary>More</summary>
+              <button type="button" class="ghost-btn" data-open-suggestion="command">Open related</button>
+              <button type="button" class="ghost-btn" data-dismiss-suggestion="${escaped}">Dismiss</button>
+            </details>
+          </div>
+        </div>
+      `;
+    }
+
+    function addTravelSuggestionToTasks(text) {
+      const title = String(text || "").trim();
+      if (!title) return;
+      const task = {
+        id: id(),
+        title,
+        category: "Travel admin",
+        timeframe: "Final prep",
+        due: "",
+        done: false,
+        archived: false,
+        order: state.tasks.length + 1
+      };
+      state.tasks.push(task);
+      normaliseOrderedList(state.tasks);
+      dismissTravelSuggestion(title, false);
+      render();
+    }
+
+    function dismissTravelSuggestion(text, shouldRender = true) {
+      const title = String(text || "").trim();
+      if (!title) return;
+      state.suggestions_cache = state.suggestions_cache || { updatedAt: "", items: [], dismissed: [] };
+      state.suggestions_cache.dismissed = state.suggestions_cache.dismissed || [];
+      if (!state.suggestions_cache.dismissed.includes(title)) state.suggestions_cache.dismissed.push(title);
+      if (shouldRender) render();
     }
 
     function renderNearbyPreferences() {
@@ -8015,47 +9078,131 @@
       if (!root) return;
       const pace = getBudgetPace();
       const totalMoney = getTotalMoney();
-      const paceSource = getBudgetPaceSource();
       const activePotLabel = pace.pots?.length > 1 ? `${pace.pots.length} active budgets` : pace.pool?.name || "No current budget";
       const activePotDetail = pace.pots?.length ? `${money(getCurrentBudgetAmount())} available. Part of ${parentFundName(pace.pool)}.` : "Choose a pot to control daily safe spend.";
-      const periodDetail = getBudgetPeriodDetail(pace);
       const reconciliation = validateFinanceTotals();
       const parents = parentPotRecords().filter((parent) => getFundTotal(parent.ref) > 0 || childPotsForFund(parent.ref).length);
-      const fundCards = parents.map((parent) => {
-        const total = getFundTotal(parent.ref);
-        const target = getFundTarget(parent.ref);
-        return [parent.name, money(total), target ? `${pct(total, target)}% of ${money(target)} starting amount.` : "Money available inside this parent pot."];
-      });
       const fundTotal = parents.reduce((sum, parent) => sum + getFundTotal(parent.ref), 0);
-      const breakdown = `Breakdown: ${parents.map((parent) => `${parent.name} ${money(getFundTotal(parent.ref))}`).join(", ") || "no child pots"}${totalMoney - fundTotal > 0 ? `, available in root ${money(totalMoney - fundTotal)}` : ""}.`;
+      const rootAvailable = totalMoney - fundTotal;
+      const breakdownRows = [
+        ...parents.map((parent) => [parent.name, money(getFundTotal(parent.ref))]),
+        ...(rootAvailable > 0 ? [["Available in root", money(rootAvailable)]] : []),
+        ...(!parents.length && rootAvailable <= 0 ? [["Child pots", "No child pots yet"]] : [])
+      ];
       root.innerHTML = [
         ["Total money", money(totalMoney), "All money currently available."],
-        ...fundCards,
+        ["Reserved funds", money(fundTotal), "Money allocated inside child or parent pots."],
+        ["Available in root", money(Math.max(0, rootAvailable)), "Money not currently allocated to child pots."],
         ["Current budget", activePotLabel, activePotDetail],
-        ["Budget period", paceSource, periodDetail],
         ["Safe spend today", pace.safeDaily === null ? "Not set" : money(pace.safeDaily), pace.safeWeekly === null ? "Weekly not set" : `${money(pace.safeWeekly)} safe per week`]
       ].map(([label, value, detail]) => `<div class="finance-kpi"><span class="muted">${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong><span class="hint">${escapeHtml(String(detail))}</span></div>`).join("")
-        + `<div class="finance-kpi span-12"><span class="muted">Money breakdown</span><strong>${escapeHtml(breakdown)}</strong><span class="hint">Child pots sit inside parent pots; they are not extra money.</span></div>`
-        + (reconciliation.warnings.length ? `<div class="empty span-12"><strong>Finance review needed</strong><span>${reconciliation.warnings.map(escapeHtml).join("<br>")}</span></div>` : "");
+        + `<div class="finance-kpi finance-breakdown"><span class="muted">Money breakdown</span><div class="breakdown-list">${breakdownRows.map(([label, value]) => `<div class="breakdown-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}</div><span class="hint">Child pots sit inside parent pots; they are not extra money.</span></div>`;
+
+      renderBudgetOverviewPots();
+      renderBudgetHealth(pace, reconciliation);
 
       const recentRoot = document.getElementById("recentMoneyList");
       if (!recentRoot) return;
       const recent = state.money.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 5);
-      recentRoot.innerHTML = "";
       if (!recent.length) {
         recentRoot.innerHTML = `<div class="empty">No recent transactions yet.</div>`;
         return;
       }
-      recent.forEach((entry) => {
-        const node = document.createElement("div");
-        node.className = `item compact ${entry.type === "income" ? "income-row" : "expense-row"}`;
-        node.innerHTML = `<div><div class="item-title"></div><div class="item-body"></div></div><div class="item-actions"><button type="button" class="ghost-btn">Edit</button><button type="button" class="danger-btn">Delete</button></div>`;
-        node.querySelector(".item-title").textContent = `${entry.type === "income" ? "Income" : "Expense"} - ${money(entry.amount)}`;
-        node.querySelector(".item-body").textContent = [entry.date || "No date", entry.description || entry.note || "", entry.category || "Uncategorised"].filter(Boolean).join(" - ");
-        node.querySelector(".ghost-btn").addEventListener("click", () => editMoney(entry));
-        node.querySelector(".danger-btn").addEventListener("click", () => removeItem("money", entry.id));
-        recentRoot.appendChild(node);
+      recentRoot.innerHTML = financeTableHtml(["Date", "Description", "Pot", "Category", "Amount", "Note", "Actions"], recent.map((entry) => {
+        const pot = (state.budgetPools || []).find((item) => item.id === (entry.potId || entry.budgetPoolId));
+        const amountClass = entry.type === "income" ? "money-positive" : "money-negative";
+        return [
+          formatDateOrNotSet(entry.date),
+          escapeHtml(entry.description || "Transaction"),
+          escapeHtml(pot?.name || rootPot().name || "Root"),
+          escapeHtml(`${entry.category || "Uncategorised"}${entry.subcategory ? " / " + entry.subcategory : ""}`),
+          `<span class="${amountClass}">${escapeHtml(money(entry.amount))}</span>`,
+          escapeHtml(entry.note || ""),
+          financeActionMenuHtml([
+            ["Edit", `data-edit-transaction="${escapeHtml(entry.id)}"`],
+            ["Delete", `data-delete-transaction="${escapeHtml(entry.id)}"`, "danger-btn"]
+          ])
+        ];
+      }));
+      recentRoot.querySelectorAll("[data-edit-transaction]").forEach((button) => {
+        const entry = state.money.find((item) => item.id === button.dataset.editTransaction);
+        if (entry) button.addEventListener("click", () => editMoney(entry));
       });
+      recentRoot.querySelectorAll("[data-delete-transaction]").forEach((button) => {
+        button.addEventListener("click", () => removeItem("money", button.dataset.deleteTransaction));
+      });
+    }
+
+    function financeActionMenuHtml(actions) {
+      return `<details class="action-menu finance-row-menu"><summary>...</summary>${actions.map(([label, attr, className = "ghost-btn"]) => `<button type="button" class="${className}" ${attr}>${escapeHtml(label)}</button>`).join("")}</details>`;
+    }
+
+    function financeTableHtml(headers, rows) {
+      return `<div class="finance-table-header">${headers.map((header) => `<span>${escapeHtml(header)}</span>`).join("")}</div>${rows.map((row) => `<div class="finance-table-row">${row.map((cell) => `<span>${cell}</span>`).join("")}</div>`).join("")}`;
+    }
+
+    function renderBudgetOverviewPots() {
+      const root = document.getElementById("budgetOverviewPots");
+      if (!root) return;
+      const rows = [];
+      const pushPotRow = (label, total, available, allocated, depth, ref, pool = null) => {
+        const progress = total > 0 ? pct(allocated, total) : 0;
+        const attrs = pool
+          ? [
+              ["Add child", `data-overview-add-child="${escapeHtml(`pot:${pool.id}`)}"`],
+              ["Transfer", `data-overview-transfer="${escapeHtml(`pot:${pool.id}`)}"`],
+              ["Edit", `data-overview-edit-pot="${escapeHtml(pool.id)}"`]
+            ]
+          : [
+              ["Add child", `data-overview-add-child="${escapeHtml(ref)}"`],
+              ["Transfer", `data-overview-transfer="${escapeHtml(ref)}"`]
+            ];
+        rows.push([
+          `<span class="finance-pot-name" style="--depth:${depth}">${escapeHtml(label)}</span>`,
+          `<span class="money-value">${escapeHtml(money(total))}</span>`,
+          `<span class="money-value">${escapeHtml(money(available))}</span>`,
+          `<span class="finance-progress"><i style="width:${progress}%"></i><em>${progress}% allocated</em></span>`,
+          financeActionMenuHtml(attrs)
+        ]);
+      };
+      const renderChild = (pool, depth) => {
+        const ref = `pot:${pool.id}`;
+        const total = getPotBalance(pool.id);
+        pushPotRow(pool.name || "Untitled pot", total, availableInNode(ref), allocatedToChildren(ref), depth, ref, pool);
+        directChildPots(ref).forEach((child) => renderChild(child, depth + 1));
+      };
+      const rootRef = rootParentRef();
+      pushPotRow(rootPot().name || "Total Amount", getTotalMoney(), availableInNode(rootRef), allocatedToChildren(rootRef), 0, rootRef, null);
+      parentPotRecords().forEach((parent) => {
+        pushPotRow(parent.name, parentRecordTotal(parent), availableInNode(parent.ref), allocatedToChildren(parent.ref), 1, parent.ref, parent.pot || null);
+        directChildPots(parent.ref).forEach((pool) => renderChild(pool, 2));
+      });
+      if (!rows.length) {
+        root.innerHTML = `<div class="empty">No pots yet. Add a pot to begin allocating money.</div>`;
+        return;
+      }
+      root.innerHTML = financeTableHtml(["Pot", "Total", "Available", "Utilisation", "Actions"], rows);
+      root.querySelectorAll("[data-overview-add-child]").forEach((button) => button.addEventListener("click", () => openAddPotModal(button.dataset.overviewAddChild)));
+      root.querySelectorAll("[data-overview-transfer]").forEach((button) => button.addEventListener("click", () => openPotActionModal("transfer", button.dataset.overviewTransfer)));
+      root.querySelectorAll("[data-overview-edit-pot]").forEach((button) => {
+        const pool = state.budgetPools.find((item) => item.id === button.dataset.overviewEditPot);
+        if (pool) button.addEventListener("click", () => editBudgetPool(pool));
+      });
+    }
+
+    function renderBudgetHealth(pace, reconciliation) {
+      const root = document.getElementById("budgetHealth");
+      if (!root) return;
+      const insights = [];
+      if (reconciliation.warnings.length) reconciliation.warnings.forEach((warning) => insights.push(["Review", warning, "warning"]));
+      if (!pace.pool) insights.push(["No current budget", "Choose an active pot with dates to calculate daily spend.", "info"]);
+      else {
+        insights.push(["Current budget", `${pace.pots?.length > 1 ? pace.pots.length + " pots" : pace.pool.name} controls safe spend.`, "info"]);
+        if (pace.warning && pace.warning !== "On pace") insights.push(["Attention", pace.warning, "warning"]);
+        else insights.push(["Pace", "Spending is within the current pace based on available data.", "success"]);
+        if (pace.remainingDays !== null && pace.remainingDays <= 7) insights.push(["Period ending", `${pace.remainingDays} days remain in this budget period.`, "warning"]);
+      }
+      root.innerHTML = insights.map(([title, body, tone]) => `<div class="finance-insight ${tone}"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(body)}</span></div>`).join("");
     }
 
     function renderBudgetPace() {
@@ -8684,7 +9831,10 @@
           archivedDateItemList: ["No archived dates", "Archived dates will appear here."],
           travelDateList: ["No active travel dates", "Add key dates to power countdowns and timelines."],
           archivedTravelDateList: ["No archived dates", "Archived travel dates will appear here."],
-          planningWindowList: ["No advanced budget periods yet", "Most budgets only need pot start and end dates."]
+          planningWindowList: ["No advanced budget periods yet", "Most budgets only need pot start and end dates."],
+          departureList: ["No preparation tasks yet", "Add a task or add one of the suggestions above."],
+          completedDepartureList: ["No completed preparation tasks yet", "Completed prep tasks will stay here."],
+          archivedDepartureList: ["No archived preparation tasks", "Archived prep tasks can be restored here."]
         };
         const [title, body] = messages[idName] || ["Nothing here yet", "New entries will appear here after you add them."];
         root.innerHTML = `<div class="empty"><strong>${title}</strong><span>${body}</span></div>`;
@@ -8707,6 +9857,47 @@
       node.querySelector("input").addEventListener("change", (event) => { item.done = event.target.checked; render(); });
       node.querySelector(".ghost-btn").addEventListener("click", () => collection === "tasks" ? editTask(item) : editTitle(item));
       node.querySelector(".danger-btn").addEventListener("click", () => removeItem(collection, item.id));
+      return node;
+    }
+
+    function travelTaskItem(task) {
+      const node = document.createElement("div");
+      node.className = `item travel-task ${task.done ? "done" : ""}`;
+      node.innerHTML = `
+        <input type="checkbox" ${task.done ? "checked" : ""} aria-label="Mark task complete">
+        <div>
+          <div class="item-title"></div>
+          <div class="item-body"></div>
+        </div>
+        <div class="item-actions">
+          <details class="action-menu">
+            <summary>Actions</summary>
+            <button type="button" class="ghost-btn edit-task">Edit</button>
+            <button type="button" class="ghost-btn archive-task"></button>
+            <button type="button" class="danger-btn delete-task">Delete</button>
+          </details>
+        </div>
+      `;
+      node.querySelector(".item-title").textContent = task.title;
+      node.querySelector(".item-body").innerHTML = [
+        task.category || "Travel admin",
+        task.timeframe || "Final prep",
+        task.due ? taskDueLabel(task) : "",
+        `Position ${Number(task.order) || orderedItems(state.tasks).indexOf(task) + 1}`
+      ].filter(Boolean).map((label) => `<span class="pill">${escapeHtml(label)}</span>`).join("");
+      node.querySelector("input").addEventListener("change", (event) => {
+        task.done = event.target.checked;
+        render();
+      });
+      node.querySelector(".edit-task").addEventListener("click", () => editTask(task));
+      const archiveButton = node.querySelector(".archive-task");
+      archiveButton.textContent = task.archived ? "Unarchive" : "Archive";
+      archiveButton.addEventListener("click", () => {
+        task.archived = !task.archived;
+        normaliseOrderedList(state.tasks);
+        render();
+      });
+      node.querySelector(".delete-task").addEventListener("click", () => removeItem("tasks", task.id));
       return node;
     }
 
@@ -8984,6 +10175,8 @@
       if (timeframe === null) return;
       const due = promptValue("Due date, optional YYYY-MM-DD", item.due || "");
       if (due === null) return;
+      const order = promptValue("Position", item.order || orderedItems(state.tasks).indexOf(item) + 1);
+      if (order === null) return;
       const completed = promptValue("Completed? yes/no", item.done ? "yes" : "no");
       if (completed === null) return;
       item.title = title || item.title;
@@ -8991,6 +10184,7 @@
       item.timeframe = timeframe || item.timeframe || "Setup";
       item.due = due || "";
       item.done = /^(yes|y|true|done|complete|completed)$/i.test(completed);
+      moveOrderedItem(state.tasks, item, order);
       render();
     }
 
@@ -9468,7 +10662,8 @@
           timeframe: timeframe || "Setup",
           due: due || "",
           title: titleParts.join(" | ") || due || timeframe || category || "New task",
-          done: false
+          done: false,
+          archived: false
         };
       });
     }
@@ -9737,7 +10932,21 @@
       showDashboard();
     });
 
-    bindForm("taskForm", (data) => state.tasks.push({ id: id(), ...data, done: false }));
+    bindForm("taskForm", (data) => state.tasks.push({ id: id(), ...data, done: false, archived: false, order: state.tasks.length + 1 }));
+    bindForm("travelPrepTaskForm", (data) => {
+      const task = {
+        id: id(),
+        title: data.title || "New preparation task",
+        category: data.category || "Travel admin",
+        timeframe: "Final prep",
+        due: data.due || "",
+        done: false,
+        archived: false,
+        order: state.tasks.length + 1
+      };
+      state.tasks.push(task);
+      moveOrderedItem(state.tasks, task, data.order || state.tasks.length);
+    });
     bindForm("routeForm", (data) => {
       const stop = { id: id(), ...data, order: state.route.length + 1 };
       state.route.push(stop);
@@ -9819,6 +11028,8 @@
       render();
     });
     document.getElementById("openAddPotBtn").addEventListener("click", () => openAddPotModal());
+    document.getElementById("financeHeaderAddPotBtn").addEventListener("click", () => openAddPotModal());
+    document.getElementById("financeHeaderTransferBtn").addEventListener("click", () => openPotActionModal("transfer", rootParentRef()));
     document.getElementById("cancelAddPotBtn").addEventListener("click", () => {
       document.getElementById("addPotModal").hidden = true;
     });

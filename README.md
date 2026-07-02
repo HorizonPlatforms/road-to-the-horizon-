@@ -17,11 +17,13 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.34.0`.
+Current app version: `0.36.0`.
 
 The current interface uses an integrated workspace style: ordinary sections sit on the page with dividers, rows, tables and compact toolbars instead of default card containers. Cards are reserved for focused states such as authentication, modals, temporary alerts and compact result callouts.
 
 The visual system defaults to a warm light theme with a redesigned charcoal dark theme available from Settings. Theme choices are `System`, `Light` and `Dark`, and the app uses shared colour tokens for workspace, secondary surfaces, dividers, accent, success, warning, error and information states.
+
+The main shell uses a website-style left sidebar, contextual page headers and dashboard-only global metrics so feature pages do not repeat the same summary strip.
 
 ## Structure and planning model
 
@@ -33,7 +35,7 @@ The app is organised so normal editing happens close to the section that uses th
 - Journal contains diary entries, optional mood/energy/sleep context, reflections, travel context, finance reflections and Patterns and Insights.
 - Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
 
-Budget keeps the surface model simple: one editable root pot for total money, user-defined child pots, current budget, budget period and transactions. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Pot names are user-defined labels, and add/remove/transfer/spending actions are saved as transaction records so balances remain auditable. Older finance values are preserved and normalized into compatible records for existing users.
+Budget keeps the surface model simple: one editable root pot for total money, user-defined child pots, current budget, budget period and transactions. The Money overview uses a compact summary band, a hierarchy table for pots, recent transaction table, spending pace panel and deterministic budget-health insights. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Pot names are user-defined labels, and add/remove/transfer/spending actions are saved as transaction records so balances remain auditable. Older finance values are preserved and normalized into compatible records for existing users.
 
 Journal and Finance are connected without duplicating spending records. Finance remains the source of truth for transactions, balances, pots, Safe Spend and analytics. Journal entries show same-day Finance transactions, can link to transaction IDs, and ask before creating a new Finance transaction from a journal spending item.
 
