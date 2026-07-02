@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#245d8f">
+  <meta name="theme-color" content="#176B78">
   <meta name="application-name" content="Travel Life OS">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Life OS">
@@ -14,38 +14,57 @@
   <style>
     :root {
       color-scheme: light;
-      --ink: #16202f;
-      --muted: #637083;
-      --line: #d8e0e8;
-      --paper: #f7f5ef;
-      --panel: #ffffff;
-      --soft: #f3f7f8;
-      --soft-2: #eaf0f3;
-      --blue: #245d8f;
-      --green: #2f7d5c;
-      --amber: #a76722;
-      --red: #a54848;
-      --shadow: 0 10px 28px rgba(22, 32, 47, 0.08);
-      --shadow-soft: 0 4px 14px rgba(22, 32, 47, 0.06);
-      --focus: 0 0 0 3px color-mix(in srgb, var(--blue) 26%, transparent);
+      --app-bg: #f6f7f8;
+      --workspace: #ffffff;
+      --surface-subtle: #f1f3f5;
+      --surface-raised-token: #fafbfc;
+      --text-primary: #18212b;
+      --text-secondary: #66717d;
+      --text-muted: #6b7680;
+      --divider: #dde2e7;
+      --accent-primary: #176b78;
+      --accent-hover: #125661;
+      --accent-soft: #e7f3f5;
+      --success: #2f7d5a;
+      --warning-token: #a96b19;
+      --error-token: #b74545;
+      --info: #3e6fa5;
+      --shadow: 0 12px 34px rgba(24, 33, 43, 0.08);
+      --shadow-soft: 0 3px 12px rgba(24, 33, 43, 0.06);
+      --focus: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 24%, transparent);
+      --ink: var(--text-primary);
+      --muted: var(--text-secondary);
+      --line: var(--divider);
+      --paper: var(--app-bg);
+      --panel: var(--workspace);
+      --soft: var(--surface-subtle);
+      --soft-2: color-mix(in srgb, var(--surface-subtle) 78%, var(--divider));
+      --blue: var(--accent-primary);
+      --green: var(--success);
+      --amber: var(--warning-token);
+      --red: var(--error-token);
     }
 
     body.dark {
       color-scheme: dark;
-      --ink: #ecf2f7;
-      --muted: #a9b6c6;
-      --line: #334254;
-      --paper: #111923;
-      --panel: #182333;
-      --soft: #1f2c3b;
-      --soft-2: #253547;
-      --blue: #7fb7e6;
-      --green: #7bcaa5;
-      --amber: #e2a862;
-      --red: #e18484;
-      --shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
-      --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.2);
-      --focus: 0 0 0 3px color-mix(in srgb, var(--blue) 34%, transparent);
+      --app-bg: #111418;
+      --workspace: #171b20;
+      --surface-subtle: #1e242a;
+      --surface-raised-token: #20272d;
+      --text-primary: #f2f5f7;
+      --text-secondary: #b5bec7;
+      --text-muted: #88939e;
+      --divider: #303840;
+      --accent-primary: #4fa3ad;
+      --accent-hover: #72bbc3;
+      --accent-soft: #18363b;
+      --success: #4c9a70;
+      --warning-token: #c98a35;
+      --error-token: #d96565;
+      --info: #78a8d7;
+      --shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+      --shadow-soft: 0 3px 12px rgba(0, 0, 0, 0.22);
+      --focus: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 36%, transparent);
     }
 
     * { box-sizing: border-box; }
@@ -1364,17 +1383,19 @@
 
     /* Professional UI system override */
     :root {
-      --bg: #f6f7f4;
-      --surface: #ffffff;
-      --surface-muted: #f1f4f2;
-      --surface-raised: #fbfcfa;
-      --text: #17202c;
-      --text-soft: #566273;
-      --border: #dfe6e2;
-      --accent: #245d8f;
-      --accent-2: #2f7d5c;
-      --warning: #a76722;
-      --danger: #a54848;
+      --bg: var(--app-bg);
+      --surface: var(--workspace);
+      --surface-muted: var(--surface-subtle);
+      --surface-raised: var(--surface-raised-token);
+      --text: var(--text-primary);
+      --text-soft: var(--text-secondary);
+      --text-faint: var(--text-muted);
+      --border: var(--divider);
+      --accent: var(--accent-primary);
+      --accent-2: var(--accent-primary);
+      --accent-soft-ui: var(--accent-soft);
+      --warning: var(--warning-token);
+      --danger: var(--error-token);
       --radius-xs: 6px;
       --radius-sm: 8px;
       --radius-md: 10px;
@@ -1386,26 +1407,25 @@
       --space-6: 28px;
       --content-max: 1180px;
       --nav-width: 224px;
-      --elevation-1: 0 1px 2px rgba(22, 32, 47, 0.05);
-      --elevation-2: 0 14px 34px rgba(22, 32, 47, 0.08);
+      --elevation-1: var(--shadow-soft);
+      --elevation-2: var(--shadow);
       --motion-fast: 150ms;
       --z-nav: 900;
     }
 
     body.dark {
-      --bg: #101821;
-      --surface: #172331;
-      --surface-muted: #202d3c;
-      --surface-raised: #1b2837;
-      --text: #edf4f8;
-      --text-soft: #aab7c6;
-      --border: #324253;
+      --bg: var(--app-bg);
+      --surface: var(--workspace);
+      --surface-muted: var(--surface-subtle);
+      --surface-raised: var(--surface-raised-token);
+      --text: var(--text-primary);
+      --text-soft: var(--text-secondary);
+      --text-faint: var(--text-muted);
+      --border: var(--divider);
     }
 
     body {
-      background:
-        linear-gradient(180deg, color-mix(in srgb, var(--bg) 92%, var(--surface)) 0%, var(--bg) 380px),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
       font-size: 15px;
     }
@@ -1432,7 +1452,7 @@
     .mini-brand,
     .brand-mark {
       border-radius: var(--radius-md);
-      background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent-2) 52%, var(--accent)));
+      background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--info) 28%, var(--accent)));
     }
 
     h1 {
@@ -1497,7 +1517,7 @@
     }
 
     .tab.active {
-      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+      background: var(--accent-soft-ui);
       border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
       color: var(--accent);
       box-shadow: none;
@@ -1699,7 +1719,7 @@
     }
 
     .category-chip.active {
-      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+      background: var(--accent-soft-ui);
       color: var(--accent);
     }
 
@@ -1729,7 +1749,7 @@
 
     .progress-fill,
     .timeline-fill {
-      background: var(--accent-2);
+      background: var(--accent);
     }
 
     .finance-kpi strong,
@@ -1905,6 +1925,447 @@
 
       .item-actions {
         justify-content: flex-start;
+      }
+    }
+
+    /* Continuous workspace visual pass */
+    :root {
+      --workspace-line: color-mix(in srgb, var(--border) 72%, transparent);
+      --workspace-wash: color-mix(in srgb, var(--surface-muted) 54%, transparent);
+    }
+
+    body {
+      background: var(--bg);
+    }
+
+    .wrap {
+      width: min(1240px, calc(100% - 40px));
+    }
+
+    header {
+      background: color-mix(in srgb, var(--surface) 96%, transparent);
+      padding: 8px 0;
+    }
+
+    main {
+      align-items: start;
+      gap: 0;
+      border-left: 1px solid var(--workspace-line);
+      border-right: 1px solid var(--workspace-line);
+      background: var(--surface);
+    }
+
+    .tabs {
+      top: 70px;
+      padding: 18px 12px;
+      border: 0;
+      border-right: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: color-mix(in srgb, var(--surface-muted) 52%, transparent);
+      box-shadow: none;
+    }
+
+    .tabs::before {
+      margin: 0 10px 14px;
+    }
+
+    .tab {
+      border: 0;
+      background: transparent;
+    }
+
+    .tab.active {
+      border: 0;
+      background: var(--accent-soft-ui);
+      color: var(--accent);
+    }
+
+    .main-content {
+      min-width: 0;
+      padding: 4px clamp(18px, 3vw, 36px) 0;
+    }
+
+    .metrics {
+      grid-column: 2;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0;
+      margin: 0 0 var(--space-5);
+      border-top: 1px solid var(--workspace-line);
+      border-bottom: 1px solid var(--workspace-line);
+      background: transparent;
+    }
+
+    .metric-card {
+      min-height: 0;
+      padding: 14px 16px;
+      border: 0;
+      border-right: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .metric-card .muted {
+      color: var(--text-faint);
+      font-weight: 700;
+    }
+
+    .metric-card:last-child {
+      border-right: 0;
+    }
+
+    .metric-card .progress-bar,
+    .score-card .progress-bar {
+      height: 5px;
+      margin-top: 8px;
+    }
+
+    .view.active {
+      gap: var(--space-4);
+    }
+
+    .view.active::before {
+      margin: 0;
+      padding: 0 0 var(--space-5);
+      border-bottom: 1px solid var(--workspace-line);
+    }
+
+    .grid {
+      gap: 0 var(--space-5);
+    }
+
+    .panel {
+      padding: var(--space-5) 0;
+      border: 0;
+      border-top: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .panel h2,
+    .panel h3 {
+      color: var(--text);
+    }
+
+    .grid > .panel:first-child,
+    #command .grid > .panel:first-child,
+    #travel .grid > .panel:first-child,
+    #budget .grid > .panel:first-child,
+    #journal .grid > .panel:first-child {
+      border-top: 0;
+      background: transparent;
+    }
+
+    .setup-panel {
+      margin-bottom: var(--space-5);
+      padding: var(--space-5);
+      border: 1px solid var(--workspace-line);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--surface) 72%, transparent);
+    }
+
+    .section-heading-row,
+    .inline-actions,
+    .modal-actions {
+      gap: 8px;
+    }
+
+    .form-grid {
+      align-items: end;
+      padding: 0;
+    }
+
+    label {
+      gap: 6px;
+    }
+
+    input,
+    select,
+    textarea {
+      background: color-mix(in srgb, var(--surface) 94%, var(--surface-muted));
+    }
+
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+      border-color: var(--accent);
+      box-shadow: var(--focus);
+    }
+
+    .budget-tabs,
+    .auth-tabs {
+      border: 0;
+      border-bottom: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+      gap: 0;
+    }
+
+    .budget-tab,
+    .auth-tabs button {
+      border: 0;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .budget-tab.active,
+    .auth-tabs button.active {
+      border-bottom-color: var(--accent);
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .finance-kpis,
+    .countdown-grid,
+    .score-grid,
+    .about-grid,
+    .finance-chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0;
+      border-top: 1px solid var(--workspace-line);
+      border-left: 1px solid var(--workspace-line);
+    }
+
+    .finance-kpi,
+    .countdown-card,
+    .score-card,
+    .about-card,
+    .chart-card {
+      padding: 14px 16px;
+      border: 0;
+      border-right: 1px solid var(--workspace-line);
+      border-bottom: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .progress-bar,
+    .timeline-track {
+      height: 5px;
+      border: 0;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface-muted) 86%, var(--border));
+      overflow: hidden;
+    }
+
+    .progress-fill,
+    .timeline-fill {
+      border-radius: inherit;
+    }
+
+    .daily-briefing-card,
+    .weather-card,
+    .root-pot-card {
+      border: 0;
+      border-top: 1px solid var(--workspace-line);
+      border-bottom: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .daily-briefing-card {
+      padding: 16px 0;
+    }
+
+    .root-pot-card {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(130px, .7fr));
+      gap: 0;
+      padding: 0;
+    }
+
+    .root-pot-card > div {
+      padding: 14px 16px;
+      border-right: 1px solid var(--workspace-line);
+    }
+
+    .root-pot-card > div:last-child {
+      border-right: 0;
+    }
+
+    .pot-tree {
+      border-top: 1px solid var(--workspace-line);
+    }
+
+    .pot-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-3);
+      padding: 12px 0;
+      border: 0;
+      border-bottom: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .pot-children {
+      border-left: 1px solid var(--workspace-line);
+      margin-left: 18px;
+      padding-left: 14px;
+    }
+
+    .list,
+    .table-ish {
+      border-top: 1px solid var(--workspace-line);
+    }
+
+    .item,
+    .place-card,
+    .transaction-row,
+    .route-row,
+    .budget-pool-row,
+    .packing-group {
+      padding: 12px 0;
+      border: 0;
+      border-bottom: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .place-card {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .item:hover,
+    .place-card:hover,
+    .route-row:hover,
+    .transaction-row:hover {
+      background: var(--workspace-wash);
+    }
+
+    .advanced-details,
+    .advanced-panel {
+      border: 0;
+      border-top: 1px solid var(--workspace-line);
+      border-bottom: 1px solid var(--workspace-line);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .advanced-details summary,
+    .advanced-panel summary {
+      padding: 12px 0;
+    }
+
+    .nearby-category-panel,
+    .privacy-note,
+    .empty {
+      border: 0;
+      border-left: 3px solid color-mix(in srgb, var(--accent) 38%, var(--workspace-line));
+      border-radius: 0;
+      background: var(--workspace-wash);
+      box-shadow: none;
+    }
+
+    .warning-box {
+      border: 0;
+      border-left: 3px solid var(--warning);
+      border-radius: 0;
+      background: color-mix(in srgb, var(--warning) 10%, var(--surface));
+    }
+
+    .danger-btn {
+      color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+      border-color: color-mix(in srgb, var(--danger) 22%, var(--border));
+    }
+
+    .pill,
+    .sync-status,
+    .category-chip,
+    .pot-stats span {
+      border-radius: 999px;
+      box-shadow: none;
+    }
+
+    .modal-card,
+    .auth-card,
+    .splash-card,
+    .mobile-more-panel,
+    .update-banner {
+      border-radius: var(--radius-md);
+      box-shadow: var(--elevation-2);
+    }
+
+    .auth-card,
+    .splash-card,
+    .modal-card {
+      background: var(--surface);
+    }
+
+    @media (max-width: 1060px) {
+      .root-pot-card {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 820px) {
+      .wrap {
+        width: min(100% - 24px, 1240px);
+      }
+
+      main {
+        border: 0;
+        background: transparent;
+      }
+
+      .main-content {
+        padding: 0;
+      }
+
+      .tabs {
+        border-right: 0;
+        border-top: 1px solid var(--workspace-line);
+        background: color-mix(in srgb, var(--surface) 96%, transparent);
+        box-shadow: none;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .metric-card {
+        border-right: 1px solid var(--workspace-line);
+      }
+
+      .metric-card:nth-child(2n) {
+        border-right: 0;
+      }
+
+      .panel {
+        padding: var(--space-4) 0;
+      }
+
+      .finance-kpis,
+      .countdown-grid,
+      .score-grid,
+      .about-grid,
+      .finance-chart-grid,
+      .root-pot-card {
+        grid-template-columns: 1fr;
+      }
+
+      .root-pot-card > div {
+        border-right: 0;
+        border-bottom: 1px solid var(--workspace-line);
+      }
+
+      .root-pot-card > div:last-child {
+        border-bottom: 0;
+      }
+
+      .pot-card,
+      .place-card {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -2840,7 +3301,7 @@
         <div class="panel span-6">
           <h2>Dashboard Text And Preferences</h2>
           <div class="form-grid">
-            <label class="field-4"><span>Theme</span><select id="themeSettingInput"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+            <label class="field-4"><span>Theme</span><select id="themeSettingInput"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
             <label class="field-12">Dashboard subtitle<textarea id="dashboardSubtitleInput"></textarea></label>
           </div>
           <div class="inline-actions">
@@ -2886,7 +3347,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.32.0";
+    const APP_VERSION = "0.34.0";
     const defaultSubtitle = "Your local command centre for travel, money, TEFL, content, writing, journal entries and long-term planning.";
     const defaultSectionLabels = {
       command: "Dashboard",
@@ -3066,7 +3527,7 @@
     const defaults = {
       meta: { version: 3, createdAt: new Date().toISOString(), lastSaved: null, setupComplete: false, demoMode: false },
       settings: {
-        theme: "light",
+        theme: "system",
         dashboardSubtitle: defaultSubtitle,
         sectionLabels: defaultSectionLabels,
         prepPot: 0,
@@ -6980,7 +7441,7 @@
     }
 
     function renderSettings() {
-      setValue("themeSettingInput", state.settings.theme || "light");
+      setValue("themeSettingInput", state.settings.theme || "system");
       setValue("dashboardSubtitleInput", state.settings.dashboardSubtitle || defaultSubtitle);
       setValue("teflTargetInput", state.settings.teflTargetHours);
       renderSectionLabelSettings();
@@ -7803,7 +8264,7 @@
     }
 
     function chartColour(index) {
-      return ["#2f6f73", "#d28a32", "#8aa6a3", "#6f7f95", "#c65f5f", "#7a6fa8", "#4f8f5f"][index % 7];
+      return ["var(--accent)", "var(--warning)", "var(--info)", "var(--text-muted)", "var(--danger)", "var(--success)", "var(--text-secondary)"][index % 7];
     }
 
     function pieChart(entries) {
@@ -7835,7 +8296,7 @@
       }).join(" ");
       const first = items[0]?.date || "";
       const last = items[items.length - 1]?.date || "";
-      return `<div class="line-chart"><svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Finance trend"><polyline points="${points}" fill="none" stroke="#2f6f73" stroke-width="3" vector-effect="non-scaling-stroke"></polyline></svg></div><div class="chart-legend"><span>${escapeHtml(formatDate(first))}</span><span>${escapeHtml(formatDate(last))}</span></div>`;
+      return `<div class="line-chart"><svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Finance trend"><polyline points="${points}" fill="none" style="stroke:var(--accent)" stroke-width="3" vector-effect="non-scaling-stroke"></polyline></svg></div><div class="chart-legend"><span>${escapeHtml(formatDate(first))}</span><span>${escapeHtml(formatDate(last))}</span></div>`;
     }
 
     function groupedMonthlyBars(months) {
@@ -7844,12 +8305,12 @@
         <div class="bar-row">
           <span>${escapeHtml(item.label)}</span>
           <div>
-            <div class="bar-track"><div class="bar-fill" style="width:${pct(item.income, max)}%; background:#2f6f73"></div></div>
-            <div class="bar-track" style="margin-top:4px"><div class="bar-fill" style="width:${pct(item.expenses, max)}%; background:#c65f5f"></div></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct(item.income, max)}%; background:var(--success)"></div></div>
+            <div class="bar-track" style="margin-top:4px"><div class="bar-fill" style="width:${pct(item.expenses, max)}%; background:var(--danger)"></div></div>
           </div>
           <strong>${money(item.income)} / ${money(item.expenses)}</strong>
         </div>
-      `).join("") + `<div class="chart-legend"><span><i class="legend-dot" style="background:#2f6f73"></i>Income</span><span><i class="legend-dot" style="background:#c65f5f"></i>Expenses</span></div>`;
+      `).join("") + `<div class="chart-legend"><span><i class="legend-dot" style="background:var(--success)"></i>Income</span><span><i class="legend-dot" style="background:var(--danger)"></i>Expenses</span></div>`;
     }
 
     function renderBudgetSummaries() {
@@ -9851,8 +10312,9 @@
     });
 
     document.getElementById("themeSettingInput").addEventListener("input", (event) => {
-      state.settings.theme = event.target.value === "dark" ? "dark" : "light";
+      state.settings.theme = ["system", "light", "dark"].includes(event.target.value) ? event.target.value : "system";
       render();
+      save();
     });
 
     document.querySelectorAll(".tab").forEach((tab) => {
@@ -9863,14 +10325,29 @@
     });
 
     document.getElementById("themeBtn").addEventListener("click", () => {
-      state.settings.theme = state.settings.theme === "dark" ? "light" : "dark";
+      const order = ["system", "light", "dark"];
+      const currentIndex = order.indexOf(state.settings.theme || "system");
+      state.settings.theme = order[(currentIndex + 1) % order.length];
       render();
+      save();
     });
 
     function applyTheme() {
-      document.body.classList.toggle("dark", state.settings.theme === "dark");
-      document.getElementById("themeBtn").textContent = state.settings.theme === "dark" ? "Light Mode" : "Dark Mode";
+      const preference = ["system", "light", "dark"].includes(state.settings.theme) ? state.settings.theme : "system";
+      const systemDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches || false;
+      const dark = preference === "dark" || (preference === "system" && systemDark);
+      document.body.classList.toggle("dark", dark);
+      document.documentElement.style.colorScheme = dark ? "dark" : "light";
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#171B20" : "#176B78");
+      const themeButton = document.getElementById("themeBtn");
+      if (themeButton) {
+        themeButton.textContent = preference === "system" ? "Theme: System" : dark ? "Theme: Dark" : "Theme: Light";
+      }
     }
+
+    window.matchMedia?.("(prefers-color-scheme: dark)")?.addEventListener?.("change", () => {
+      if ((state.settings.theme || "system") === "system") applyTheme();
+    });
 
     document.getElementById("exportBtn").addEventListener("click", () => {
       createBackupDownload("manual");
