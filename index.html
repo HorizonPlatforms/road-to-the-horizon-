@@ -1032,6 +1032,29 @@
       list-style: none;
     }
 
+    .category-chip-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .category-chip {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      min-height: 38px;
+    }
+
+    .category-chip.active {
+      border-color: color-mix(in srgb, var(--blue) 55%, var(--line));
+      background: color-mix(in srgb, var(--blue) 12%, var(--panel));
+      color: var(--blue);
+    }
+
     .briefing-item {
       display: grid;
       gap: 3px;
@@ -1778,18 +1801,22 @@
           <div id="weatherStatus" class="hint" aria-live="polite"></div>
           <div id="weatherSummary" class="weather-card"></div>
           <div id="weatherSuggestions" class="suggestion-list"></div>
+          <div class="nearby-category-panel">
+            <strong>Nearby category</strong>
+            <div id="nearbyCategoryChips" class="category-chip-list" aria-label="Nearby place categories"></div>
+          </div>
           <details class="advanced-details">
             <summary>Nearby place preferences</summary>
             <form id="nearbyPreferencesForm" class="form-grid">
-              <label class="field-4">Interests<input name="interests" placeholder="parks, cafes, museums"></label>
-              <label class="field-2">Radius<select name="radius"><option value="800">800 m</option><option value="1500">1.5 km</option><option value="3000">3 km</option><option value="5000">5 km</option></select></label>
+              <select name="category" id="nearbyCategorySelect" hidden></select>
+              <label class="field-2">Radius<select name="radius"><option value="1000">1 km</option><option value="3000">3 km</option><option value="8000">8 km</option></select></label>
               <label class="field-2">Cost<select name="cost"><option value="any">Any</option><option value="free">Free/low cost</option><option value="paid">Paid ok</option></select></label>
               <label class="field-2">Energy<select name="energy"><option value="any">Any</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
               <label class="field-2">Time<select name="time"><option value="any">Any</option><option value="quick">Quick</option><option value="half-day">Half day</option></select></label>
               <button class="field-3 primary-btn" type="submit">Save Preferences</button>
-              <button id="findNearbyPlacesBtn" class="field-3 secondary-btn" type="button">Find Nearby Places</button>
             </form>
           </details>
+          <button id="findNearbyPlacesBtn" class="secondary-btn" type="button">Find Nearby Places</button>
           <div id="nearbyStatus" class="hint" aria-live="polite"></div>
           <div id="nearbyPlacesList" class="list"></div>
           <details class="advanced-details">
@@ -2300,7 +2327,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.30.0";
+    const APP_VERSION = "0.30.4";
     const defaultSubtitle = "Your local command centre for travel, money, TEFL, content, writing, journal entries and long-term planning.";
     const defaultSectionLabels = {
       command: "Command",
@@ -2324,6 +2351,66 @@
     const taskCategories = ["Travel admin", "Budget", "TEFL", "Route", "Packing", "Content", "Writing", "Destination"];
     const taskTimeframes = ["Setup", "Pre-trip", "Final prep", "During travel", "Later"];
     const legacyHabitKeys = ["tefl", "exercise", "walk", "reading", "writing", "content", "travelPlanning", "budgetDiscipline", "earlyBedtime", "leftHouse", "social"];
+    const OVERPASS_ENDPOINTS = [
+      "https://overpass-api.de/api/interpreter",
+      "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass.osm.ch/api/interpreter"
+    ];
+    const OVERPASS_TIMEOUT_MS = 18000;
+    const NEARBY_CACHE_HOURS = 6;
+    const DEFAULT_NEARBY_RADIUS = 3000;
+    const DEFAULT_OSM_TAGS = [
+      ["tourism", "museum"],
+      ["tourism", "gallery"],
+      ["tourism", "attraction"],
+      ["tourism", "viewpoint"],
+      ["historic", "*"],
+      ["leisure", "park"],
+      ["leisure", "garden"],
+      ["amenity", "library"],
+      ["amenity", "cafe"],
+      ["amenity", "restaurant"],
+      ["amenity", "arts_centre"],
+      ["amenity", "theatre"],
+      ["amenity", "cinema"],
+      ["tourism", "information"],
+      ["shop", "supermarket"],
+      ["amenity", "pharmacy"]
+    ];
+    const NEARBY_CATEGORY_OPTIONS = [
+      { id: "cafe", label: "Cafe", primaryQuery: "cafe", fallbackQueries: ["coffee", "coffee shop"], type: "food" },
+      { id: "park", label: "Park", primaryQuery: "park", fallbackQueries: ["public park", "green space", "garden"], type: "outdoor" },
+      { id: "museum", label: "Museum", primaryQuery: "museum", fallbackQueries: ["gallery", "art gallery", "tourist attraction"], type: "culture" },
+      { id: "restaurant", label: "Restaurant", primaryQuery: "restaurant", fallbackQueries: ["food", "places to eat", "takeaway"], type: "food" },
+      { id: "library", label: "Library", primaryQuery: "library", fallbackQueries: ["public library", "study space"], type: "quiet" },
+      { id: "supermarket", label: "Supermarket", primaryQuery: "supermarket", fallbackQueries: ["grocery store", "food shop", "convenience store"], type: "practical" },
+      { id: "pharmacy", label: "Pharmacy", primaryQuery: "pharmacy", fallbackQueries: ["chemist", "drugstore"], type: "practical" },
+      { id: "pub", label: "Pub", primaryQuery: "pub", fallbackQueries: ["bar", "public house"], type: "food" },
+      { id: "train_station", label: "Train station", primaryQuery: "train station", fallbackQueries: ["railway station", "station"], type: "transport" },
+      { id: "tourist_attraction", label: "Tourist attraction", primaryQuery: "tourist attraction", fallbackQueries: ["landmark", "things to do", "attraction"], type: "culture" },
+      { id: "church", label: "Church", primaryQuery: "church", fallbackQueries: ["place of worship", "cathedral"], type: "culture" },
+      { id: "gym", label: "Gym", primaryQuery: "gym", fallbackQueries: ["fitness centre", "fitness center"], type: "fitness" },
+      { id: "coworking", label: "Coworking space", primaryQuery: "coworking space", fallbackQueries: ["shared office", "workspace", "study space"], type: "work" },
+      { id: "cheap_food", label: "Cheap food", primaryQuery: "cheap food", fallbackQueries: ["takeaway", "fast food", "meal deal", "bakery"], type: "food" },
+      { id: "green_walk", label: "Green space / walk", primaryQuery: "green space", fallbackQueries: ["park", "garden", "walking trail", "nature reserve"], type: "outdoor" }
+    ];
+    const INTEREST_OSM_TAGS = [
+      { match: /history|historic|heritage|castle|monument/, tags: [["historic", "*"], ["tourism", "museum"], ["tourism", "attraction"]] },
+      { match: /museum/, tags: [["tourism", "museum"]] },
+      { match: /art|gallery|creative/, tags: [["tourism", "gallery"], ["amenity", "arts_centre"]] },
+      { match: /park|garden|walk|outdoor/, tags: [["leisure", "park"], ["leisure", "garden"]] },
+      { match: /nature|reserve|wildlife/, tags: [["leisure", "nature_reserve"], ["natural", "*"]] },
+      { match: /book|library|study|quiet/, tags: [["amenity", "library"]] },
+      { match: /cafe|coffee|cafes/, tags: [["amenity", "cafe"]] },
+      { match: /food|restaurant|eat/, tags: [["amenity", "restaurant"], ["amenity", "fast_food"]] },
+      { match: /church|cathedral|worship/, tags: [["amenity", "place_of_worship"], ["religion", "christian"]] },
+      { match: /view|viewpoint|photo|photography/, tags: [["tourism", "viewpoint"]] },
+      { match: /market/, tags: [["amenity", "marketplace"]] },
+      { match: /cinema|film/, tags: [["amenity", "cinema"]] },
+      { match: /theatre|theater|performance/, tags: [["amenity", "theatre"], ["amenity", "arts_centre"]] },
+      { match: /shop|supermarket|grocery/, tags: [["shop", "supermarket"]] },
+      { match: /pharmacy|chemist/, tags: [["amenity", "pharmacy"]] }
+    ];
 
     function id() {
       return "id-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -2435,8 +2522,8 @@
       weather_cache: { updatedAt: "", expiresAt: "", location: null, current: null, daily: [] },
       location_settings: { mode: "manual", name: "", latitude: null, longitude: null, timezone: "" },
       suggestions_cache: { updatedAt: "", items: [] },
-      nearby_places_cache: { updatedAt: "", expiresAt: "", locationKey: "", places: [] },
-      nearby_place_preferences: { interests: "parks, cafes, museums", radius: 1500, cost: "any", energy: "any", time: "any" },
+      nearby_places_cache: { updatedAt: "", expiresAt: "", locationKey: "", queryKey: "", radius: DEFAULT_NEARBY_RADIUS, places: [] },
+      nearby_place_preferences: { category: "cafe", interests: "cafe", radius: DEFAULT_NEARBY_RADIUS, cost: "any", energy: "any", time: "any" },
       saved_places: [],
       dismissed_places: [],
       daily_briefing_cache: { generatedAt: "", signature: "", daypart: "", items: [] },
@@ -2619,8 +2706,14 @@
       merged.suggestions_cache.items = Array.isArray(data.suggestions_cache?.items) ? data.suggestions_cache.items : [];
       merged.nearby_places_cache = { ...next.nearby_places_cache, ...(data.nearby_places_cache || {}) };
       merged.nearby_places_cache.places = Array.isArray(data.nearby_places_cache?.places) ? data.nearby_places_cache.places : [];
+      if (!merged.nearby_places_cache.places.length) {
+        merged.nearby_places_cache.expiresAt = "";
+        merged.nearby_places_cache.queryKey = "";
+      }
       merged.nearby_place_preferences = { ...next.nearby_place_preferences, ...(data.nearby_place_preferences || {}) };
-      merged.nearby_place_preferences.radius = Number(merged.nearby_place_preferences.radius) || next.nearby_place_preferences.radius;
+      merged.nearby_place_preferences.category = normaliseNearbyCategory(merged.nearby_place_preferences.category, merged.nearby_place_preferences.interests);
+      merged.nearby_place_preferences.interests = nearbyCategoryOption(merged.nearby_place_preferences.category)?.primaryQuery || merged.nearby_place_preferences.interests || "";
+      merged.nearby_place_preferences.radius = normaliseNearbyRadius(merged.nearby_place_preferences.radius);
       merged.saved_places = Array.isArray(data.saved_places) ? data.saved_places : [];
       merged.dismissed_places = Array.isArray(data.dismissed_places) ? data.dismissed_places : [];
       merged.daily_briefing_cache = { ...next.daily_briefing_cache, ...(data.daily_briefing_cache || {}) };
@@ -5078,9 +5171,7 @@
     }
 
     function walkingTimeText(place) {
-      if (place.distanceKm === null || place.distanceKm === undefined) return "Walking time unknown";
-      const minutes = Math.max(1, Math.round((Number(place.distanceKm) / 4.8) * 60));
-      return `${minutes} minute walk`;
+      return place.distance || formatNearbyDistance(place.distanceKm) || "Distance unknown";
     }
 
     function placeCostText(place) {
@@ -5175,14 +5266,16 @@
     async function geocodeLocation(name) {
       const query = String(name || "").trim();
       if (!query) throw new Error("Enter a location first.");
-      const data = await fetchJsonWithTimeout(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
-      const result = data.results?.[0];
+      const data = await fetchJsonWithTimeout(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=${encodeURIComponent(query)}`, 10000);
+      const result = Array.isArray(data) ? data[0] : null;
       if (!result) throw new Error("Location not found.");
+      const address = result.address || {};
+      const locality = address.city || address.town || address.village || address.hamlet || address.suburb || result.name || query;
       return {
-        name: [result.name, result.admin1, result.country].filter(Boolean).join(", "),
-        latitude: result.latitude,
-        longitude: result.longitude,
-        timezone: result.timezone || "auto"
+        name: [locality, address.state || address.county, address.country].filter(Boolean).join(", "),
+        latitude: Number(result.lat),
+        longitude: Number(result.lon),
+        timezone: "auto"
       };
     }
 
@@ -5254,15 +5347,48 @@
       if (status) status.textContent = message || "";
     }
 
+    function logNearbySearch(step, detail = {}) {
+      console.log(`Nearby search: ${step}`, detail);
+    }
+
+    function normaliseNearbyRadius(value) {
+      const radius = Math.round(Number(value) || DEFAULT_NEARBY_RADIUS);
+      if (!Number.isFinite(radius) || radius <= 0) return DEFAULT_NEARBY_RADIUS;
+      return Math.max(300, Math.min(10000, radius));
+    }
+
+    function validateNearbyCoordinates(location = state.location_settings) {
+      const latitude = Number(location?.latitude);
+      const longitude = Number(location?.longitude);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+      if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+      return { latitude, longitude };
+    }
+
     function nearbyLocationKey(location = state.location_settings) {
-      const lat = Number(location?.latitude);
-      const lon = Number(location?.longitude);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return "";
-      return `${lat.toFixed(4)},${lon.toFixed(4)}`;
+      const coords = validateNearbyCoordinates(location);
+      if (!coords) return "";
+      return `${coords.latitude.toFixed(4)},${coords.longitude.toFixed(4)}`;
+    }
+
+    function hasNearbyLocation(location = state.location_settings) {
+      return Boolean(nearbyLocationKey(location));
+    }
+
+    function nearbyQueryKey(location = state.location_settings, prefs = state.nearby_place_preferences) {
+      const category = normaliseNearbyCategory(prefs?.category, prefs?.interests);
+      const tags = overpassTagSetForCategory(category).map(([key, value]) => `${key}=${value}`).sort().join("|");
+      return [nearbyLocationKey(location), normaliseNearbyRadius(prefs?.radius), category, tags].join("|");
     }
 
     function nearbyCacheValid() {
-      return Boolean(state.nearby_places_cache?.places?.length && state.nearby_places_cache?.expiresAt && new Date(state.nearby_places_cache.expiresAt) > new Date() && state.nearby_places_cache.locationKey === nearbyLocationKey());
+      return Boolean(
+        state.nearby_places_cache?.places?.length
+        && state.nearby_places_cache?.expiresAt
+        && new Date(state.nearby_places_cache.expiresAt) > new Date()
+        && state.nearby_places_cache.locationKey === nearbyLocationKey()
+        && (state.nearby_places_cache.queryKey || "") === nearbyQueryKey()
+      );
     }
 
     function interestTokens() {
@@ -5272,72 +5398,270 @@
         .filter(Boolean);
     }
 
-    function overpassInterestFilters(tokens = interestTokens()) {
-      const wanted = new Set(tokens.length ? tokens : ["parks", "cafes", "museums"]);
-      const filters = [];
-      if ([...wanted].some((item) => /park|garden|nature|walk|outdoor/.test(item))) filters.push('["leisure"~"park|garden|nature_reserve"]');
-      if ([...wanted].some((item) => /cafe|coffee|food/.test(item))) filters.push('["amenity"~"cafe|restaurant|fast_food|food_court"]');
-      if ([...wanted].some((item) => /museum|gallery|culture|art/.test(item))) filters.push('["tourism"~"museum|gallery|artwork|attraction"]');
-      if ([...wanted].some((item) => /library|study|quiet|indoor/.test(item))) filters.push('["amenity"~"library|community_centre"]');
-      if ([...wanted].some((item) => /view|landmark|history/.test(item))) filters.push('["tourism"~"viewpoint|attraction"]["historic"]');
-      return filters.length ? filters : ['["tourism"~"attraction|museum|gallery"]', '["leisure"~"park|garden"]', '["amenity"~"cafe|library"]'];
+    function nearbyCategoryOption(categoryId) {
+      return NEARBY_CATEGORY_OPTIONS.find((option) => option.id === categoryId) || null;
+    }
+
+    function normaliseNearbyCategory(categoryId, interests = "") {
+      if (nearbyCategoryOption(categoryId)) return categoryId;
+      const text = String(interests || categoryId || "").toLowerCase();
+      const match = NEARBY_CATEGORY_OPTIONS.find((option) => text.includes(option.id.replace(/_/g, " ")) || text.includes(option.primaryQuery) || text.includes(option.label.toLowerCase()));
+      if (match) return match.id;
+      if (/park|garden|green|walk|nature/.test(text)) return "park";
+      if (/cafe|coffee/.test(text)) return "cafe";
+      if (/train|station|rail/.test(text)) return "train_station";
+      if (/cheap|takeaway|fast/.test(text)) return "cheap_food";
+      return "cafe";
+    }
+
+    function nearbyTagsForQuery(query) {
+      const text = String(query || "").toLowerCase();
+      if (text === "cafe" || text === "coffee" || text === "coffee shop") return [["amenity", "cafe"]];
+      if (text === "park" || text === "public park") return [["leisure", "park"]];
+      if (text === "green space") return [["leisure", "park"], ["leisure", "garden"], ["natural", "wood"], ["natural", "grassland"]];
+      if (text === "garden") return [["leisure", "garden"]];
+      if (text === "walking trail") return [["highway", "footway"], ["highway", "path"]];
+      if (text === "nature reserve") return [["leisure", "nature_reserve"], ["natural", "*"]];
+      if (text === "museum") return [["tourism", "museum"]];
+      if (text === "gallery" || text === "art gallery") return [["tourism", "gallery"], ["amenity", "arts_centre"]];
+      if (text === "tourist attraction" || text === "attraction" || text === "landmark" || text === "things to do") return [["tourism", "attraction"], ["tourism", "viewpoint"], ["historic", "*"]];
+      if (text === "restaurant" || text === "places to eat") return [["amenity", "restaurant"]];
+      if (text === "food") return [["amenity", "restaurant"], ["amenity", "fast_food"], ["amenity", "food_court"]];
+      if (text === "takeaway" || text === "fast food" || text === "cheap food") return [["amenity", "fast_food"], ["amenity", "food_court"]];
+      if (text === "meal deal") return [["shop", "convenience"], ["shop", "supermarket"]];
+      if (text === "bakery") return [["shop", "bakery"]];
+      if (text === "library" || text === "public library") return [["amenity", "library"]];
+      if (text === "study space") return [["amenity", "library"], ["amenity", "cafe"], ["amenity", "community_centre"]];
+      if (text === "supermarket" || text === "grocery store") return [["shop", "supermarket"]];
+      if (text === "food shop" || text === "convenience store") return [["shop", "convenience"], ["shop", "grocery"], ["shop", "supermarket"]];
+      if (text === "pharmacy" || text === "drugstore") return [["amenity", "pharmacy"]];
+      if (text === "chemist") return [["amenity", "pharmacy"], ["shop", "chemist"]];
+      if (text === "pub" || text === "public house") return [["amenity", "pub"]];
+      if (text === "bar") return [["amenity", "bar"], ["amenity", "pub"]];
+      if (text === "train station" || text === "railway station") return [["railway", "station"]];
+      if (text === "station") return [["railway", "station"], ["public_transport", "station"], ["railway", "halt"]];
+      if (text === "church") return [["building", "church"], ["amenity", "place_of_worship"]];
+      if (text === "place of worship") return [["amenity", "place_of_worship"]];
+      if (text === "cathedral") return [["building", "cathedral"], ["amenity", "place_of_worship"], ["historic", "*"]];
+      if (text === "gym" || text === "fitness centre" || text === "fitness center") return [["leisure", "fitness_centre"], ["sport", "fitness"]];
+      if (text === "coworking space") return [["office", "coworking"], ["amenity", "coworking_space"]];
+      if (text === "shared office" || text === "workspace") return [["office", "coworking"], ["amenity", "coworking_space"], ["amenity", "library"]];
+      return overpassTagSetForInterests(text);
+    }
+
+    function nearbyQueryAttemptsForCategory(option) {
+      if (!option) return [{ query: "nearby", fallback: false, tags: DEFAULT_OSM_TAGS }];
+      return [option.primaryQuery, ...(option.fallbackQueries || [])].map((query, index) => ({
+        query,
+        fallback: index > 0,
+        tags: uniqueOsmTags(nearbyTagsForQuery(query))
+      }));
+    }
+
+    function uniqueOsmTags(tags) {
+      const seen = new Set();
+      return tags.filter(([key, value]) => {
+        const id = `${key}=${value}`;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    }
+
+    function overpassTagSetForCategory(categoryId = state.nearby_place_preferences?.category, fallback = false) {
+      const option = nearbyCategoryOption(normaliseNearbyCategory(categoryId, state.nearby_place_preferences?.interests));
+      if (!option) return DEFAULT_OSM_TAGS;
+      const queries = nearbyQueryAttemptsForCategory(option);
+      return uniqueOsmTags((fallback ? queries.flatMap((attempt) => attempt.tags) : queries[0]?.tags) || DEFAULT_OSM_TAGS);
+    }
+
+    function overpassTagSetForInterests(interests = state.nearby_place_preferences?.interests) {
+      const tokens = String(interests || "").split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+      const tags = [];
+      tokens.forEach((token) => {
+        INTEREST_OSM_TAGS.forEach((entry) => {
+          if (entry.match.test(token)) tags.push(...entry.tags);
+        });
+      });
+      return uniqueOsmTags(tags.length ? tags : DEFAULT_OSM_TAGS);
+    }
+
+    function overpassFilterForTag(key, value) {
+      return value === "*" ? `["${key}"]` : `["${key}"="${value}"]`;
+    }
+
+    function buildNearbyOverpassQuery(lat, lon, radius, tags = overpassTagSetForInterests()) {
+      const blocks = tags.map(([key, value]) => {
+        const filter = overpassFilterForTag(key, value);
+        return `
+          node${filter}(around:${radius},${lat},${lon});
+          way${filter}(around:${radius},${lat},${lon});
+          relation${filter}(around:${radius},${lat},${lon});
+        `;
+      }).join("\n");
+      return `[out:json][timeout:20];(${blocks});out center tags;`;
     }
 
     async function fetchNearbyPlaces() {
       const location = state.location_settings || {};
-      const lat = Number(location.latitude);
-      const lon = Number(location.longitude);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error("Set a location with coordinates first.");
+      logNearbySearch("location object loaded", { mode: location.mode || "", label: readableLocationLabel(location), hasCoordinates: Boolean(nearbyLocationKey(location)) });
+      const coords = validateNearbyCoordinates(location);
+      if (!coords) throw new Error("Nearby-place search could not start.");
+      const lat = coords.latitude;
+      const lon = coords.longitude;
+      logNearbySearch("coordinates validated", { roundedCoordinates: nearbyLocationKey(location) });
       const prefs = state.nearby_place_preferences || {};
-      const radius = Math.max(300, Math.min(10000, Number(prefs.radius) || 1500));
-      const filters = overpassInterestFilters();
-      const blocks = filters.map((filter) => `
-        node${filter}(around:${radius},${lat},${lon});
-        way${filter}(around:${radius},${lat},${lon});
-        relation${filter}(around:${radius},${lat},${lon});
-      `).join("\n");
-      const query = `[out:json][timeout:15];(${blocks});out center tags 40;`;
-      const data = await fetchJsonWithTimeout(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, 15000);
-      const places = (data.elements || [])
-        .map((element) => normaliseNearbyPlace(element, lat, lon))
-        .filter((place) => place.name)
-        .filter((place, index, list) => list.findIndex((item) => item.id === place.id || normalizeMoneyText(item.name) === normalizeMoneyText(place.name)) === index);
-      const ranked = rankNearbyPlaces(places).slice(0, 20);
-      const now = new Date();
-      state.nearby_places_cache = {
-        updatedAt: now.toISOString(),
-        expiresAt: new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString(),
-        locationKey: nearbyLocationKey(location),
-        places: ranked
-      };
+      const category = normaliseNearbyCategory(prefs.category, prefs.interests);
+      const categoryOption = nearbyCategoryOption(category);
+      logNearbySearch("search preferences loaded", {
+        category,
+        radius: normaliseNearbyRadius(prefs.radius),
+        cost: prefs.cost || "any",
+        energy: prefs.energy || "any",
+        time: prefs.time || "any"
+      });
+      const radius = normaliseNearbyRadius(prefs.radius);
+      logNearbySearch("selected category", { category, label: categoryOption?.label || category, primaryQuery: categoryOption?.primaryQuery || "" });
+      const attempts = nearbyQueryAttemptsForCategory(categoryOption);
+      let rawElements = [];
+      let places = [];
+      let ranked = [];
+      let usedTags = attempts[0]?.tags || DEFAULT_OSM_TAGS;
+      let usedQuery = attempts[0]?.query || "";
+      for (const attempt of attempts) {
+        const query = buildNearbyOverpassQuery(lat, lon, radius, attempt.tags);
+        logNearbySearch("query attempted", { category, query: attempt.query, fallback: attempt.fallback });
+        logNearbySearch("Overpass query built", { category, query: attempt.query, fallback: attempt.fallback, radius, tagCount: attempt.tags.length, queryLength: query.length });
+        const data = await fetchOverpassWithFallback(query, { lat, lon, radius, tags: attempt.tags });
+        rawElements = Array.isArray(data.elements) ? data.elements : [];
+        logNearbySearch("raw element count", { category, query: attempt.query, fallback: attempt.fallback, rawElements: rawElements.length });
+        places = dedupeNearbyPlaces(rawElements
+          .map((element) => normaliseNearbyPlace(element, lat, lon))
+          .filter(Boolean)
+          .filter((place) => place.distanceKm <= radius / 1000 + 0.05));
+        ranked = rankNearbyPlaces(places, attempt.tags).slice(0, 20);
+        usedTags = attempt.tags;
+        usedQuery = attempt.query;
+        logNearbySearch("normalised place count", {
+          category,
+          query: attempt.query,
+          fallback: attempt.fallback,
+          rawElements: rawElements.length,
+          normalisedPlaces: places.length,
+          rankedResults: ranked.length,
+          radius,
+          roundedLocation: nearbyLocationKey(location)
+        });
+        logNearbySearch("query result count", { category, query: attempt.query, results: ranked.length, fallbackUsed: attempt.fallback });
+        if (ranked.length) break;
+        if (!attempt.fallback) logNearbySearch("primary query returned no results, trying fallbacks", { category, query: attempt.query });
+      }
+      logNearbySearch("ranked place count", { category, query: usedQuery, rankedResults: ranked.length, fallbackUsed: attempts.find((attempt) => attempt.query === usedQuery)?.fallback || false });
+      if (ranked.length) {
+        const now = new Date();
+        state.nearby_places_cache = {
+          updatedAt: now.toISOString(),
+          expiresAt: new Date(now.getTime() + NEARBY_CACHE_HOURS * 60 * 60 * 1000).toISOString(),
+          locationKey: nearbyLocationKey(location),
+          queryKey: nearbyQueryKey(location, prefs),
+          radius,
+          category,
+          query: usedQuery,
+          tagSet: usedTags.map(([key, value]) => `${key}=${value}`),
+          places: ranked
+        };
+      } else {
+        state.nearby_places_cache = { ...state.nearby_places_cache, expiresAt: "" };
+      }
       state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
       return ranked;
+    }
+
+    async function fetchOverpassWithFallback(query, context) {
+      let lastError = null;
+      for (const endpoint of OVERPASS_ENDPOINTS) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
+        try {
+          logNearbySearch("starting Overpass request", {
+            endpoint,
+            radius: context.radius,
+            roundedCoordinates: `${Number(context.lat).toFixed(4)},${Number(context.lon).toFixed(4)}`,
+            tagCount: context.tags.length
+          });
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+            body: `data=${encodeURIComponent(query)}`,
+            signal: controller.signal
+          });
+          logNearbySearch("Overpass response received", { endpoint, status: response.status });
+          if (!response.ok) throw new Error(`Overpass status ${response.status}`);
+          const data = await response.json();
+          logNearbySearch("Overpass response parsed", { endpoint, rawElements: Array.isArray(data.elements) ? data.elements.length : 0 });
+          return data;
+        } catch (error) {
+          lastError = error;
+          const timedOut = error?.name === "AbortError";
+          console.warn("Nearby search: Overpass endpoint failed", {
+            endpoint,
+            timedOut,
+            message: timedOut ? "Request timed out" : error.message
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+      throw lastError || new Error("All nearby-place endpoints failed.");
     }
 
     function normaliseNearbyPlace(element, baseLat, baseLon) {
       const tags = element.tags || {};
       const lat = Number(element.lat ?? element.center?.lat);
       const lon = Number(element.lon ?? element.center?.lon);
-      const type = tags.tourism || tags.amenity || tags.leisure || tags.historic || "place";
-      const distance = Number.isFinite(lat) && Number.isFinite(lon) ? distanceKm(baseLat, baseLon, lat, lon) : null;
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+      const type = tags.tourism || tags.amenity || tags.leisure || tags.historic || tags.natural || tags.shop || tags.railway || tags.public_transport || tags.office || tags.building || tags.sport || "place";
+      const category = placeCategory(type);
+      const distance = distanceKm(baseLat, baseLon, lat, lon);
       return {
         id: `osm-${element.type}-${element.id}`,
+        osm_type: element.type,
+        osm_id: element.id,
         osmType: element.type,
         osmId: element.id,
+        latitude: lat,
+        longitude: lon,
         lat,
         lon,
-        name: tags.name || tags["name:en"] || "",
+        name: tags.name || tags["name:en"] || tags.brand || tags.operator || `${category} place`,
         type,
-        category: placeCategory(type),
+        category,
         distanceKm: distance,
+        distanceMeters: Math.round(distance * 1000),
+        distance: formatNearbyDistance(distance),
+        address: formatOsmAddress(tags),
+        website: tags.website || tags["contact:website"] || "",
+        opening_hours: tags.opening_hours || "",
+        openingHours: tags.opening_hours || "",
+        fee: tags.fee || "",
+        accessibility: tags.wheelchair || "",
         cost: inferPlaceCost(tags, type),
         energy: inferPlaceEnergy(tags, type, distance),
         time: inferPlaceTime(tags, type),
         indoor: isIndoorPlace(tags, type),
-        openingHours: tags.opening_hours || "",
         rating: "",
         tags
       };
+    }
+
+    function dedupeNearbyPlaces(places) {
+      const seen = new Set();
+      return places.filter((place) => {
+        const key = `${place.osm_type || place.osmType}:${place.osm_id || place.osmId}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     }
 
     function distanceKm(lat1, lon1, lat2, lon2) {
@@ -5349,16 +5673,36 @@
       return r * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
+    function formatNearbyDistance(distance) {
+      if (!Number.isFinite(Number(distance))) return "";
+      if (distance < 1) return `${Math.round(distance * 1000)} m`;
+      return `${distance.toFixed(distance < 10 ? 1 : 0)} km`;
+    }
+
+    function formatOsmAddress(tags = {}) {
+      return [
+        tags["addr:housenumber"],
+        tags["addr:street"],
+        tags["addr:suburb"] || tags["addr:city"] || tags["addr:town"] || tags["addr:village"],
+        tags["addr:postcode"]
+      ].filter(Boolean).join(", ");
+    }
+
     function placeCategory(type) {
       if (/park|garden|nature/.test(type)) return "Outdoor";
-      if (/cafe|restaurant|food/.test(type)) return "Food";
-      if (/museum|gallery|artwork|attraction|historic/.test(type)) return "Culture";
+      if (/cafe|restaurant|food|fast_food|pub|bar/.test(type)) return "Food";
+      if (/museum|gallery|artwork|attraction|historic|viewpoint|arts_centre|theatre|cinema/.test(type)) return "Culture";
       if (/library|community/.test(type)) return "Quiet";
+      if (/supermarket|pharmacy/.test(type)) return "Practical";
+      if (/station|halt/.test(type)) return "Transport";
+      if (/fitness|gym/.test(type)) return "Fitness";
+      if (/worship|church/.test(type)) return "Church";
+      if (/coworking|office/.test(type)) return "Work";
       return "Nearby";
     }
 
     function inferPlaceCost(tags, type) {
-      if (tags.fee === "yes" || /restaurant|museum|gallery/.test(type)) return "paid";
+      if (tags.fee === "yes" || /restaurant|museum|gallery|fitness/.test(type)) return "paid";
       return "free";
     }
 
@@ -5369,27 +5713,29 @@
     }
 
     function inferPlaceTime(tags, type) {
-      if (/museum|gallery|nature/.test(type)) return "half-day";
+      if (/museum|gallery|nature|fitness/.test(type)) return "half-day";
       return "quick";
     }
 
     function isIndoorPlace(tags, type) {
-      return /cafe|restaurant|museum|gallery|library|community/.test(type) || tags.indoor === "yes";
+      return /cafe|restaurant|museum|gallery|library|community|pub|bar|supermarket|pharmacy|station|fitness|coworking|office|worship|church/.test(type) || tags.indoor === "yes";
     }
 
-    function rankNearbyPlaces(places) {
+    function rankNearbyPlaces(places, categoryTags = overpassTagSetForCategory(state.nearby_place_preferences?.category)) {
       const prefs = state.nearby_place_preferences || {};
       const weather = weatherCodeLabel(state.weather_cache?.current?.weather_code);
       const rainy = /rain|drizzle|thunderstorm|snow/i.test(weather);
       const dismissed = new Set((state.dismissed_places || []).map((place) => place.id));
+      const interestTags = categoryTags;
       return places
         .filter((place) => !dismissed.has(place.id))
-        .filter((place) => prefs.cost === "any" || place.cost === prefs.cost || (prefs.cost === "paid" && place.cost))
-        .filter((place) => prefs.energy === "any" || place.energy === prefs.energy)
-        .filter((place) => prefs.time === "any" || place.time === prefs.time)
         .map((place) => {
           let score = 50;
           if (place.distanceKm !== null) score += Math.max(0, 20 - place.distanceKm * 5);
+          score += nearbyInterestScore(place, interestTags);
+          if (prefs.cost !== "any") score += place.cost === prefs.cost || (prefs.cost === "paid" && place.cost) ? 8 : -4;
+          if (prefs.energy !== "any") score += place.energy === prefs.energy ? 8 : -4;
+          if (prefs.time !== "any") score += place.time === prefs.time ? 8 : -4;
           if (rainy && place.indoor) score += 18;
           if (!rainy && !place.indoor) score += 10;
           if ((state.saved_places || []).some((saved) => saved.id === place.id)) score += 8;
@@ -5398,24 +5744,69 @@
         .sort((a, b) => b.score - a.score || (a.distanceKm ?? 99) - (b.distanceKm ?? 99));
     }
 
+    function nearbyInterestScore(place, interestTags) {
+      if (!interestTags?.length) return 0;
+      const tags = place.tags || {};
+      return interestTags.reduce((score, [key, value]) => {
+        if (!(key in tags)) return score;
+        if (value === "*" || String(tags[key]) === value) return score + 12;
+        return score;
+      }, 0);
+    }
+
     async function refreshNearbyPlaces(force = false) {
       try {
-        setNearbyStatus(force ? "Finding nearby places..." : "Checking nearby places...");
-        if (!force && nearbyCacheValid()) {
-          setNearbyStatus("Showing cached nearby places.");
+        const cacheValid = nearbyCacheValid();
+        logNearbySearch("cache checked", { force, cacheValid, cachedPlaces: state.nearby_places_cache?.places?.length || 0 });
+        if (!hasNearbyLocation()) {
+          setNearbyStatus("Set a location before searching nearby places.");
+          logNearbySearch("search could not start", { reason: "no valid location" });
           renderNearbyPlaces();
-          return state.nearby_places_cache.places;
+          return [];
+        }
+        setNearbyStatus(force ? "Searching nearby places..." : "Checking nearby places...");
+        if (!force && nearbyCacheValid()) {
+          const updated = state.nearby_places_cache?.updatedAt ? formatDateTime(state.nearby_places_cache.updatedAt) : "recently";
+          setNearbyStatus(`Showing cached nearby places from ${updated}.`);
+          renderNearbyPlaces();
+          return rankNearbyPlaces(state.nearby_places_cache.places);
         }
         const places = await fetchNearbyPlaces();
-        setNearbyStatus(places.length ? `Found ${places.length} nearby places.` : "No nearby places matched these filters.");
+        setNearbyStatus(places.length ? `Found ${places.length} nearby places.` : "No nearby places found for this category after trying related searches. Increase distance or try another category.");
         renderNearbyPlaces();
         save();
+        logNearbySearch("search completed", { results: places.length });
         return places;
       } catch (error) {
-        console.error("Nearby place search failed", error);
-        setNearbyStatus("Nearby places unavailable. Showing cached results if available.");
+        console.error("Nearby search: search failed", error);
+        const cached = state.nearby_places_cache?.places || [];
+        if (cached.length) {
+          const updated = state.nearby_places_cache?.updatedAt ? formatDateTime(state.nearby_places_cache.updatedAt) : "recently";
+          setNearbyStatus(`Nearby-place search is temporarily unavailable. Showing cached nearby places from ${updated}.`);
+        } else {
+          setNearbyStatus(error.message === "Nearby-place search could not start." ? "Nearby-place search could not start." : "Nearby-place search is temporarily unavailable.");
+        }
         renderNearbyPlaces();
-        return state.nearby_places_cache?.places || [];
+        return cached;
+      }
+    }
+
+    async function handleNearbySearchClick() {
+      logNearbySearch("button clicked", { buttonId: "findNearbyPlacesBtn" });
+      setNearbyStatus("Searching nearby places...");
+      const button = document.getElementById("findNearbyPlacesBtn");
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Searching...";
+      }
+      try {
+        return await refreshNearbyPlaces(true);
+      } finally {
+        const latestButton = document.getElementById("findNearbyPlacesBtn");
+        if (latestButton) {
+          latestButton.disabled = false;
+          latestButton.textContent = "Find Nearby Places";
+        }
       }
     }
 
@@ -5426,6 +5817,7 @@
         state.location_settings = { mode: "manual", ...location };
         await fetchWeatherForLocation(location);
         setWeatherStatus(`Weather updated for ${location.name}.`);
+        setNearbyStatus("Location selected. Search nearby places when ready.");
         render();
       } catch (error) {
         console.error("Weather update failed", error);
@@ -5460,6 +5852,7 @@
           setWeatherStatus("Loading weather...");
           await fetchWeatherForLocation(location);
           setWeatherStatus(`Weather updated for ${readableLocationLabel(location)}.`);
+          setNearbyStatus("Location selected. Search nearby places when ready.");
           render();
         } catch (error) {
           console.error("Weather update failed", error);
@@ -5706,7 +6099,7 @@
               <h4>Nearby recommendation</h4>
               ${nearby ? `
                 <strong>${escapeHtml(nearby.name)}</strong>
-                <p class="hint">${escapeHtml([nearby.distanceKm !== null && nearby.distanceKm !== undefined ? `${nearby.distanceKm.toFixed(1)} km` : "", walkingTimeText(nearby), placeCostText(nearby)].filter(Boolean).join(" - "))}</p>
+                <p class="hint">${escapeHtml([walkingTimeText(nearby), placeCostText(nearby)].filter(Boolean).join(" - "))}</p>
                 <p class="hint">${escapeHtml(placeRecommendationReason(nearby))}</p>
               ` : `<p class="hint">Choose your interests and we'll recommend places nearby.</p>`}
             </section>
@@ -6080,12 +6473,59 @@
       const form = document.getElementById("nearbyPreferencesForm");
       if (!form) return;
       const prefs = state.nearby_place_preferences || {};
+      const categorySelect = form.elements.category;
+      if (categorySelect && !categorySelect.options.length) {
+        categorySelect.innerHTML = NEARBY_CATEGORY_OPTIONS.map((option) => `<option value="${escapeHtml(option.id)}">${escapeHtml(option.label)}</option>`).join("");
+      }
       if (!document.activeElement || !form.contains(document.activeElement)) {
-        form.elements.interests.value = prefs.interests || "";
-        form.elements.radius.value = String(prefs.radius || 1500);
+        if (categorySelect) categorySelect.value = normaliseNearbyCategory(prefs.category, prefs.interests);
+        const radius = String(normaliseNearbyRadius(prefs.radius));
+        if (![...form.elements.radius.options].some((option) => option.value === radius)) {
+          form.elements.radius.add(new Option(formatNearbyDistance(Number(radius) / 1000), radius));
+        }
+        form.elements.radius.value = radius;
         form.elements.cost.value = prefs.cost || "any";
         form.elements.energy.value = prefs.energy || "any";
         form.elements.time.value = prefs.time || "any";
+      }
+      renderNearbyCategoryChips();
+    }
+
+    function renderNearbyCategoryChips() {
+      const root = document.getElementById("nearbyCategoryChips");
+      if (!root) return;
+      const current = normaliseNearbyCategory(state.nearby_place_preferences?.category, state.nearby_place_preferences?.interests);
+      root.innerHTML = "";
+      NEARBY_CATEGORY_OPTIONS.forEach((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `category-chip${option.id === current ? " active" : ""}`;
+        button.textContent = option.label;
+        button.setAttribute("aria-pressed", option.id === current ? "true" : "false");
+        button.addEventListener("click", () => selectNearbyCategory(option.id));
+        root.appendChild(button);
+      });
+    }
+
+    function selectNearbyCategory(categoryId) {
+      const category = normaliseNearbyCategory(categoryId);
+      const option = nearbyCategoryOption(category);
+      state.nearby_place_preferences = {
+        ...(state.nearby_place_preferences || {}),
+        category,
+        interests: option?.primaryQuery || category
+      };
+      state.nearby_places_cache = { ...state.nearby_places_cache, expiresAt: "" };
+      state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
+      const select = document.getElementById("nearbyCategorySelect");
+      if (select) select.value = category;
+      renderNearbyCategoryChips();
+      if (hasNearbyLocation()) {
+        handleNearbySearchClick();
+      } else {
+        setNearbyStatus("Set a location before searching nearby places.");
+        renderNearbyPlaces();
+        save();
       }
     }
 
@@ -6098,7 +6538,14 @@
       const saved = state.saved_places || [];
       const dismissed = state.dismissed_places || [];
       if (!places.length) {
-        list.innerHTML = `<div class="empty"><strong>No nearby suggestions yet</strong><span>Set a location, choose preferences, then find nearby places.</span></div>`;
+        const hasLocation = hasNearbyLocation();
+        const message = hasLocation
+          ? "No nearby places found for this category after trying related searches."
+          : "Set a location before searching nearby places.";
+        const action = hasLocation
+          ? "Increase distance, choose another category, or try again."
+          : "Use current location or enter a place name above.";
+        list.innerHTML = `<div class="empty"><strong>${escapeHtml(message)}</strong><span>${escapeHtml(action)}</span></div>`;
       } else {
         list.innerHTML = "";
         places.slice(0, 8).forEach((place) => list.appendChild(nearbyPlaceItem(place, false)));
@@ -6112,10 +6559,8 @@
     function nearbyPlaceItem(place, compact = false, dismissed = false) {
       const node = document.createElement("div");
       node.className = "place-card";
-      const distance = place.distanceKm === null || place.distanceKm === undefined ? "" : `${place.distanceKm.toFixed(1)} km`;
       const summary = [
         place.category || place.type || "Place",
-        distance,
         walkingTimeText(place),
         placeCostText(place),
         `${place.energy || "low"} energy`,
@@ -8491,9 +8936,12 @@
     document.getElementById("nearbyPreferencesForm").addEventListener("submit", (event) => {
       event.preventDefault();
       const data = Object.fromEntries(new FormData(event.target).entries());
+      const category = normaliseNearbyCategory(data.category);
+      const option = nearbyCategoryOption(category);
       state.nearby_place_preferences = {
-        interests: data.interests || "",
-        radius: Number(data.radius) || 1500,
+        category,
+        interests: option?.primaryQuery || category,
+        radius: normaliseNearbyRadius(data.radius),
         cost: data.cost || "any",
         energy: data.energy || "any",
         time: data.time || "any"
@@ -8503,7 +8951,10 @@
       setNearbyStatus("Preferences saved.");
       render();
     });
-    document.getElementById("findNearbyPlacesBtn").addEventListener("click", () => refreshNearbyPlaces(true));
+    document.getElementById("nearbyCategorySelect")?.addEventListener("change", (event) => {
+      selectNearbyCategory(event.target.value);
+    });
+    document.getElementById("findNearbyPlacesBtn").addEventListener("click", handleNearbySearchClick);
     bindForm("dateItemForm", (data) => {
       state.settings.dateItems = state.settings.dateItems || [];
       state.settings.dateItems.push({
