@@ -1,4 +1,4 @@
-const CACHE_NAME = "travel-life-os-v0.31.1";
+const CACHE_NAME = "travel-life-os-v0.32.0";
 const APP_SHELL = [
   "./",
   "./index.html",
