@@ -7,7 +7,7 @@ The app shell contains no real travel budget, departure date, route, tasks, trip
 ## Files
 
 - `index.html` - the public-safe Life OS app for GitHub Pages.
-- `index.html.html` - the previous local filename, kept as a matching copy for continuity.
+- `config.js` - local browser configuration for Supabase and public browser API keys.
 - `manifest.webmanifest`, `icon.svg` and `sw.js` - installable app/PWA shell files.
 - `Road_to_Australia_Project.md` - the original private planning document. Do not publish this unless it has been separately sanitised.
 - `README.md` - these instructions.
@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.30.0`.
+Current app version: `0.31.0`.
 
 ## Structure and planning model
 
@@ -40,6 +40,8 @@ Patterns and Insights runs locally over saved Journal entries. It uses simple de
 Finance calculation model: the root pot is the only real total. Every other pot stores its current total inside its parent. The app derives `available in this pot` as `pot total - direct child pot totals`, so child pots never create extra money. Transfers reallocate money between branches without changing the root total. Add/remove money can only happen at the root, and spending from any pot reduces that pot, its ancestors and the root exactly once. The legacy `walletId` and archived allocation fields remain internally only so older transactions, imports and Supabase-synced saves stay compatible.
 
 The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
+
+Nearby places use Geoapify Places API as the primary provider. The app keeps an isolated OpenStreetMap Overpass fallback for temporary Geoapify failures or missing configuration. Both providers use the same normalised place model, cache and renderer.
 
 The full-screen authentication flow supports email/password login, account creation, sign out, offline mode and Supabase password reset email requests.
 
@@ -76,6 +78,14 @@ road-to-australia-life-os-v3
 That local data can include travel dates, budgets, route stops, tasks, journal entries and other planning details. It is not uploaded to GitHub Pages by this app.
 
 Use `Export JSON Backup` to save a private backup. Keep exported backups out of public repositories.
+
+## Geoapify Browser Key
+
+The Geoapify key is a public browser key for the static GitHub Pages app, not a backend secret. It is stored once in `config.js` as `window.APP_CONFIG.GEOAPIFY_API_KEY` and should be restricted in Geoapify to the published GitHub Pages origin.
+
+Do not put the real key in documentation, Supabase, exported app state or console logs. To rotate it, create or regenerate the key in Geoapify, update only `config.js`, deploy the app, then revoke the old key after confirming the new build works. Monitor usage in the Geoapify dashboard and keep the app on the one-request-per-search flow to protect the free allowance.
+
+No backend proxy is used because this is a public static frontend and the key is intentionally controlled by browser-origin restrictions.
 
 ## First-Run Setup
 

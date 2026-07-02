@@ -1,8 +1,7 @@
-const CACHE_NAME = "travel-life-os-v0.30.4";
+const CACHE_NAME = "travel-life-os-v0.31.0";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./index.html.html",
   "./config.js",
   "./manifest.webmanifest",
   "./icon.svg"
@@ -44,5 +43,3 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")))
   );
 });
-
-
