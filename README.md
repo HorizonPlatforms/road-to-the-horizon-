@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.31.0`.
+Current app version: `0.31.1`.
 
 ## Structure and planning model
 

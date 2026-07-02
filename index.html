@@ -2328,7 +2328,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.31.0";
+    const APP_VERSION = "0.31.1";
     const defaultSubtitle = "Your local command centre for travel, money, TEFL, content, writing, journal entries and long-term planning.";
     const defaultSectionLabels = {
       command: "Command",
@@ -2365,6 +2365,9 @@
     const NEARBY_CACHE_SCHEMA = 2;
     const DEFAULT_NEARBY_RADIUS = 3000;
     const DEFAULT_NEARBY_LIMIT = 20;
+    const NEARBY_STALE_REFRESH_MS = 30 * 60 * 1000;
+    const NEARBY_LOCATION_MAX_AGE_MS = 5 * 60 * 1000;
+    const NEARBY_SLOW_SEARCH_MS = 3000;
     const DEFAULT_GEOAPIFY_CATEGORIES = [
       "catering",
       "tourism",
@@ -5370,11 +5373,23 @@
       if (status) status.textContent = message || "";
     }
 
-    let nearbySearchInFlight = null;
     let nearbySearchUiState = "idle";
+    let nearbyActiveSearchKey = "";
+    let nearbyActiveAbortController = null;
+    const nearbyInFlightRequests = new Map();
+    const nearbyCategoryMemo = new Map();
+
+    function nearbyDiagnosticsEnabled() {
+      return window.APP_CONFIG?.DEBUG_NEARBY_PLACES === true;
+    }
 
     function logNearbySearch(step, detail = {}) {
-      console.info("Nearby search", { step, ...detail });
+      if (nearbyDiagnosticsEnabled()) console.info("Nearby search", { step, ...detail });
+    }
+
+    function markNearbyPerf(timings, label, startedAt) {
+      if (!timings) return;
+      timings[label] = Math.round(performance.now() - startedAt);
     }
 
     function normaliseNearbyRadius(value) {
@@ -5433,6 +5448,12 @@
       if (cache.resultType === "results") return Boolean(cache.places?.length && cache.expiresAt && new Date(cache.expiresAt) > new Date());
       if (allowEmpty && cache.resultType === "empty") return Boolean(cache.emptyExpiresAt && new Date(cache.emptyExpiresAt) > new Date());
       return false;
+    }
+
+    function nearbyCacheNearingExpiry() {
+      const cache = state.nearby_places_cache || {};
+      if (cache.resultType !== "results" || !cache.expiresAt) return false;
+      return new Date(cache.expiresAt).getTime() - Date.now() <= NEARBY_STALE_REFRESH_MS;
     }
 
     function interestTokens() {
@@ -5499,16 +5520,33 @@
       });
     }
 
-    function nearbyGeoapifyCategories(prefs = state.nearby_place_preferences) {
+    function nearbyPreferenceSignature(prefs = state.nearby_place_preferences) {
+      return JSON.stringify({
+        category: normaliseNearbyCategory(prefs?.category, prefs?.interests),
+        interests: String(prefs?.interests || "").toLowerCase()
+      });
+    }
+
+    function nearbyMappedCategories(prefs = state.nearby_place_preferences) {
+      const signature = nearbyPreferenceSignature(prefs);
+      if (nearbyCategoryMemo.has(signature)) return nearbyCategoryMemo.get(signature);
       const selected = nearbySelectedCategoryOptions(prefs);
-      const categories = selected.flatMap((option) => option.geoapifyCategories || []);
-      return uniqueStrings(categories.length ? categories : DEFAULT_GEOAPIFY_CATEGORIES);
+      const geoapify = uniqueStrings(selected.flatMap((option) => option.geoapifyCategories || []));
+      const overpass = uniqueOsmTags(selected.flatMap((option) => option.overpassTags || []));
+      const mapped = {
+        geoapify: geoapify.length ? geoapify : DEFAULT_GEOAPIFY_CATEGORIES,
+        overpass: overpass.length ? overpass : DEFAULT_OSM_TAGS
+      };
+      nearbyCategoryMemo.set(signature, mapped);
+      return mapped;
+    }
+
+    function nearbyGeoapifyCategories(prefs = state.nearby_place_preferences) {
+      return nearbyMappedCategories(prefs).geoapify;
     }
 
     function nearbyOverpassTags(prefs = state.nearby_place_preferences) {
-      const selected = nearbySelectedCategoryOptions(prefs);
-      const tags = selected.flatMap((option) => option.overpassTags || []);
-      return uniqueOsmTags(tags.length ? tags : DEFAULT_OSM_TAGS);
+      return nearbyMappedCategories(prefs).overpass;
     }
 
     function overpassFilterForTag(key, value) {
@@ -5593,10 +5631,13 @@
         apiKey: key
       });
       const controller = new AbortController();
+      const abortFromContext = () => controller.abort();
+      context.signal?.addEventListener("abort", abortFromContext, { once: true });
       const timeout = setTimeout(() => controller.abort(), GEOAPIFY_TIMEOUT_MS);
       try {
+        const networkStarted = performance.now();
         const response = await fetch(`${GEOAPIFY_PLACES_URL}?${params.toString()}`, { signal: controller.signal });
-        logNearbySearch("provider http status", { provider: "geoapify", status: response.status });
+        logNearbySearch("provider http status", { provider: "geoapify", status: response.status, networkMs: Math.round(performance.now() - networkStarted) });
         if (response.status === 429) throw new NearbyProviderError("Geoapify rate limit.", "geoapify_429", true);
         if (response.status >= 500) throw new NearbyProviderError("Geoapify server error.", "geoapify_server", true);
         if (!response.ok) throw new NearbyProviderError("Geoapify request failed.", `geoapify_${response.status}`, false);
@@ -5607,11 +5648,13 @@
         const places = data.features.map((feature) => normaliseGeoapifyPlace(feature, context)).filter(Boolean).filter((place) => place.distanceMetres <= context.radius + 50);
         return { provider: "geoapify", resultType: places.length ? "results" : "empty", places };
       } catch (error) {
+        if (context.signal?.aborted) throw new NearbyProviderError("Search was replaced by a newer request.", "search_aborted", false);
         if (error.name === "AbortError") throw new NearbyProviderError("Geoapify timed out.", "geoapify_timeout", true);
         if (error instanceof NearbyProviderError) throw error;
         throw new NearbyProviderError("Geoapify network failure.", "geoapify_network", true);
       } finally {
         clearTimeout(timeout);
+        context.signal?.removeEventListener("abort", abortFromContext);
       }
     }
     fetchGeoapifyPlaces.providerName = "geoapify";
@@ -5621,16 +5664,19 @@
       let lastError = null;
       for (const endpoint of OVERPASS_ENDPOINTS) {
         const controller = new AbortController();
+        const abortFromContext = () => controller.abort();
+        context.signal?.addEventListener("abort", abortFromContext, { once: true });
         const timeout = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
         try {
           logNearbySearch("provider request", { provider: "overpass", radius: context.radius, tagCount: context.overpassTags.length });
+          const networkStarted = performance.now();
           const response = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
             body: `data=${encodeURIComponent(query)}`,
             signal: controller.signal
           });
-          logNearbySearch("provider http status", { provider: "overpass", status: response.status });
+          logNearbySearch("provider http status", { provider: "overpass", status: response.status, networkMs: Math.round(performance.now() - networkStarted) });
           if (!response.ok) throw new Error(`Overpass status ${response.status}`);
           const parseStarted = performance.now();
           const data = await response.json();
@@ -5640,9 +5686,11 @@
           return { provider: "overpass", resultType: places.length ? "results" : "empty", places };
         } catch (error) {
           lastError = error;
+          if (context.signal?.aborted) throw new NearbyProviderError("Search was replaced by a newer request.", "search_aborted", false);
           logNearbySearch("fallback endpoint failed", { provider: "overpass", timedOut: error?.name === "AbortError" });
         } finally {
           clearTimeout(timeout);
+          context.signal?.removeEventListener("abort", abortFromContext);
         }
       }
       throw new NearbyProviderError(lastError?.message || "Fallback provider failed.", "overpass_failed", false);
@@ -5868,20 +5916,37 @@
       }, 0);
     }
 
-    async function refreshNearbyPlaces(force = false) {
-      if (nearbySearchInFlight) return nearbySearchInFlight;
-      nearbySearchInFlight = runNearbySearchController(force).finally(() => {
-        nearbySearchInFlight = null;
+    async function refreshNearbyPlaces(force = false, options = {}) {
+      const context = nearbySearchContext();
+      if (!context) return runNearbySearchController(force, null, options);
+      const key = context.cacheKey;
+      if (nearbyInFlightRequests.has(key)) return nearbyInFlightRequests.get(key);
+      if (nearbyActiveAbortController && nearbyActiveSearchKey && nearbyActiveSearchKey !== key) {
+        nearbyActiveAbortController.abort();
+      }
+      nearbyActiveSearchKey = key;
+      nearbyActiveAbortController = new AbortController();
+      context.signal = nearbyActiveAbortController.signal;
+      const promise = runNearbySearchController(force, context, options).finally(() => {
+        nearbyInFlightRequests.delete(key);
+        if (nearbyActiveSearchKey === key) {
+          nearbyActiveSearchKey = "";
+          nearbyActiveAbortController = null;
+        }
       });
-      return nearbySearchInFlight;
+      nearbyInFlightRequests.set(key, promise);
+      return promise;
     }
 
-    async function runNearbySearchController(force = false) {
+    async function runNearbySearchController(force = false, existingContext = null, options = {}) {
       const totalStarted = performance.now();
+      const timings = {};
+      let slowTimer = null;
       try {
         logNearbySearch("search controller reached", { force });
         const contextStarted = performance.now();
-        const context = nearbySearchContext();
+        const context = existingContext || nearbySearchContext();
+        markNearbyPerf(timings, "locationCacheLookupMs", contextStarted);
         if (!context) {
           nearbySearchUiState = "location_required";
           setNearbyStatus("Location required. Set a location before searching nearby places.");
@@ -5889,23 +5954,37 @@
           renderNearbyPlaces();
           return [];
         }
+        if (context.signal?.aborted) return [];
         logNearbySearch("coordinates validated", { roundedLocation: nearbyLocationKey(context.location), radius: context.radius, categoryCount: context.geoapifyCategories.length, contextMs: Math.round(performance.now() - contextStarted) });
         const cacheStarted = performance.now();
-        const cacheValid = nearbyCacheValid({ allowEmpty: !force });
+        const cacheValid = !options.bypassCache && nearbyCacheValid({ allowEmpty: !force });
+        markNearbyPerf(timings, "cacheLookupMs", cacheStarted);
         logNearbySearch("cache checked", { force, cacheHit: cacheValid, cachedPlaces: state.nearby_places_cache?.places?.length || 0, cacheMs: Math.round(performance.now() - cacheStarted) });
         if (cacheValid) {
           const updated = state.nearby_places_cache?.updatedAt ? formatDateTime(state.nearby_places_cache.updatedAt) : "recently";
           nearbySearchUiState = state.nearby_places_cache.resultType === "empty" ? "empty" : "cached";
           setNearbyStatus(state.nearby_places_cache.resultType === "empty" ? "Cached result: no places found in this area." : `Cached results from ${updated}.`);
           renderNearbyPlaces();
+          logNearbySearch("performance", { ...timings, totalMs: Math.round(performance.now() - totalStarted), source: "cache" });
+          if (!force && nearbyCacheNearingExpiry()) {
+            setTimeout(() => refreshNearbyPlaces(true, { background: true, bypassCache: true }), 0);
+          }
           return rankNearbyPlaces(state.nearby_places_cache.places || []);
         }
-        nearbySearchUiState = "searching";
-        setNearbyStatus("Searching nearby places...");
+        if (!options.background) {
+          nearbySearchUiState = "searching";
+          setNearbyStatus("Searching nearby places...");
+        }
+        slowTimer = setTimeout(() => {
+          if (!options.background && !context.signal?.aborted) setNearbyStatus("Still searching nearby...");
+        }, NEARBY_SLOW_SEARCH_MS);
         const providerStarted = performance.now();
         const result = await fetchNearbyPlacesWithProvider(context);
+        if (context.signal?.aborted) return [];
+        markNearbyPerf(timings, "providerMs", providerStarted);
         const parseRankStarted = performance.now();
         const ranked = rankNearbyPlaces(dedupeNearbyPlaces(result.places)).slice(0, DEFAULT_NEARBY_LIMIT);
+        markNearbyPerf(timings, "rankingMs", parseRankStarted);
         logNearbySearch("ranked result count", { provider: result.provider, rankedResults: ranked.length, rankingMs: Math.round(performance.now() - parseRankStarted), providerMs: Math.round(performance.now() - providerStarted) });
         const now = new Date();
         state.nearby_places_cache = {
@@ -5922,21 +6001,30 @@
         };
         state.daily_briefing_cache = { ...state.daily_briefing_cache, signature: "" };
         nearbySearchUiState = ranked.length ? "results" : "empty";
-        setNearbyStatus(ranked.length ? `Results supplied by ${result.provider === "geoapify" ? "Geoapify" : "fallback provider"}.` : "No places found in this area.");
+        if (!options.background) setNearbyStatus(ranked.length ? `Results supplied by ${result.provider === "geoapify" ? "Geoapify" : "fallback provider"}.` : "No places found in this area.");
         const renderStarted = performance.now();
         renderNearbyPlaces();
-        logNearbySearch("rendering complete", { renderingMs: Math.round(performance.now() - renderStarted), totalMs: Math.round(performance.now() - totalStarted) });
+        markNearbyPerf(timings, "renderingMs", renderStarted);
+        logNearbySearch("performance", { ...timings, totalMs: Math.round(performance.now() - totalStarted), source: result.provider });
         save();
         return ranked;
       } catch (error) {
+        if (error.code === "search_aborted") {
+          logNearbySearch("search aborted", { totalMs: Math.round(performance.now() - totalStarted) });
+          return [];
+        }
         console.error("Nearby search failed", { code: error.code || "unknown" });
+        if (options.background) return state.nearby_places_cache?.places || [];
         nearbySearchUiState = "error";
         setNearbyStatus("Nearby places are temporarily unavailable. Try again shortly.");
         renderNearbyPlaces();
         return [];
+      } finally {
+        if (slowTimer) clearTimeout(slowTimer);
       }
     }
     async function handleNearbySearchClick() {
+      const handlerStarted = performance.now();
       logNearbySearch("button clicked", { buttonId: "findNearbyPlacesBtn" });
       setNearbyStatus("Searching nearby places...");
       const button = document.getElementById("findNearbyPlacesBtn");
@@ -5952,6 +6040,7 @@
           latestButton.disabled = false;
           latestButton.textContent = "Find Nearby Places";
         }
+        logNearbySearch("event handler complete", { handlerMs: Math.round(performance.now() - handlerStarted) });
       }
     }
 
@@ -5959,7 +6048,7 @@
       try {
         setWeatherStatus("Loading weather...");
         const location = await geocodeLocation(locationName);
-        state.location_settings = { mode: "manual", ...location };
+        state.location_settings = { mode: "manual", updatedAt: new Date().toISOString(), ...location };
         await fetchWeatherForLocation(location);
         setWeatherStatus(`Weather updated for ${location.name}.`);
         setNearbyStatus("Location selected. Search nearby places when ready.");
@@ -5984,7 +6073,8 @@
           name: fallbackName,
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-          timezone: "auto"
+          timezone: "auto",
+          updatedAt: new Date().toISOString()
         };
         state.location_settings = location;
         try {
@@ -6007,7 +6097,7 @@
       }, (error) => {
         console.error("Location permission denied or unavailable", error);
         setWeatherStatus("Location was not shared. You can set a manual location instead.");
-      }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 30 * 60 * 1000 });
+      }, { enableHighAccuracy: false, timeout: 6000, maximumAge: NEARBY_LOCATION_MAX_AGE_MS });
     }
 
     function render() {
@@ -6709,8 +6799,9 @@
               : "Choose a category, then search.";
         list.innerHTML = `<div class="empty"><strong>${escapeHtml(message)}</strong><span>${escapeHtml(action)}</span></div>`;
       } else {
-        list.innerHTML = "";
-        places.slice(0, 8).forEach((place) => list.appendChild(nearbyPlaceItem(place, false)));
+        const fragment = document.createDocumentFragment();
+        places.slice(0, 8).forEach((place) => fragment.appendChild(nearbyPlaceItem(place, false)));
+        list.replaceChildren(fragment);
       }
       if (attribution) {
         const provider = state.nearby_places_cache?.provider || places[0]?.provider || "";
