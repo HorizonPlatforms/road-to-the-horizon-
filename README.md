@@ -17,13 +17,13 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.36.0`.
+Current app version: `0.36.2`.
 
 The current interface uses an integrated workspace style: ordinary sections sit on the page with dividers, rows, tables and compact toolbars instead of default card containers. Cards are reserved for focused states such as authentication, modals, temporary alerts and compact result callouts.
 
 The visual system defaults to a warm light theme with a redesigned charcoal dark theme available from Settings. Theme choices are `System`, `Light` and `Dark`, and the app uses shared colour tokens for workspace, secondary surfaces, dividers, accent, success, warning, error and information states.
 
-The main shell uses a website-style left sidebar, contextual page headers and dashboard-only global metrics so feature pages do not repeat the same summary strip.
+The main shell uses a website-style left sidebar on desktop, a fixed five-item bottom navigation on phone screens, contextual page headers and dashboard-only global metrics so feature pages do not repeat the same summary strip. Mobile secondary sections live behind the accessible More drawer.
 
 ## Structure and planning model
 
