@@ -17,7 +17,7 @@ GitHub Pages serves `index.html` as the site homepage.
 
 ## App Shell
 
-Current app version: `0.36.2`.
+Current app version: `0.36.8`.
 
 The current interface uses an integrated workspace style: ordinary sections sit on the page with dividers, rows, tables and compact toolbars instead of default card containers. Cards are reserved for focused states such as authentication, modals, temporary alerts and compact result callouts.
 
