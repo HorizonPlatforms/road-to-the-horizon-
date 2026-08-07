@@ -4165,6 +4165,46 @@
     body.dark input[type="password"] {
       color-scheme: dark;
     }
+
+    /* Final mobile fit and interaction guardrails */
+    @media (max-width: 767px) {
+      html,
+      body,
+      .app-shell,
+      main.wrap,
+      .view,
+      .panel,
+      .finance-table,
+      .table-ish,
+      .list,
+      .root-pot-card,
+      .pot-tree-table {
+        max-width: 100%;
+        overflow-x: clip;
+      }
+
+      .view.active,
+      .panel,
+      .finance-section,
+      .daily-briefing-card,
+      .weather-card {
+        contain: layout paint;
+      }
+
+      .action-menu[open] > .action-menu-popover {
+        max-width: min(220px, calc(100vw - 32px));
+        overflow-wrap: anywhere;
+      }
+
+      .finance-table-row,
+      .finance-table-header,
+      .root-pot-card > div,
+      .stat-line,
+      .breakdown-row {
+        min-width: 0;
+        max-width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -4734,8 +4774,10 @@
               <button class="primary-btn" type="button" data-budget-jump="transactions">Add Transaction</button>
               <details class="action-menu">
                 <summary>More</summary>
-                <button id="financeHeaderAddPotBtn" class="ghost-btn" type="button">Add Pot</button>
-                <button id="financeHeaderTransferBtn" class="ghost-btn" type="button">Transfer</button>
+                <div class="action-menu-popover">
+                  <button id="financeHeaderAddPotBtn" class="ghost-btn" type="button">Add Pot</button>
+                  <button id="financeHeaderTransferBtn" class="ghost-btn" type="button">Transfer</button>
+                </div>
               </details>
             </div>
           </div>
@@ -5197,7 +5239,7 @@
     const AUTH_ONLY_STAGE = false;
     const SESSION_TIMEOUT_MS = 10000;
     const CLOUD_TIMEOUT_MS = 15000;
-    const APP_VERSION = "0.36.8";
+    const APP_VERSION = "0.36.9";
     const defaultSubtitle = "Your local command centre for travel, money, TEFL, content, writing, journal entries and long-term planning.";
     const defaultSectionLabels = {
       command: "Dashboard",
@@ -7123,7 +7165,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       const stamp = new Date(state.meta.lastSaved).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       document.getElementById("saveStatus").textContent = `${currentUser?.email ? "Signed in" : offlineMode ? "Offline" : "Signed out"} - Saved ${stamp}`;
-      renderAbout();
+      if (state.settings.activeView === "settings") renderAbout();
     }
 
     function save() {
@@ -9011,6 +9053,40 @@
       save();
     }
 
+    function renderActiveView(options = {}) {
+      applyTheme();
+      applyDashboardSettings();
+      renderPhaseSelects();
+      renderRouteStopSelects();
+      renderFinanceSelects();
+      renderWalletSelects();
+      renderAllocationSelects();
+      renderBudgetPoolSelects();
+      renderFundGroupSelects();
+      renderParentFundSelects();
+      applyActiveView();
+      renderSetup();
+      renderCountdown();
+      renderMetrics();
+      const view = state.settings.activeView || "command";
+      if (view === "command") renderCommand();
+      else if (view === "travel") renderTravel();
+      else if (view === "budget") renderBudget({ activeOnly: true });
+      else if (view === "tefl") renderTefl();
+      else if (view === "content") renderContent();
+      else if (view === "writing") renderWriting();
+      else if (view === "life") renderLife();
+      else if (view === "journal") renderJournal();
+      else if (view === "review") renderReview();
+      else if (view === "dates") renderDates();
+      else if (view === "settings") {
+        renderSettings();
+        renderAbout();
+      }
+      if (options.skipSave) return;
+      save();
+    }
+
     function renderSetup() {
       const panel = document.getElementById("setupPanel");
       if (!panel) return;
@@ -9068,9 +9144,13 @@
 
     function activateView(view) {
       if (!document.getElementById(view)) return;
+      const previousView = state.settings.activeView || "command";
       state.settings.activeView = view;
       applyActiveView();
-      save();
+      if (previousView !== view) closeActionMenus();
+      renderActiveView({ skipSave: true });
+      if (previousView !== view) window.scrollTo({ top: 0, behavior: "auto" });
+      window.setTimeout(save, 0);
     }
 
     function renderCountdown() {
@@ -9669,8 +9749,10 @@
             <button type="button" class="primary-btn" data-add-suggestion="${escaped}">Add to preparation</button>
             <details class="action-menu">
               <summary>More</summary>
-              <button type="button" class="ghost-btn" data-open-suggestion="command">Open related</button>
-              <button type="button" class="ghost-btn" data-dismiss-suggestion="${escaped}">Dismiss</button>
+              <div class="action-menu-popover">
+                <button type="button" class="ghost-btn" data-open-suggestion="command">Open related</button>
+                <button type="button" class="ghost-btn" data-dismiss-suggestion="${escaped}">Dismiss</button>
+              </div>
             </details>
           </div>
         </div>
@@ -9955,24 +10037,37 @@
       });
     }
 
-    function renderBudget() {
+    function renderBudget(options = {}) {
       reconcileFinanceState(state);
       renderBudgetTabs();
-      renderBudgetOverview();
+      const view = state.settings.budgetView || "overview";
+      const full = !options.activeOnly;
+      if (full || view === "overview") {
+        renderBudgetOverview();
+        renderBudgetPace();
+      }
+      if (full || view === "transactions") renderMoneyList();
+      if (full || view === "analytics") {
+        renderSpendingChart();
+        renderBudgetSummaries();
+        renderMilestones();
+        renderFinanceAnalytics();
+      }
+      if (full || view === "pools") {
+        renderBudgetPools();
+        renderPlanningWindows();
+      }
+      if (full || view === "categories") renderFinanceCategories();
+    }
+
+    function renderMoneyList() {
       const list = document.getElementById("moneyList");
+      if (!list) return;
       list.innerHTML = "";
       state.money.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach((entry) => {
         list.appendChild(transactionItem(entry));
       });
       if (!state.money.length) list.innerHTML = `<div class="empty">No income or expense entries yet.</div>`;
-      renderSpendingChart();
-      renderBudgetSummaries();
-      renderBudgetPools();
-      renderFinanceCategories();
-      renderPlanningWindows();
-      renderMilestones();
-      renderBudgetPace();
-      renderFinanceAnalytics();
     }
 
     function renderBudgetTabs() {
@@ -10843,9 +10938,11 @@
         <div class="item-actions">
           <details class="action-menu">
             <summary>Actions</summary>
-            <button type="button" class="ghost-btn edit-task">Edit</button>
-            <button type="button" class="ghost-btn archive-task"></button>
-            <button type="button" class="danger-btn delete-task">Delete</button>
+            <div class="action-menu-popover">
+              <button type="button" class="ghost-btn edit-task">Edit</button>
+              <button type="button" class="ghost-btn archive-task"></button>
+              <button type="button" class="danger-btn delete-task">Delete</button>
+            </div>
           </details>
         </div>
       `;
@@ -12466,14 +12563,16 @@
     document.querySelectorAll("[data-budget-view]").forEach((button) => {
       button.addEventListener("click", () => {
         state.settings.budgetView = button.dataset.budgetView || "overview";
-        render();
+        renderBudget({ activeOnly: true });
+        window.setTimeout(save, 0);
       });
     });
 
     document.querySelectorAll("[data-budget-jump]").forEach((button) => {
       button.addEventListener("click", () => {
         state.settings.budgetView = button.dataset.budgetJump || "overview";
-        render();
+        renderBudget({ activeOnly: true });
+        window.setTimeout(save, 0);
       });
     });
 
