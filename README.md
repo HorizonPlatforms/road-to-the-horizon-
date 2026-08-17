@@ -1,181 +1,68 @@
-# Travel Life OS
+# Travel Life OS V2
 
-A static, browser-based personal planning dashboard that can be published on GitHub Pages without exposing private planning data.
-
-The app shell contains no real travel budget, departure date, route, tasks, trip dates or personal planning details. On first run, each user enters their own setup values, imports a backup, or loads fake demo data.
+A clean static PWA foundation for Travel Life OS. It runs on GitHub Pages, saves locally by default, and can sync a single app state object to Supabase after login.
 
 ## Files
 
-- `index.html` - the public-safe Life OS app for GitHub Pages.
-- `config.js` - local browser configuration for Supabase and public browser API keys.
-- `manifest.webmanifest`, `icon.svg` and `sw.js` - installable app/PWA shell files.
-- `Road_to_Australia_Project.md` - the original private planning document. Do not publish this unless it has been separately sanitised.
-- `README.md` - these instructions.
-- `.gitignore` - excludes the private planning document and exported JSON backups from new commits.
+- `index.html` - app shell
+- `styles.css` - responsive layout and theme
+- `app.js` - state, finance logic, auth, sync and rendering
+- `config.example.js` - copy to `config.js` locally or in deployment settings
+- `sw.js` - static app-shell service worker
+- `manifest.webmanifest` - PWA manifest
 
-GitHub Pages serves `index.html` as the site homepage.
+## Configuration
 
-## App Shell
+Copy `config.example.js` to `config.js` and fill in browser-safe publishable values:
 
-Current app version: `0.36.9`.
-
-The current interface uses an integrated workspace style: ordinary sections sit on the page with dividers, rows, tables and compact toolbars instead of default card containers. Cards are reserved for focused states such as authentication, modals, temporary alerts and compact result callouts.
-
-The visual system defaults to a warm light theme with a redesigned charcoal dark theme available from Settings. Theme choices are `System`, `Light` and `Dark`, and the app uses shared colour tokens for workspace, secondary surfaces, dividers, accent, success, warning, error and information states.
-
-The main shell uses a website-style left sidebar on desktop, a fixed five-item bottom navigation on phone screens, contextual page headers and dashboard-only global metrics so feature pages do not repeat the same summary strip. Mobile secondary sections live behind the accessible More drawer.
-
-## Structure and planning model
-
-The app is organised so normal editing happens close to the section that uses the data:
-
-- Travel contains route stops and the editable phase manager.
-- Budget contains a simplified money dashboard: overview, money pots, optional advanced budget periods, transactions, categories/subcategories, analytics and milestones.
-- Dates & Counters contains editable counters and key travel dates.
-- Journal contains diary entries, optional mood/energy/sleep context, reflections, travel context, finance reflections and Patterns and Insights.
-- Settings is kept for app preferences, section names, About/version details, backup/import/export and reset.
-
-Budget keeps the surface model simple: one editable root pot for total money, user-defined child pots, current budget, budget period and transactions. The Money overview uses a compact summary band, a hierarchy table for pots, recent transaction table, spending pace panel and deterministic budget-health insights. Pot start/end dates normally control Safe Spend. Optional advanced budget periods are available for short-term overrides, but everyday budgeting should usually happen from the pot itself. Pot names are user-defined labels, and add/remove/transfer/spending actions are saved as transaction records so balances remain auditable. Older finance values are preserved and normalized into compatible records for existing users.
-
-Journal and Finance are connected without duplicating spending records. Finance remains the source of truth for transactions, balances, pots, Safe Spend and analytics. Journal entries show same-day Finance transactions, can link to transaction IDs, and ask before creating a new Finance transaction from a journal spending item.
-
-Habits have been removed from the active app. Older habit settings and per-entry habit values are retained as legacy data during migration so historical backups are not silently destroyed, but they are no longer displayed, edited or used in calculations.
-
-Patterns and Insights runs locally over saved Journal entries. It uses simple deterministic checks such as average comparisons, repeated tags, travel-day comparisons and recent trends. Insights only appear when there are enough relevant entries and use neutral wording such as possible pattern or repeated association.
-
-Finance calculation model: the root pot is the only real total. Every other pot stores its current total inside its parent. The app derives `available in this pot` as `pot total - direct child pot totals`, so child pots never create extra money. Transfers reallocate money between branches without changing the root total. Add/remove money can only happen at the root, and spending from any pot reduces that pot, its ancestors and the root exactly once. The legacy `walletId` and archived allocation fields remain internally only so older transactions, imports and Supabase-synced saves stay compatible.
-
-The dashboard includes a manifest, app icon and service worker so it can behave like an installable app when served over GitHub Pages or another local web server. The service worker caches only the static app shell files. Private dashboard data remains in local storage and, after sign-in, Supabase.
-
-Nearby places use Geoapify Places API as the primary provider. The app keeps an isolated OpenStreetMap Overpass fallback for temporary Geoapify failures or missing configuration. Both providers use the same normalised place model, cache and renderer.
-
-The full-screen authentication flow supports email/password login, account creation, sign out, offline mode and Supabase password reset email requests.
-
-Visible route/itinerary numbering is calculated from the current sorted list position. Stable item IDs remain separate from display numbers, so deleting or moving a middle stop automatically renumbers the route without gaps.
-
-Reset App Data uses a two-step confirmation, requires typing `RESET`, and prepares a timestamped JSON backup before local browser data is cleared. Signed-in Supabase cloud data is never silently deleted.
-
-Departure-dependent calculations use one shared departure-date helper. If no departure date exists, pace widgets show `Not set` rather than using a fallback date.
-
-Phases are editable settings. Route, budget, dates and journal widgets read from shared phase settings so changes update across the app.
-
-## App Updates
-
-When the app is installed as a PWA, the service worker checks for new static app files during normal loads. If a new version is available, the app shows:
-
-```text
-Update available. Refresh to get the latest version.
+```js
+window.APP_CONFIG = {
+  SUPABASE_URL: "https://your-project.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "your-publishable-key",
+  GEOAPIFY_API_KEY: "optional-browser-key"
+};
 ```
 
-Choose `Refresh` to activate the new service worker and reload the app. The app does not auto-refresh while you are typing or editing data. If a form has unsaved edits, finish or save the edit first, then refresh.
+`config.js` is ignored by git. Do not put service-role keys in the browser app.
 
-Local storage is saved before the refresh starts. Supabase sessions are managed by Supabase Auth, so signed-in users should remain signed in after the app reloads.
+## Supabase
 
-## Privacy Model
+The app expects the existing saved-state table pattern:
 
-GitHub Pages hosts only the static app shell: HTML, CSS and JavaScript.
+- `user_id`
+- `state`
+- `created_at`
+- `updated_at`
 
-Private user data is stored only in the browser's local storage under:
+No database schema change is required for this V2 foundation.
 
-```text
-road-to-australia-life-os-v3
-```
+## What V2 Includes
 
-That local data can include travel dates, budgets, route stops, tasks, journal entries and other planning details. It is not uploaded to GitHub Pages by this app.
+- Supabase email login/signup
+- local storage fallback
+- cloud load/save after login
+- JSON import/export
+- recursive finance pot tree
+- root pot rename
+- create/edit/archive/delete child pots
+- transfer between pots
+- add/remove actual money at root
+- spending transactions
+- transaction editing with reversal before applying the new transaction
+- budget period and safe daily/weekly spend
+- minimal editable travel checklist
+- simple route notes
+- simple journal entries
+- mobile-first responsive layout
+- PWA service worker for static app shell only
 
-Use `Export JSON Backup` to save a private backup. Keep exported backups out of public repositories.
+## What Is Intentionally Later
 
-## Geoapify Browser Key
+- full nearby places UI
+- Open-Meteo weather widgets
+- route itinerary builder
+- document tracking
+- advanced analytics
+- automatic conflict detection
 
-The Geoapify key is a public browser key for the static GitHub Pages app, not a backend secret. It is stored once in `config.js` as `window.APP_CONFIG.GEOAPIFY_API_KEY` and should be restricted in Geoapify to the published GitHub Pages origin.
-
-Do not put the real key in documentation, Supabase, exported app state or console logs. To rotate it, create or regenerate the key in Geoapify, update only `config.js`, deploy the app, then revoke the old key after confirming the new build works. Monitor usage in the Geoapify dashboard and keep the app on the one-request-per-search flow to protect the free allowance.
-
-No backend proxy is used because this is a public static frontend and the key is intentionally controlled by browser-origin restrictions.
-
-## First-Run Setup
-
-When the app opens without saved local data, it shows a setup screen for:
-
-- Departure date
-- Starting budget
-- Travel pot target
-- Route stops
-- Key dates
-- TEFL target hours
-- Core tasks
-
-Setup values are saved locally in the current browser and then used by all dashboard cards, countdowns, readiness scores, budget summaries and timelines.
-
-## Demo Mode
-
-The setup screen includes `Load Demo Mode`.
-
-Demo mode loads fake sample data so visitors can explore the dashboard without entering real information. Demo data is clearly generic and can be reset or replaced with real setup data in local storage.
-
-## Run Locally
-
-No installation is required.
-
-1. Open this folder:
-
-2. Open `index.html` in a browser.
-
-You can also serve the folder locally:
-
-```powershell
-npx serve .
-```
-
-Then open the served file in the browser.
-
-## Main Sections
-
-- `Command` - daily briefing, countdowns, priorities and readiness scores.
-- `Travel` - route planner, phase manager, documents, packing and timeline.
-- `Budget` - money overview, pots, optional advanced budget periods, transactions, categories, analytics and milestones.
-- `TEFL` - target hours, completed hours, modules, study log and pace tracking.
-- `Content` - content ideas and pipeline tracking.
-- `Writing` - writing ideas, notes and sessions.
-- `Life` - journal-based mood, energy, sleep, stress and recent pattern summaries.
-- `Journal` - diary-first journal hub with optional check-in data, reflections, travel context, Finance-linked daily spending, tags and Patterns and Insights.
-- `Weekly Review` - weekly summaries and review notes.
-- `Dates & Counters` - editable countdowns, count-up counters and key travel dates, with dashboard pinning.
-- `Settings` - account/sync status, backup/import/export, preferences, labels, About/version details and the protected reset flow.
-
-Daily mood, energy, sleep and reflection context can be saved optionally inside Journal entries. Settings is for app-level controls, not everyday logging.
-
-## Backup And Restore
-
-Use `Export JSON Backup` before:
-
-- Clearing browser data
-- Changing browser
-- Moving to another laptop
-- Publishing a fresh copy online
-- Making major dashboard changes
-
-Use `Import JSON Backup` to restore a private backup. Importing replaces the current browser data after confirmation.
-
-## Publishing To GitHub Pages
-
-1. Make sure the app file is named `index.html`.
-2. Do not commit private exports, private planning documents or real-data backups.
-3. Commit only the public-safe app shell and documentation.
-4. Enable GitHub Pages for the repository branch/folder you want to publish.
-5. Open the Pages URL and confirm the setup screen appears in a clean browser profile.
-
-If the private planning document was already tracked by Git, remove it from the public branch/index before publishing. `.gitignore` prevents new accidental adds, but it does not rewrite existing Git history.
-
-## Data Safety Checklist
-
-Before publishing, search the repository for real values such as:
-
-- Real budgets
-- Real departure dates
-- Real route stops
-- Real trip dates
-- Personal tasks or journal text
-- Exported `.json` backups
-
-The public app should start from setup or demo mode only.
+The foundation is designed so those can be added without reviving the old all-in-one codebase.

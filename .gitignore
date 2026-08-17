@@ -1,3 +1,5 @@
-Road_to_Australia_Project.md
-*.json
-road-to-australia-life-os-*.json
+config.js
+*.local.json
+*.backup.json
+node_modules/
+.DS_Store
